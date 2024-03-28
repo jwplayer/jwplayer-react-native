@@ -509,6 +509,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
     }
 
     override func castController(_ controller:JWCastController, connectedTo device: JWCastingDevice) {
+        super.castController(controller, connectedTo:device)
         let dict:NSMutableDictionary! = NSMutableDictionary()
 
         dict.setObject(device.name, forKey:"name" as NSCopying)
@@ -539,6 +540,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
     }
     
     override func castController(_ controller: JWCastController, devicesAvailable devices:[JWCastingDevice]) {
+        super.castController(controller, devicesAvailable:devices)
         parentView?.availableDevices = devices
 
         var devicesInfo: [[String: Any]] = []

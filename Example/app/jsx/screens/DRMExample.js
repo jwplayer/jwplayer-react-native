@@ -8,6 +8,36 @@ export default () => {
   const playerRef = useRef([]);
   const [isEmulator, setIsEmulator] = useState(false);
 
+  // Must use legacy OR use a signed `playlist` URL: below config will work in when below ticket is released (Android)
+  // TODO with SDK-11349
+  const jwSignedConfigPlaylist = {
+      "title": "Shaka Test",
+      "mediaId": "placeholder",
+      "image": "https://shaka-player-demo.appspot.com/assets/poster.jpg",
+      "description": "",
+      "sources": [
+        {
+          "drm": {
+            "widevine": {
+              "url": "https://cwip-shaka-proxy.appspot.com/no_auth"
+            },
+          },
+          "file": "https://storage.googleapis.com/shaka-demo-assets/sintel-widevine/dash.mpd",
+          "type": "application/dash+xml"
+        },
+        {
+          "drm": {
+            "fairplay": {
+              "processSpcUrl": "https://fps.ezdrm.com/api/licenses",
+              "certificateUrl": "https://fps.ezdrm.com/demo/video/eleisure.cer"
+            }
+          },
+          "file": "https://fps.ezdrm.com/demo/video/ezdrm.m3u8",
+          "type": "application/vnd.apple.mpegurl"
+        }
+      ]
+    }
+
   const renderIOSPlayer = () => {
     const EZDRMLicenseAPIEndpoint = 'https://fps.ezdrm.com/api/licenses';
     const EZDRMCertificateEndpoint =
@@ -93,7 +123,7 @@ export default () => {
           renderAndroidPlayer()
         )
       }
-      text="Welcome to react-native-jw-media-player"
+      text="Welcome to jwplayer-react-native"
     />
   );
 };

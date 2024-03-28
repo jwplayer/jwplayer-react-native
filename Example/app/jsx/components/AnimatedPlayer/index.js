@@ -20,7 +20,7 @@ import {
 import Orientation from 'react-native-orientation-locker';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Player from '../Player';
-import {JWPlayerState} from 'react-native-jw-media-player';
+import {JWPlayerState} from 'jwplayer-react-native';
 
 /* styles */
 import playerStyle from './player.style';

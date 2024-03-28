@@ -1,6 +1,229 @@
-declare module "react-native-jw-media-player" {
+declare module "jwplayer-react-native" {
   import React from "react";
   import { ViewStyle } from "react-native";
+
+  interface JwConfig {
+    pid?: string;
+    mute?: boolean;
+    forceLegacyConfig?: boolean;
+    useTextureView?: boolean;
+    autostart?: boolean;
+    nextupoffset?: string | number; // String with % or number
+    repeat?: boolean;
+    allowCrossProtocolRedirectsSupport?: boolean; // maybe android only?
+    displaytitle?: boolean;
+    displaydescription?: boolean;
+    stretching?: JwStretching;
+    thumbnailPreview?: JwThumbnailPreview;
+    preload?: boolean;
+    playlist?: JwPlaylistItem[] | string;
+    sources?: JwSource[]; // Can be used in place of `playlist` to build a playlist, but not recommended
+    file?: string; // Can be used in place of `playlist` to build a playlist, but not recommended
+    playlistIndex?: number;
+    related?: JwRelatedConfig;
+    uiConfig?: JwUiConfig;
+    logoView?: JwLogoView;
+    advertising?: JwAdvertisingConfig;
+    playbackRates?: number[];
+    playbackRateControls?: boolean;
+    license: string;
+  }
+
+  type JwThumbnailPreview = 101 | 102 | 103;
+
+  type JwStretching = "uniform" | "fill" | "exactfit" | "none";
+
+  type JwAdvertisingConfig = VmapAdvertisingConfig | VastAdvertisingConfig | ImaVmapAdvertisingConfig
+    | ImaAdvertisingConfig | ImaDaiAdvertisingConfig;
+
+  interface JwAdRules {
+    startOn?: number;
+    frequency?: number;
+    timeBetweenAds?: number;
+    startOnSeek?: JwStartOnSeek;
+  }
+
+  type JwStartOnSeek = "pre" | "none";
+  interface VmapAdvertisingConfig {
+    cuetext?: string;
+    adpodmessage?: string;
+    vpaidcontrols?: boolean;
+    requestTimeout?: number;
+    creativeTimeout?: number;
+    conditionaladoptout?: boolean;
+    schedule: string; // Must bestring for VMAP
+    rules?: JwAdRules;
+    allowedOmidVendors?: string[];
+    omidSupport?: JwOmidSupport;
+    admessage?: string;
+    skipmessage?: string;
+    skiptext?: string;
+    skipoffset?: number;
+  }
+
+  interface VastAdvertisingConfig {
+    cuetext?: string;
+    adpodmessage?: string;
+    vpaidcontrols?: boolean;
+    requestTimeout?: number;
+    creativeTimeout?: number;
+    conditionaladoptout?: boolean;
+    schedule?: JwAdBreak[]; // Array of breaks or object of breaks
+    rules: JwAdRules;
+    allowedOmidVendors?: string[];
+    omidSupport?: JwOmidSupport; 
+    admessage?: string;
+    skipmessage?: string;
+    skiptext?: string;
+    skipoffset?: number;
+  }
+
+  type JwOmidSupport = "auto" | "enabled" | "disabled";
+
+  interface ImaVmapAdvertisingConfig {
+    imaSdkSettings?: JwImaSdkSettings;
+    tag?: string;
+  }
+
+  interface ImaAdvertisingConfig {
+    imaSdkSettings?: JwImaSdkSettings;
+    schedule?: JwAdBreak[] | JwAdBreak; // Array of breaks or object of breaks
+  }
+
+  interface ImaDaiAdvertisingConfig {
+    imaDaiSettings?: JwImaDaiSettings;
+    imaSdkSettings?: JwImaSdkSettings;
+  }
+
+  interface JwImaSdkSettings {
+    sessionId?: string;
+    ppid?: string;
+    autoPlayAdBreaks?: boolean;
+    language?: string;
+    maxRedirects?: number; //int
+    playerType?: string;
+    playerVersion?: string;
+    isDebugMode?: boolean;
+    doesRestrictToCustomPlayer?: boolean;
+  }
+
+  interface JwLogoView {
+    imageFile: string;
+    fades: boolean; // margin required for fade on Android
+    margin?: number;
+    position?: JwLogoPosition;
+    webLink: string;
+  }
+
+  type JwLogoPosition = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+
+  interface JwUiConfig { // all default to false. When using this, it's specify all or they are assumed false
+    hasOverlay?: boolean;
+    hasControlbar?: boolean;
+    hasCenterControls?: boolean;
+    hasNextUp?: boolean;
+    hasSideSeek?: boolean;
+    hasLogoView?: boolean;
+    hasError?: boolean;
+    hasPlaylist?: boolean;
+    hasQualitySubMenu?: boolean;
+    hasCaptionsSubMenu?: boolean;
+    hasPlaybackRatesSubMenu?: boolean;
+    hasAudiotracksSubMenu?: boolean;
+    hasMenu?: boolean;
+    hasPlayerControlsContainer?: boolean;
+    hasCastingMenu?: boolean;
+    hasChapters?: boolean;
+    hasAds?: boolean;
+  }
+
+  interface JwRelatedConfig {
+    file?: string;
+    oncomplete?: JwRelatedOnComplete;
+    onclick?: JwOnRelatedClick;
+    // autoplaymessage: string; // deprecated
+    autoplaytimer: number;
+  }
+
+  interface JwPlaylistItem {
+    title?: string;
+    description?: string;
+    file?: string;
+    image?: string;
+    mediaid?: string;
+    feedid?: string;
+    recommendations?: string;
+    starttime?: number; // double -- default 0.0
+    duration: number; // int -- default 0
+    tracks?: JwTrack[];
+    sources?: JwSource[];
+    externalMetadata?: JwExternalMetadata[];
+    adschedule?: JwAdBreak[]; // array of schedules
+    schedule?: { [key: string]: JwAdBreak };
+    imaDaiSettings?: JwImaDaiSettings;
+    httpheaders?: { [key: string]: string };
+  }
+
+  interface JwImaDaiSettings {
+    videoID?: string;
+    cmsID?: string;
+    assetKey?: string;
+    apiKey?: string;
+    streamType?: string;
+    adTagParameters?: { [key: string]: string };
+  }
+
+  interface JwAdBreak {
+    ad?: string | string[];
+    offset?: string;
+    skipoffset?: number;
+    type?: JwAdType;
+    custParams?: { [key: string]: string };
+  }
+
+  type JwAdType = "LINEAR" | "NONLINEAR";
+
+  interface JwExternalMetadata {
+    startTime?: number; // double
+    endTime?: number; // double
+    id: number; // int
+  }
+
+  interface JwSource {
+    drm?: JwDrm;
+    file?: string;
+    label?: string;
+    default?: string;
+    type?: string;
+    httpheaders?: { [key: string]: string };
+  }
+
+  interface JwDrm {
+    widevine?: JwWidevine;
+    fairplay?: JwFairplay;
+  }
+
+  interface JwFairplay {
+    processSpcUrl?: string;
+    certificateUrl?: string;
+  }
+
+  interface JwWidevine {
+    url?: string;
+    keySetId?: string;
+  }
+
+  interface JwTrack {
+    id?: string;
+    file?: string;
+    kind: string;
+    label?: string;
+    default?: boolean;
+  }
+
+  type JwRelatedOnComplete = "hide" | "show" | "none" | "autoplay";
+
+  type JwOnRelatedClick = "play" | "link";
 
   interface AudioTrack {
     autoSelect: boolean;
@@ -95,7 +318,7 @@ declare module "react-native-jw-media-player" {
     imaSettings?: IMASettings;
     // friendlyObstructions?: FriendlyObstruction[];
     googleDAIStream?: GoogleDAIStream;
-  }  
+  }
   type Advertising = VASTAdvertising | IMAAdvertising | IMA_DAIAdvertising;
   interface PlaylistItem {
     file: string;
@@ -275,9 +498,10 @@ declare module "react-native-jw-media-player" {
   type NativeError = (event: BaseEvent<PlayerErrorEventProps>) => void;
   type NativeWarning = (event: BaseEvent<PlayerWarningEventProps>) => void;
   interface PropsType {
-    config: Config;
+    config: Config | JwConfig;
     style?: ViewStyle;
     controls?: boolean;
+    forceLegacyConfig?: boolean;
     onPlayerReady?: () => void;
     onPlaylist?: (event: BaseEvent<PlaylistEventProps>) => void;
     onBeforePlay?: () => void;

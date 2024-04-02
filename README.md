@@ -57,7 +57,9 @@ Follow these steps to add the library to your iOS project:
 1. From the project directory in terminal, add the **jwplayer-react-native** library. You can use npm or yarn.
 
     `npm i jwplayer-react-native --save`
+
    OR
+
    `yarn add jwplayer-react-native`
 
 2. Change the directory to the iOS folder of your React Native project.

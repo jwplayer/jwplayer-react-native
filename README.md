@@ -1,6 +1,6 @@
 # react-native-jw-media-player
 
-<img src="https://img.shields.io/badge/Version-0.2.0-blue?style=flat&color=blue />
+<img src="https://img.shields.io/badge/Version-1.0.0-blue?style=flat&color=blue />
 
 [Prerequisites](#prerequisites) | [Installation](#installation) |
 
@@ -30,6 +30,7 @@ Before installing and using the library, you need the following items:
 ### Android
 Follow these steps to add the library to your Android project:
 1. From the project directory in terminal, add the **jwplayer-react-native** library. You can use npm or yarn.
+
    **npm**
     `npm i jwplayer-react-native --save`
 
@@ -54,6 +55,7 @@ Follow these steps to add the library to your Android project:
 
 Follow these steps to add the library to your iOS project:
 1. From the project directory in terminal, add the **jwplayer-react-native** library. You can use npm or yarn.
+
     `npm i jwplayer-react-native --save`
    OR
    `yarn add jwplayer-react-native`

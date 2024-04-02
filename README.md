@@ -1,12 +1,74 @@
 # react-native-jw-media-player
 
-### A react-native bridge for JWPlayer native SDK's
+<img src="https://img.shields.io/badge/Version-0.2.0-blue?style=flat&color=blue />
 
-⚠️ Important you need a `JWPlayer` license to use this library https://jwplayer.com/
+[Prerequisites](#prerequisites) | [Installation](#installation) |
+
+> ⚠️
+> This **README** is for `react-native-jw-media-player` version `0.2.0` and higher, for previous version check out the [Old README](./Pre.0.2.0_README.md).
+>
+> Beginning with version `0.2.0`, [JWP's `JWPlayerKit ` (iOS)]((https://developer.jwplayer.com/jwplayer/docs/ios-get-started)) and [SDK 4 (Android)]((https://developer.jwplayer.com/jwplayer/docs/android-get-started)).
+
+
+The `react-native-jw-media-player` library is a bridge that enables using the native JWP Android and iOS SDKs in React Native applications.
 
 <img width="150" alt="sample" src="./images/1.png">
 <img width="150" alt="sample" src="./images/2.png">
 <img width="150" alt="sample" src="./images/3.png">
+
+## Prerequisites
+
+Before installing and using the library, you need the following items:
+- JWP [Account](https://jwplayer.com/pricing/)
+- JWP License Key ([Android](https://docs.jwplayer.com/players/docs/android-overview#requirements) | [iOS](https://docs.jwplayer.com/players/docs/ios-overview#requirements))
+- [React Native App](https://reactnative.dev/docs/getting-started)
+- Package Manager ([npm](https://nodejs.org/en/download) | [yarn](https://yarnpkg.com/getting-started/install) )
+
+## Installation
+[Android](#android) | [iOS](#ios)
+
+### Android
+Follow these steps to add the library to your Android project:
+1. From the project directory in terminal, add the **jwplayer-react-native** library. You can use npm or yarn.
+   **npm**
+    `npm i jwplayer-react-native --save`
+
+   **yarn**
+   `yarn add jwplayer-react-native`
+
+2. In **android/build.gradle**, add the JWP Maven repository inside the `allprojects` block.
+
+   ```groovy
+   allprojects {
+       repositories {
+           ...
+           maven {
+               url 'https://mvn.jwplayer.com/content/repositories/releases/'
+           }
+   ```
+
+
+<br /><br />
+
+### iOS
+
+Follow these steps to add the library to your iOS project:
+1. From the project directory in terminal, add the **jwplayer-react-native** library. You can use npm or yarn.
+    `npm i jwplayer-react-native --save`
+   OR
+   `yarn add jwplayer-react-native`
+
+2. Change the directory to the iOS folder of your React Native project.
+   ```
+   cd ios/
+   ```
+
+3. Install the iOS dependencies with CocoaPods.
+     ```
+   pod install
+   ```
+
+
 
 ## Getting started
 

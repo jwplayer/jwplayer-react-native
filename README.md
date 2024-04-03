@@ -2,12 +2,9 @@
 
 <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=flat&color=blue />
 
-[Prerequisites](#prerequisites) | [Installation](#installation) |
+⚠️ This **README** is for `react-native-jw-media-player` version `0.2.0` and higher, for previous version check out the [Old README](./Pre.0.2.0_README.md). Beginning with version `0.2.0`, this library uses [JWP's `JWPlayerKit ` (iOS)]((https://developer.jwplayer.com/jwplayer/docs/ios-get-started)) and [SDK 4 (Android)]((https://developer.jwplayer.com/jwplayer/docs/android-get-started)).
 
-> ⚠️
-> This **README** is for `react-native-jw-media-player` version `0.2.0` and higher, for previous version check out the [Old README](./Pre.0.2.0_README.md).
->
-> Beginning with version `0.2.0`, [JWP's `JWPlayerKit ` (iOS)]((https://developer.jwplayer.com/jwplayer/docs/ios-get-started)) and [SDK 4 (Android)]((https://developer.jwplayer.com/jwplayer/docs/android-get-started)).
+[Prerequisites](#prerequisites) | [Installation](#installation) |
 
 
 The `react-native-jw-media-player` library is a bridge that enables using the native JWP Android and iOS SDKs in React Native applications.

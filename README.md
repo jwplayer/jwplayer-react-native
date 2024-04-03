@@ -253,6 +253,7 @@ Follow these steps to enable background audio sessions:
 
 JWP enables casting by default with a casting button.
 
+<br />
 
 #### Android
 
@@ -272,6 +273,42 @@ Follow these steps to enable casting:
         android:value="path.to.CastOptionsProvider" />
    ```
 
+<br />
+
+#### iOS
+
+Follow these steps to enable casting:
+
+1. [Enable casting to Chromecast devices](https://docs.jwplayer.com/players/docs/ios-enable-casting-to-chromecast-devices).'
+2. Add `$RNJWPlayerUseGoogleCast = true` to your **Podfile**. This setting will install `google-cast-sdk` pod.
+3. Edit **Info.plist** with the following values.
+
+  ```text
+  'NSBluetoothAlwaysUsageDescription' => 'We will use your Bluetooth for media casting.',
+  'NSBluetoothPeripheralUsageDescription' => 'We will use your Bluetooth for media casting.',
+  'NSLocalNetworkUsageDescription' => 'We will use the local network to discover Cast-enabled devices on your WiFi network.',
+  'Privacy - Local Network Usage Description' => 'We will use the local network to discover Cast-enabled devices on your WiFi network.'
+  'NSMicrophoneUsageDescription' => 'We will use your Microphone for media casting.'
+
+##### Available iOS Method
+
+`castState(GCKCastState)`
+_Gets the cast state_
+
+**GCKCastState**
+
+```text
+typedef NS_ENUM(NSUInteger, GCKCastState) {
+  /** No Cast session is established, and no Cast devices are available. */
+  GCKCastStateNoDevicesAvailable = 0,
+  /** No Cast session is establishd, and Cast devices are available. */
+  GCKCastStateNotConnected = 1,
+  /** A Cast session is being established. */
+  GCKCastStateConnecting = 2,
+  /** A Cast session is established. */
+  GCKCastStateConnected = 3,
+};
+```
 
 
 `autoSelect`: boolean

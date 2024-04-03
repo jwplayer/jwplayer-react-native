@@ -293,12 +293,11 @@ Follow these steps to enable casting:
 
 <br />
 
-##### Available iOS Method
+| Available Method | Description |
+| --- | --- |
+| `castState(GCKCastState)` | Gets the cast state<br />See: [GCKCastState](#gckcaststate) |
 
-`castState(GCKCastState)`
-_Gets the cast state_
-
-**GCKCastState**
+##### GCKCastState
 
 ```text
 typedef NS_ENUM(NSUInteger, GCKCastState) {

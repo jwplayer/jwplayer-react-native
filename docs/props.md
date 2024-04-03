@@ -5,11 +5,11 @@ This wrapper implements the native methods exposed by the [Android](https://sdk.
 
 | Field | Platform |  Additional Notes |
 | --- | --- | --- |
-| **pid** string | A, I | Unique identifier of the player |
-| <a href="https://docs.jwplayer.com/players/reference/setup-options#mute" target="_blank">**mute**</a> boolean | A, I | |
-| **forceLegacyConfig** boolean | A, I | Determines whether to use the legacy configuration settings |
-| **useTextureView** boolean | A | |
-| <a href="https://docs.jwplayer.com/players/reference/setup-options#autostart" target="_blank">autostart</a> boolean | A, I | |
+| `pid` string | A, I | Unique identifier of the player |
+| <a href="https://docs.jwplayer.com/players/reference/setup-options#mute" target="_blank">`mute`</a> boolean | A, I | |
+| `forceLegacyConfig` boolean | A, I | Determines whether to use the legacy configuration settings |
+| `useTextureView` boolean | A | |
+| <a href="https://docs.jwplayer.com/players/reference/setup-options#autostart" target="_blank">`autostart`</a> boolean | A, I | |
 
 
 |nextupoffset                      |                   |string &#124; number|TRUE    |                 |

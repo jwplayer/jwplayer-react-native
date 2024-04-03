@@ -7,9 +7,9 @@ This wrapper implements the native methods exposed by the [Android](https://sdk.
 | --- | --- | --- |
 | **pid** string | A, I | Unique identifier of the player |
 | <a href="https://docs.jwplayer.com/players/reference/setup-options#mute" target="_blank">**mute**</a> boolean | A, I | |
-| **forceLegacyConfig** boolean | Determines whether to use the legacy configuration settings | A, I | |
+| **forceLegacyConfig** boolean | A, I | Determines whether to use the legacy configuration settings |
 | **useTextureView** boolean | A | |
-| <a href="<a href="https://docs.jwplayer.com/players/reference/setup-options#autostart" target="_blank">autostart</a> boolean | A, I | |
+| <a href="https://docs.jwplayer.com/players/reference/setup-options#autostart" target="_blank">autostart</a> boolean | A, I | |
 
 
 |nextupoffset                      |                   |string &#124; number|TRUE    |                 |

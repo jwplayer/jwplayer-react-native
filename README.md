@@ -190,6 +190,8 @@ Follow these steps to configure the media playback experience in your app:
 3. Define `config.playlist` with the media to play in the player.
 4. (Optional) Define the other values of the `config` prop.
 
+<br />
+
 ℹ️ See [Props](/docs/props.md) for all the available `config` prop fields.
 
 <br /><br />

@@ -188,6 +188,8 @@ render() {
 3. Define `config.playlist` with the media to play in the player.
 4. (Optional) Define the other values of the `config` prop.
 
+ℹ️ See [Props](/docs/props.md) for all the available `config` prop fields.
+
 <br /><br />
 
 ### Example Project
@@ -222,154 +224,10 @@ Follow these steps to run the example project:
 
 ℹ️ You can also build and run the app with specific `react-native` commands.
 
-## Available props
+<br /><br />
 
-| Prop           | Description                      | Default     | Type      |
-| -------------- | -------------------------------- | ----------- | --------- |
-| **`config`**   | The JW [Config](#Config) object. | `undefined` | `Object`  |
-| **`controls`** | Should the player controls show. | `true`      | `Boolean` |
+## Advanced Topics
 
-##### Config
-
-| Prop                           | Description                                                                                                                                                                                                                                                                                                                                                             | Type                                                                                                                                                                                                                   | Platform                                    | Default    |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------- |
-| **`offlineImage`**             | The url for the player offline thumbnail.                                                                                                                                                                                                                                                                                                                               | `String`                                                                                                                                                                                                               | `iOS`                                       | `none`     |
-| **`offlineMessage`**           | The message when the player is offline.                                                                                                                                                                                                                                                                                                                                 | `String`                                                                                                                                                                                                               | `iOS`                                       | `none`     |
-| **`autostart`**                | Should the tracks auto start.                                                                                                                                                                                                                                                                                                                                           | `Boolean`                                                                                                                                                                                                              | `iOS && Android`                            | `false`    |
-| **`controls`**                 | Should the control buttons show.                                                                                                                                                                                                                                                                                                                                        | `Boolean`                                                                                                                                                                                                              | `Android`                                   | `true`     |
-| **`repeat`**                   | Should the track repeat.                                                                                                                                                                                                                                                                                                                                                | `Boolean`                                                                                                                                                                                                              | `iOS && Android`                            | `false`    |
-| **`playlist`**                 | An array of playlistItems.                                                                                                                                                                                                                                                                                                                                              | `[playlistItem]` see [PlaylistItem](#PlaylistItem)]                                                                                                                                                                    | `iOS && Android`                            | `none`     |
-| **`nextUpStyle`**              | How the next up videos should be presented.                                                                                                                                                                                                                                                                                                                             | `{offsetSeconds: Int, offsetPercentage, Int}`                                                                                                                                                                          | `iOS && Android`                            | `none`     |
-| **`styling`**                  | All the stylings for the player see [Styling](#Styling) section.                                                                                                                                                                                                                                                                                                        | `Object`                                                                                                                                                                                                               | `iOS && Android`                            | `none`     |
-| **`advertising`**              | General Advertising settings on the player see [Advertising](#Advertising) section.                                                                                                                                                                                                                                                                                     | `Object`                                                                                                                                                                                                               | `iOS && Android`                            | `none`     |
-| **`fullScreenOnLandscape`**    | When this is true the player will go into full screen on rotate of phone to landscape                                                                                                                                                                                                                                                                                   | `Boolean`                                                                                                                                                                                                              | `iOS && Android`                            | `false`    |
-| **`landscapeOnFullScreen`**    | When this is true the player will go into landscape orientation when on full screen                                                                                                                                                                                                                                                                                     | `Boolean`                                                                                                                                                                                                              | `iOS && Android`                            | `false`    |
-| **`portraitOnExitFullScreen`** | When this is true the player will go into portrait orientation when exiting full screen                                                                                                                                                                                                                                                                                 | `Boolean`                                                                                                                                                                                                              | `Android`                                   | `false`    |
-| **`exitFullScreenOnPortrait`** | When this is true the player will exit full screen when the phone goes into portrait                                                                                                                                                                                                                                                                                    | `Boolean`                                                                                                                                                                                                              | `Android`                                   | `false`    |
-| **`enableLockScreenControls`** | When this is true the player will show media controls on lock screen                                                                                                                                                                                                                                                                                                    | `Boolean`                                                                                                                                                                                                              | `iOS`                                       | `true`     |
-| **`stretching`**               | Resize images and video to fit player dimensions. See below [Stretching](#Stretching) section.                                                                                                                                                                                                                                                                          | `String`                                                                                                                                                                                                               | `Android`                                   | `none`     |
-| **`backgroundAudioEnabled`**   | Should the player continue playing in the background and handle interruptions.                                                                                                                                                                                                                                                                                          | `Boolean`                                                                                                                                                                                                              | `iOS && Android`                            | `false`    |
-| **`category`**                 | Controls the audio session category. See below [AudioSessionCategory](#AudioSessionCategory)                                                                                                                                                                                                                                                                            | `String`                                                                                                                                                                                                               | `iOS`                                       | `Playback` |
-| **`mode`**                     | Controls the audio session mode. See below [AudioSessionMode](#AudioSessionMode)                                                                                                                                                                                                                                                                                        | `String`                                                                                                                                                                                                               | `iOS`                                       | `none`     |
-| **`viewOnly`**                 | When true the player will not have any controls it will show only the video.                                                                                                                                                                                                                                                                                            | `Boolean`                                                                                                                                                                                                              | `iOS`                                       | `false`    |
-| **`pipEnabled`**               | When true the player will be able to go into Picture in Picture mode. **Note: This is true by default for iOS PlayerViewController**. **For Android you will also need to follow the instruction mentioned [here](https://developer.jwplayer.com/jwplayer/docs/android-invoke-picture-in-picture-playback) && below [Picture in picture](Picture-in-picture) section.** | `Boolean`                                                                                                                                                                                                              | `iOS when viewOnly prop is true && Android` | `false`    |
-| **`interfaceBehavior`**        | The behavior of the player interface.                                                                                                                                                                                                                                                                                                                                   | `'normal', 'hidden', 'onscreen'`                                                                                                                                                                                       | `iOS`                                       | `normal`   |
-| **`interfaceFadeDelay`**        | The number of seconds to wait when fading the interface. The default value is 3 seconds.                                                                                                                                                                                                                                                                                                                                   | `number`                                                                                                                                                                                       | `iOS`                                       | `3`   |
-| **`preload`**                  | The behavior of the preload.                                                                                                                                                                                                                                                                                                                                            | `'auto', 'none'`                                                                                                                                                                                                       | `iOS`                                       | `auto`     |
-| **`related`**                  | The related videos behaviors. Check out the [Related](#Related) section.                                                                                                                                                                                                                                                                                                | `Object`                                                                                                                                                                                                               | `iOS`                                       | `none`     |
-| **`hideUIGroups`**              | A way to hide certain UI groups in the player.                                                                                                                                                                                                                                                                                                                         | Array of `'overlay', 'control_bar', 'center_controls', 'next_up', 'error', 'playlist', 'controls_container', 'settings_menu', 'quality_submenu', 'captions_submenu', 'playback_submenu', 'audiotracks_submenu', 'casting_menu'` | `Android`                                   | `none`     |
-| **`processSpcUrl`**            | Your DRM License URL. Checkout the [DRM](#DRM) section below.                                                                                                                                                                                                                                                                                                           | `String`                                                                                                                                                                                                               | `iOS`                                       | `none`     |
-| **`fairplayCertUrl`**          | Your DRM Certificate URL. Checkout the [DRM](#DRM) section below.                                                                                                                                                                                                                                                                                                       | `String`                                                                                                                                                                                                               | `iOS`                                       | `none`     |
-| **`contentUUID`**              | Your DRM content UUID. Checkout the [DRM](#DRM) section below.                                                                                                                                                                                                                                                                                                          | `String`                                                                                                                                                                                                               | `iOS`                                       | `none`     |
-
-##### PlaylistItem
-
-| Prop                  | Description                                                                                              | Type                                              |
-| --------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| **`mediaId`**         | The JW media id.                                                                                         | `Int`                                             |
-| **`startTime`**       | the player should start from a certain second.                                                           | `Int`                                             |
-| **`adVmap`**          | The url of ads VMAP xml. (iOS only)                                                                                 | `String`                                          |
-| **`adSchedule`**      | Array of tags and and offsets for ads. (iOS only)                                                                   | `{tag: String, offset: String}`                   |
-| **`description`**     | Description of the track.                                                                                | `String`                                          |
-| **`file`**            | The url of the file to play.                                                                             | `String`                                          |
-| **`tracks`**          | Array of caption tracks.                                                                                 | `{file: String, label: String}`                   |
-| **`sources`**         | Array of media sources.                                                                                  | `{file: String, label: String, default: Boolean}` |
-| **`image`**           | The url of the player thumbnail.                                                                         | `String`                                          |
-| **`title`**           | The title of the track.                                                                                  | `String`                                          |
-| **`recommendations`** | Url for recommended videos.                                                                              | `String`                                          |
-| **`autostart`**       | Should the track auto start.                                                                             | `Boolean`                                         |
-| **`authUrl`**         | Only Available on **Android**, Used for Authorizing DRM content. Checkout the [DRM](#DRM) section below. | `String`                                          |
-
-##### JWControlType
-
-| Key              | Value |
-| ---------------- | ----- |
-| **`forward`**    | 0     |
-| **`rewind`**     | 1     |
-| **`pip`**        | 2     |
-| **`airplay`**    | 3     |
-| **`chromecast`** | 4     |
-| **`next`**       | 5     |
-| **`previous`**   | 6     |
-| **`settings`**   | 7     |
-| **`languages`**  | 8     |
-| **`fullscreen`** | 9     |
-
-##### JWPlayerAdClients
-
-| Client                     | Value |
-| -------------------------- | ----- |
-| **`JWAdClientVast`**       | 0     |
-| **`JWAdClientGoogima`**    | 1     |
-| **`JWAdClientGoogimaDAI`** | 2     |
-
-##### JWPlayerState
-
-#### **iOS**
-
-| State                        | Value |
-| ---------------------------- | ----- |
-| **`JWPlayerStateUnknown`**   | 0     |
-| **`JWPlayerStateIdle`**      | 1     |
-| **`JWPlayerStateBuffering`** | 2     |
-| **`JWPlayerStatePlaying`**   | 3     |
-| **`JWPlayerStatePaused`**    | 4     |
-| **`JWPlayerStateComplete`**  | 5     |
-| **`JWPlayerStateError`**     | 6     |
-
-#### **Android**
-
-| State                        | Value |
-| ---------------------------- | ----- |
-| **`JWPlayerStateIdle`**      | 0     |
-| **`JWPlayerStateBuffering`** | 1     |
-| **`JWPlayerStatePlaying`**   | 2     |
-| **`JWPlayerStatePaused`**    | 3     |
-| **`JWPlayerStateComplete`**  | 4     |
-| **`JWPlayerStateError`**     | 5     |
-
-##### Styling
-
-| Prop                     | Description                                                                                                                                                        | Type                                                                                                                                                                                               | Platform         | Default  |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | -------- |
-| **`displayDescription`** | Should the player show the description.                                                                                                                            | `Boolean`                                                                                                                                                                                          | `iOS && Android` | `true`   |
-| **`displayTitle`**       | Should the player show the title.                                                                                                                                  | `Boolean`                                                                                                                                                                                          | `iOS && Android` | `true`   |
-| **`colors`**             | Object with colors in hex format (without hashtag), for the icons and progress bar See below [Colors](#Colors) section.                                            | `Object`                                                                                                                                                                                           |
-| **`font`**               | Name and size of the fonts for all texts in the player. **Note: the font must be added properly in your native project**                                           | `{name: String, size: Int}`                                                                                                                                                                        | `iOS`            | `System` |
-| **`captionsStyle`**      | Style of the captions: name and size of the fonts, backgroundColor, edgeStyle and highlightColor. **Note: the font must be added properly in your native project** | `{font: {name: String, size: Int}, backgroundColor: String, highlightColor: String, edgeStyle: 'none', 'dropshadow', 'raised', 'depressed', 'uniform'}` See the [edgeStyle](#EdgeStyle) enum below | `iOS`            | `System` |
-| **`menuStyle`**          | Style of the menu: name and size of the fonts, backgroundColor and fontColor. **Note: the font must be added properly in your native project**                     | `{font: {name: String, size: Int}, backgroundColor: String, fontColor: String}`                                                                                                                    | `iOS`            | `System` |
-
-##### Colors
-
-| Prop                  | Description                  | Type                                                               | Platform                                                      | Default  |
-| --------------------- | ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------- | -------- |
-| **`buttons`**         | Color of all the icons.      | `String`                                                           | `iOS`                                                         | `FFFFFF` |
-| **`timeslider`**      | Colors for the progress bar. | `{progress: String, buffer: String, rail: String, thumb: String,}` | `iOS & Android **Note: buffer is only available on android**` | `FFFFFF` |
-| **`backgroundColor`** | Color for the background.    | `String`                                                           | `iOS & Android`                                               | `FFFFFF` |
-
-**Note: It is expected to pass the colors in hex format without the hashtag example for white FFFFFF.**
-
-```javascript
-colors: PropTypes.shape({
-  buttons: PropTypes.string,
-  timeslider: PropTypes.shape({
-    progress: PropTypes.string,
-    rail: PropTypes.string,
-    thumb: PropTypes.string,
-  }),
-});
-```
-
-##### EdgeStyle
-
-| State                              | Value |
-| ---------------------------------- | ----- |
-| **`JWCaptionEdgeStyleUndefined`**  | 1     |
-| **`JWCaptionEdgeStyleNone`**       | 2     |
-| **`JWCaptionEdgeStyleDropshadow`** | 3     |
-| **`JWCaptionEdgeStyleRaised`**     | 4     |
-| **`JWCaptionEdgeStyleDepressed`**  | 5     |
-| **`JWCaptionEdgeStyleUniform`**    | 6     |
 
 ### AudioTrack
 

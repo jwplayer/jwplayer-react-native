@@ -9,7 +9,7 @@
 
 The `react-native-jw-media-player` library is a bridge that enables using the native JWP Android and iOS SDKs in React Native applications.
 
-<img width="250" alt="sample" src="./images/1.png"> <img width="250" alt="sample" src="./images/2.png"> <img width="250" alt="sample" src="./images/3.png">
+<img width="200" alt="sample" src="./images/1.png"> <img width="200" alt="sample" src="./images/2.png"> <img width="200" alt="sample" src="./images/3.png">
 
 <br /><br />
 

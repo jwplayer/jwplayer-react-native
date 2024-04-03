@@ -78,111 +78,111 @@ Follow these steps to configure the media playback experience in your app:
 
 1. Use the following example as a guide to configure the media playback experience. Be sure to remove all instances of `...` from the code.
 
-```javascript
-...
+  ```javascript
+  ...
 
-import JWPlayer, { JWPlayerState } from 'react-native-jw-media-player';
+  import JWPlayer, { JWPlayerState } from 'react-native-jw-media-player';
 
-...
+  ...
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  player: {
-    flex: 1,
-  },
-});
-
-...
-
-const playlistItem = {
-  title: 'Track',
-  mediaId: -1,
-  image: 'http://image.com/image.png',
-  description: 'My beautiful track',
-  startTime: 0,
-  file: 'http://file.com/file.mp3',
-  autostart: true,
-  repeat: false,
-  displayDescription: true,
-  displayTitle: true,
-  tracks: [
-    {
-      file: 'http://file.com/english.vtt',
-      label: 'en'
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
     },
-    {
-      file: 'http://file.com/spanish.srt',
-      label: 'es'
-    }
-  ],
-  sources: [
-    {
-      file: 'http://file.com/file.mp3',
-      label: 'audio'
+    player: {
+      flex: 1,
     },
-    {
-      file: 'http://file.com/file.mp4',
-      label: 'video',
-      default: true
-    }
-  ]
-}
+  });
 
-const config = {
-  license:
-    Platform.OS === 'android'
-      ? 'YOUR_ANDROID_SDK_KEY'
-      : 'YOUR_IOS_SDK_KEY',
-  backgroundAudioEnabled: true,
-  autostart: true,
-  styling: {
-    colors: {
-      timeslider: {
-        rail: "0000FF",
+  ...
+
+  const playlistItem = {
+    title: 'Track',
+    mediaId: -1,
+    image: 'http://image.com/image.png',
+    description: 'My beautiful track',
+    startTime: 0,
+    file: 'http://file.com/file.mp3',
+    autostart: true,
+    repeat: false,
+    displayDescription: true,
+    displayTitle: true,
+    tracks: [
+      {
+        file: 'http://file.com/english.vtt',
+        label: 'en'
+      },
+      {
+        file: 'http://file.com/spanish.srt',
+        label: 'es'
+      }
+    ],
+    sources: [
+      {
+        file: 'http://file.com/file.mp3',
+        label: 'audio'
+      },
+      {
+        file: 'http://file.com/file.mp4',
+        label: 'video',
+        default: true
+      }
+    ]
+  }
+
+  const config = {
+    license:
+      Platform.OS === 'android'
+        ? 'YOUR_ANDROID_SDK_KEY'
+        : 'YOUR_IOS_SDK_KEY',
+    backgroundAudioEnabled: true,
+    autostart: true,
+    styling: {
+      colors: {
+        timeslider: {
+          rail: "0000FF",
+        },
       },
     },
-  },
-  playlist: [playlistItem],
-}
+    playlist: [playlistItem],
+  }
 
-...
+  ...
 
-async isPlaying() {
-  const playerState = await this.JWPlayer.playerState();
-  return playerState === JWPlayerState.JWPlayerStatePlaying;
-}
+  async isPlaying() {
+    const playerState = await this.JWPlayer.playerState();
+    return playerState === JWPlayerState.JWPlayerStatePlaying;
+  }
 
-...
+  ...
 
-render() {
+  render() {
 
-...
+  ...
 
-<View style={styles.container}>
-  <JWPlayer
-    ref={p => (this.JWPlayer = p)}
-    style={styles.player}
-    config={config}
-    onBeforePlay={() => this.onBeforePlay()}
-    onPlay={() => this.onPlay()}
-    onPause={() => this.onPause()}
-    onIdle={() => console.log("onIdle")}
-    onPlaylistItem={event => this.onPlaylistItem(event)}
-    onSetupPlayerError={event => this.onPlayerError(event)}
-    onPlayerError={event => this.onPlayerError(event)}
-    onBuffer={() => this.onBuffer()}
-    onTime={event => this.onTime(event)}
-    onFullScreen={() => this.onFullScreen()}
-    onFullScreenExit={() => this.onFullScreenExit()}
-  />
-</View>
+  <View style={styles.container}>
+    <JWPlayer
+      ref={p => (this.JWPlayer = p)}
+      style={styles.player}
+      config={config}
+      onBeforePlay={() => this.onBeforePlay()}
+      onPlay={() => this.onPlay()}
+      onPause={() => this.onPause()}
+      onIdle={() => console.log("onIdle")}
+      onPlaylistItem={event => this.onPlaylistItem(event)}
+      onSetupPlayerError={event => this.onPlayerError(event)}
+      onPlayerError={event => this.onPlayerError(event)}
+      onBuffer={() => this.onBuffer()}
+      onTime={event => this.onTime(event)}
+      onFullScreen={() => this.onFullScreen()}
+      onFullScreenExit={() => this.onFullScreenExit()}
+    />
+  </View>
 
-...
+  ...
 
-}
-```
+  }
+  ```
 
 2. Define `config.license` with your Android or iOS JWP license key.
 3. Define `config.playlist` with the media to play in the player.

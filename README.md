@@ -197,7 +197,7 @@ Follow these steps to configure the media playback experience in your app:
 
 ℹ️ See [Props](/docs/props.md) for all the available `config` prop fields.
 
-<br /><br />
+<br />
 
 ### Example Project
 
@@ -213,8 +213,8 @@ This repository contains the **Example** project. This project showcases several
 Follow these steps to run the example project:
 
 1. Checkout this repository.
-2. From the `Example` directory, run `yarn` or `npm i`.
-3. From the `Example/ios` directory, install the iOS dependencies.
+2. From the **Example** directory, run `yarn` or `npm i`.
+3. From the **Example/ios** directory, install the iOS dependencies.
    ```
    pod install
    ```
@@ -246,8 +246,6 @@ Follow these steps to run the example project:
 ### Advertising
 
 [Android](#android-advertising) | [iOS](#ios-advertising)
-
-<br />
 
 #### Android Advertising
 

@@ -198,7 +198,7 @@ Follow these steps to configure the media playback experience in your app:
 
 ### Example Project
 
-This repository contains the `Example` project. This project showcases several basic implementations of the `<JWPlayer>` view and can be used as a resource while working with the `react-native-jw-media-player` library:
+This repository contains the **Example** project. This project showcases several basic implementations of the `<JWPlayer>` view and can be used as a resource while working with the `react-native-jw-media-player` library:
 
 - Test pull requests (PRs) or modifications
 - Experiment with the available media playback features
@@ -236,7 +236,31 @@ Follow these steps to run the example project:
 
 ## Advanced Topics
 
-[Background Audio](#background-audio) | [Casting](#casting)
+[Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm)
+
+<br />
+
+### Advertising
+
+[Android](#android-advertising) | [iOS](#ios-advertising)
+
+<br />
+
+#### Android Advertising
+
+Follow this step to set up advertising with IMA or DAI:
+
+1. In the **app/build.gradle** `ext{}`, add `RNJWPlayerUseGoogleIMA = true`. This setting will add the following dependencies: `com.google.ads.interactivemedia.v3:interactivemedia:3.31.0` and `com.google.android.gms:play-services-ads-identifier:18.0.1`.
+
+<br />
+
+#### iOS Advertising
+
+Follow this step to set up advertising with IMA or DAI:
+
+1. In the **Podfile** `ext{}`, add `$RNJWPlayerUseGoogleIMA = true`. This setting will add `GoogleAds-IMA-iOS-SDK` to the pod.
+
+<br /><br />
 
 ### Background Audio
 
@@ -254,6 +278,8 @@ Follow these steps to enable background audio sessions:
 [Android](#android-casting) | [iOS](#ios-casting)
 
 JWP enables casting by default with a casting button.
+
+<br />
 
 #### Android Casting
 
@@ -312,6 +338,41 @@ typedef NS_ENUM(NSUInteger, GCKCastState) {
 };
 ```
 
+<br /><br />
+
+### DRM
+
+Enable digital rights management (DRM) protected playback.
+
+💡 Check out the **DRMExample** in the **Example** app. The **DRMExample** cannot be run in the Simulator. Additionally, the window will not show on an Android Emulator.
+
+<br />
+
+#### Android DRM
+
+Only Widevine is supported.
+
+Follow these steps to enable DRM:
+1. Set up your Android app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/android-play-drm-protected-content).
+2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
+❗️**Do not sign and store your API secerets from your application.**
+
+If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWP signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
+
+<br />
+
+#### iOS DRM
+
+Only Fairplay is supported.
+
+Follow these steps to enable DRM:
+1. Set up your iOS app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/ios-play-drm-protected-content).
+2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
+❗️**Do not sign and store your API secerets from your application.**
+
+If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWP signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
+
+<br /><br />
 
 `autoSelect`: boolean
 

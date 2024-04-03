@@ -239,7 +239,7 @@ Follow these steps to run the example project:
 
 ## Advanced Topics
 
-[Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm)
+[Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm) | [Picture in Picture (PiP)](#picture-in-picture-pip)
 
 <br />
 

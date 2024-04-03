@@ -11,8 +11,7 @@ The `react-native-jw-media-player` library is a bridge that enables using the na
 
 <img width="250" alt="sample" src="./images/1.png"> <img width="250" alt="sample" src="./images/2.png"> <img width="250" alt="sample" src="./images/3.png">
 
-
-***
+<br /><br />
 
 ## Prerequisites
 
@@ -23,7 +22,7 @@ Before installing and using the library, you need the following items:
 - Package Manager ([npm](https://nodejs.org/en/download) | [yarn](https://yarnpkg.com/getting-started/install) )
 
 
-***
+<br /><br />
 
 ## Installation
 [Android](#android) | [iOS](#ios)

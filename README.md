@@ -251,11 +251,11 @@ Follow these steps to enable background audio sessions:
 
 ### Casting
 
+[Android](#android-casting) | [iOS](#ios-casting)
+
 JWP enables casting by default with a casting button.
 
-<br />
-
-#### Android
+#### Android Casting
 
 Follow these steps to enable casting:
 
@@ -275,7 +275,7 @@ Follow these steps to enable casting:
 
 <br />
 
-#### iOS
+#### iOS Casting
 
 Follow these steps to enable casting:
 
@@ -289,8 +289,9 @@ Follow these steps to enable casting:
   'NSLocalNetworkUsageDescription' => 'We will use the local network to discover Cast-enabled devices on your WiFi network.',
   'Privacy - Local Network Usage Description' => 'We will use the local network to discover Cast-enabled devices on your WiFi network.'
   'NSMicrophoneUsageDescription' => 'We will use your Microphone for media casting.'
+  ```
 
-
+<br />
 
 ##### Available iOS Method
 

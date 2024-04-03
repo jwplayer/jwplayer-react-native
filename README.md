@@ -205,6 +205,8 @@ This repository contains the `Example` project. This project showcases several b
 - Validate your configurations in a known, working application
 - Demonstrate issues within a sanitary environment when submitting bugs
 
+<br />
+
 Follow these steps to run the example project:
 
 1. Checkout this repository.
@@ -226,16 +228,51 @@ Follow these steps to run the example project:
    yarn ios
    ```
 
+<br />
+
 ℹ️ You can also build and run the app with specific `react-native` commands.
 
 <br /><br />
 
 ## Advanced Topics
 
+[Background Audio](#background-audio)
 
-### AudioTrack
+### Background Audio
 
-Each AudioTrack object has the following keys:
+Background Audio allows your viewers to play audio while they are no longer actively using your app or have locked their device.
+
+Follow these steps to enable background audio sessions:
+
+1. Set `backgroundAudioEnabled` to `true` in the `config`.
+2. Ensure that background audio is set for [Android](https://docs.jwplayer.com/players/docs/android-enable-background-audio) or [iOS](https://docs.jwplayer.com/players/docs/ios-player-backgrounding-reference#configure-audio-playback).
+
+<br /><br />
+
+### Casting
+
+JWP enables casting by default with a casting button.
+
+
+#### Android
+
+Follow these steps to enable casting:
+
+1. In **app/build.gradle** in `ext{}`, add `RNJWPlayerUseGoogleCast = true`.
+2. In **app/build.gradle**, add `com.google.android.gms:play-services-cast-framework:21.3.0`.
+3. Create a class that overrides `OptionsProvider` in your Android codebase:
+   1. See the reference file **android/src/main/java/com/appgoalz/rnjwplayer/CastOptionsProvider.java**.
+   2. Replace `.setTargetActivityClassName(RNJWPlayerView.class.getName())` with your player Activity.
+   3. Modify the file with any options necessary for your use case.
+4. Add the `meta-data` to your **AndroidManifest.xml**.
+
+   ```xml
+    <meta-data
+        android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+        android:value="path.to.CastOptionsProvider" />
+   ```
+
+
 
 `autoSelect`: boolean
 

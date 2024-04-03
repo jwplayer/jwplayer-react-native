@@ -4,10 +4,10 @@ This wrapper implements the native methods exposed by the [Android](https://sdk.
 
 | Prop | Type | Description | Default |
 | --- | --- | --- | --- |
-| `config` | Object | **(REQUIRED)** `JWConfig` object, see: [Config](#config) | `undefined` |
+| `config` | Object | **(REQUIRED)** `JWConfig` object<br /><br />See: [Config](#config) | `undefined` |
 | `controls` | Boolean | Determines if player controls are displayed | `true` |
 
-
+<br /><br />
 
 ## Config
 With the exception of `license` and `playlist`, all other fields are optional.

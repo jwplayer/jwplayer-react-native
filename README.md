@@ -355,8 +355,8 @@ Only Widevine is supported.
 
 Follow these steps to enable DRM:
 1. Set up your Android app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/android-play-drm-protected-content).
-2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
-❗️**Do not sign and store your API secerets from your application.**
+2. Define `config.file` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
+   ❗️**Do not sign and store your API secerets from your application.**
 
 If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWP signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
 
@@ -369,11 +369,13 @@ Only Fairplay is supported.
 Follow these steps to enable DRM:
 1. Set up your iOS app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/ios-play-drm-protected-content).
 2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
-❗️**Do not sign and store your API secerets from your application.**
+   ❗️**Do not sign and store your API secerets from your application.**
 
 If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWP signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
 
 <br /><br />
+
+### Picture in Picture (PiP)
 
 `autoSelect`: boolean
 

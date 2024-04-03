@@ -290,6 +290,8 @@ Follow these steps to enable casting:
   'Privacy - Local Network Usage Description' => 'We will use the local network to discover Cast-enabled devices on your WiFi network.'
   'NSMicrophoneUsageDescription' => 'We will use your Microphone for media casting.'
 
+
+
 ##### Available iOS Method
 
 `castState(GCKCastState)`

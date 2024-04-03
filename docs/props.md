@@ -5,14 +5,13 @@ This wrapper implements the native methods exposed by the [Android](https://sdk.
 
 | Field | Type | Platform |  Additional Notes |
 | --- | --- | --- | --- |
-| <a href="https://docs.jwplayer.com/players/reference/setup-options#autostart" target="_blank">`autostart`</a> | boolean | A, I | |
-| `forceLegacyConfig`                                                                                           | boolean | A, I | Determines whether to use the legacy configuration settings |
-| <a href="https://docs.jwplayer.com/players/reference/setup-options#mute" target="_blank">`mute`</a>           | boolean | A, I | |
-| `pid`                                                                                                         | string  | A, I | Unique identifier of the player |
-| `useTextureView`                                                                                              | boolean | A | |
+| [`autostart`](https://docs.jwplayer.com/players/reference/setup-options#autostart)       | boolean | A, I |                                                             |
+| `forceLegacyConfig`                                                                      | boolean | A, I | Determines whether to use the legacy configuration settings |
+| [`mute`](https://docs.jwplayer.com/players/reference/setup-options#mute)</a>             | boolean | A, I |                                                             |
+| [`nextupoffset`](https://docs.jwplayer.com/players/reference/setup-options#nextupoffset) | string &#124; number | A, I |
+| `pid`                                                                                    | string  | A, I | Unique identifier of the player                             |
+| `useTextureView`                                                                         | boolean | A    |                                                             |
 
-
-|nextupoffset                      |                   |string &#124; number|TRUE    |                 |
 |repeat                            |                   |boolean|TRUE    |                 |
 |allowCrossProtocolRedirectsSupport|                   |boolean|TRUE    |A                |
 |displaytitle                      |                   |boolean|TRUE    |                 |

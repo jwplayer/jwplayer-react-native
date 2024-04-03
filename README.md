@@ -68,61 +68,15 @@ Follow these steps to add the library to your iOS project:
    pod install
    ```
 
-
-
-## Getting started
-
-`npm i react-native-jw-media-player --save`
-
-### Mostly automatic installation
-
-For iOS you have to run `cd ios/` && `pod install`.
-
-For Android the package is automatically linked.
-
-### Important
-
-This **README** is for `react-native-jw-media-player` version `0.2.0` and higher, for previous version check out the [Old README](./Pre.0.2.0_README.md).
-
-Since version `0.2.0` we use the new JWPlayerKit && SDK 4 check out [iOS get started](https://developer.jwplayer.com/jwplayer/docs/ios-get-started) && [Android get started](https://developer.jwplayer.com/jwplayer/docs/android-get-started)
-
-##### Android dependencies
-
-Insert the following lines inside the allProjects.dependencies block in `android/build.gradle`:
-
-```
-maven{
-    url 'https://mvn.jwplayer.com/content/repositories/releases/'
-}
-```
-
-As so
-
-```
-allprojects {
-    repositories {
-        mavenLocal()
-        maven {
-            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-            url("$rootDir/../node_modules/react-native/android")
-        }
-        maven {
-            // Android JSC is installed from npm
-            url("$rootDir/../node_modules/jsc-android/dist")
-        }
-
-        google()
-        jcenter()
-        maven { url 'https://jitpack.io' }
-        // Add these lines
-        maven{
-            url 'https://mvn.jwplayer.com/content/repositories/releases/'
-        }
-    }
-}
-```
+<br /><br />
 
 ## Usage
+
+The following example shows how you can enhance your React Native application by seamlessly integrating the multimedia playback functionalities of the JWP mobile SDKs.
+
+Follow these steps to configure the media playback experience in your app:
+
+1. Use the following example as a guide to configure the media playback experience. Be sure to remove all instances of `...` from the code.
 
 ```javascript
 ...
@@ -230,15 +184,43 @@ render() {
 }
 ```
 
-## Run example project
+2. Define `config.license` with your Android or iOS JWP license key.
+3. Define `config.playlist` with the media to play in the player.
+4. (Optional) Define the other values of the `config` prop.
 
-Running the example project:
+<br /><br />
+
+### Example Project
+
+This repository contains the `Example` project. This project showcases several basic implementations of the `<JWPlayer>` view and can be used as a resource while working with the `react-native-jw-media-player` library:
+
+- Test pull requests (PRs) or modifications
+- Experiment with the available media playback features
+- Validate your configurations in a known, working application
+- Demonstrate issues within a sanitary environment when submitting bugs
+
+Follow these steps to run the example project:
 
 1. Checkout this repository.
-2. Go to `Example` directory and run `yarn` or `npm i`
-3. Go to `Example/ios` and install Pods with `pod install`
-4. Open `RNJWPlayer.xcworkspace` with XCode.
-5. Add your JW SDK license in `App.js` under the `config `prop.
+2. From the `Example` directory, run `yarn` or `npm i`.
+3. From the `Example/ios` directory, install the iOS dependencies.
+   ```
+   pod install
+   ```
+4. In Xcode,open **RNJWPlayer.xcworkspace**.
+5. In **App.js**, within the `config` prop, add your JWP SDK license key.
+6. Build and run the app for your preferred platform.
+   ```
+   yarn android
+   ```
+
+   OR
+
+   ```
+   yarn ios
+   ```
+
+ℹ️ You can also build and run the app with specific `react-native` commands.
 
 ## Available props
 

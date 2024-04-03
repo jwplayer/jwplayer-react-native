@@ -10,6 +10,8 @@ This wrapper implements the native methods exposed by the [Android](https://sdk.
 | **forceLegacyConfig** boolean | Determines whether to use the legacy configuration settings | A, I |
 | **useTextureView** boolean | |A |
 | <a href="<a href="https://docs.jwplayer.com/players/reference/setup-options#autostart" target="_blank">autostart</a> boolean | A, I |
+
+
 |nextupoffset                      |                   |string &#124; number|TRUE    |                 |
 |repeat                            |                   |boolean|TRUE    |                 |
 |allowCrossProtocolRedirectsSupport|                   |boolean|TRUE    |A                |
@@ -29,6 +31,7 @@ This wrapper implements the native methods exposed by the [Android](https://sdk.
 |playbackRates                     |                   |number[ ]|TRUE    |                 |
 |playbackRateControls              |                   |boolean|TRUE    |                 |
 |license                           |non-jw json        |string|FALSE   |                 |
+
 
 
 |Field                             |Description        |Type|Optional|Platform Specific|

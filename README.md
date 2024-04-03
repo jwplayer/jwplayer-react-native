@@ -279,7 +279,7 @@ Follow these steps to enable casting:
 
 Follow these steps to enable casting:
 
-1. [Enable casting to Chromecast devices](https://docs.jwplayer.com/players/docs/ios-enable-casting-to-chromecast-devices).'
+1. [Enable casting to Chromecast devices](https://docs.jwplayer.com/players/docs/ios-enable-casting-to-chromecast-devices).
 2. Add `$RNJWPlayerUseGoogleCast = true` to your **Podfile**. This setting will install `google-cast-sdk` pod.
 3. Edit **Info.plist** with the following values.
 

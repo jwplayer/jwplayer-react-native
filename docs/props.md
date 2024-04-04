@@ -14,31 +14,30 @@ With the exception of `license` and `playlist`, all other fields are optional.
 
 | Field | Type | Platform |  Additional Notes |
 | --- | --- | --- | --- |
+| `license`                                                                                | string |A, I | **REQUIRED** Platform-specific license key ([Android](https://docs.jwplayer.com/players/docs/android-overview#requirements) \| [iOS](https://docs.jwplayer.com/players/docs/ios-overview#requirements))|
+| [`playlist`](https://docs.jwplayer.com/players/reference/setup-options#playlist)         | JwPlaylistItem[ ] &#124; string | A, I | **REQUIRED** |
+| [`advertising`](https://docs.jwplayer.com/players/reference/advertising-config-ref)                                                                            |JwAdvertisingConfig | A, I | |
 | `allowCrossProtocolRedirectsSupport`                                                     | boolean | A    | |
 | [`autostart`](https://docs.jwplayer.com/players/reference/setup-options#autostart)       | boolean | A, I | |
 | [`displaydescription`](https://docs.jwplayer.com/players/reference/setup-options#displaydescription) | boolean| A, I | |
 | [`displaytitle`](https://docs.jwplayer.com/players/reference/setup-options#displaytitle) | boolean | A    | |
+| [`file`](https://docs.jwplayer.com/players/reference/playlists#file)                     | string  | A, I | |
 | `forceLegacyConfig`                                                                      | boolean | A, I | Determines whether to use the legacy configuration settings |
+| `logoView`                                                                               | JwLogoView | A, I | |
 | [`mute`](https://docs.jwplayer.com/players/reference/setup-options#mute)                 | boolean | A, I | |
 | [`nextupoffset`](https://docs.jwplayer.com/players/reference/setup-options#nextupoffset) | string &#124; number | A, I | |
 | `pid`                                                                                    | string  | A, I | Unique identifier of the player |
-| [`playlist`](https://docs.jwplayer.com/players/reference/setup-options#playlist)         | JwPlaylistItem[ ] &#124; string | A, I | |
+| [`playbackRateControls`](https://docs.jwplayer.com/players/reference/setup-options#playbackratecontrols) | boolean | A, I | |
+| [`playbackRates`](https://docs.jwplayer.com/players/reference/setup-options#playbackrates)|number[ ] | A, I | |
+| [`playlistIndex`](https://docs.jwplayer.com/players/reference/setup-options#playlistIndex) | number | A, I | |
 | [`preload`](https://docs.jwplayer.com/players/reference/setup-options#preload)           | boolean | A, I | |
+| [`related`](https://docs.jwplayer.com/players/reference/related-config-ref)              | JwRelatedConfig | A, I | |
 | [`repeat`](https://docs.jwplayer.com/players/reference/setup-options#repeat) | boolean | A, I | |
+| [`sources`](https://docs.jwplayer.com/players/reference/playlists#playlistsources)       | JwSource[ ] | A, I | |
 | [`stretching`](https://docs.jwplayer.com/players/reference/setup-options#stretching)     | JwStretching | A, I | |
 | `thumbnailPreview`                                                                       | JwThumbnailPreview| A, I | |
+| `uiConfig`                                                                               | JwUiConfig | A, I | |
 | `useTextureView`                                                                         | boolean | A    | |
-
-|sources                           |                   |JwSource[ ]|TRUE    |                 |
-|file                              |                   |string|TRUE    |                 |
-|playlistIndex                     |                   |number|TRUE    |                 |
-|related                           |                   |JwRelatedConfig|TRUE    |                 |
-|uiConfig                          |                   |JwUiConfig|TRUE    |                 |
-|logoView                          |                   |JwLogoView|TRUE    |                 |
-|advertising                       |                   |JwAdvertisingConfig|TRUE    |                 |
-|playbackRates                     |                   |number[ ]|TRUE    |                 |
-|playbackRateControls              |                   |boolean|TRUE    |                 |
-|license                           |non-jw json        |string|FALSE   |                 |
 
 
 

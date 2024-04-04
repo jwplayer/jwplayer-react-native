@@ -1,7 +1,6 @@
 # jwplayer-react-native
 
-[![Version](https://img.shields.io/badge/Version-1.0.0-blue?style=flat&color=blue)](https://github.com/jwplayer/jwplayer-react-native)
-[![NPM version](https://img.shields.io/npm/v/%40jwplayer%2Fjwplayer-react-native)](https://www.npmjs.com/package/@jwplayer/jwplayer-react-native)
+[![Version](/badges/version.svg)](https://github.com/jwplayer/jwplayer-react-native) [![NPM version](https://img.shields.io/npm/v/%40jwplayer%2Fjwplayer-react-native)](https://www.npmjs.com/package/@jwplayer/jwplayer-react-native) [![License](/badges/license.svg)](/LICENSE)
 
 ⚠️ This **README** is for `jwplayer-react-native` version `1.0.0` and higher, for previous versions from the original author, [Chaim Paneth](https://github.com/chaimPaneth) via [Orthodox Union](https://www.ou.org/), see [react-native-jw-media-player](https://github.com/chaimPaneth/react-native-jw-media-player). Beginning with version `0.2.0`, this library uses [JWP's `JWPlayerKit ` (iOS)]((https://developer.jwplayer.com/jwplayer/docs/ios-get-started)) and [SDK 4 (Android)]((https://developer.jwplayer.com/jwplayer/docs/android-get-started)).
 

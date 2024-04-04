@@ -17,8 +17,8 @@ declare module "jwplayer-react-native" {
     thumbnailPreview?: JwThumbnailPreview;
     preload?: boolean;
     playlist?: JwPlaylistItem[] | string;
-    sources?: JwSource[]; // Can be used in place of `playlist` to build a playlist, but not recommended
-    file?: string; // Can be used in place of `playlist` to build a playlist, but not recommended
+    sources?: JwSource[]; // Can be used in place of `playlist` to build a playlist, but not recommended (cannot be used for DRM)
+    file?: string; // Can be used in place of `playlist` to build a playlist, but not recommended (cannot be used for DRM)
     playlistIndex?: number;
     related?: JwRelatedConfig;
     uiConfig?: JwUiConfig;

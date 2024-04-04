@@ -12,6 +12,8 @@ This wrapper implements the native methods exposed by the [Android](https://sdk.
 ## Config
 With the exception of `license` and `playlist`, all other fields are optional.
 
+See [`types`](./types.md) for a definition of config types defined below
+
 | Field | Type | Platform |  Additional Notes |
 | --- | --- | --- | --- |
 | `license`                                                                                | string |A, I | **(REQUIRED)** Platform-specific license key<br />([Android](https://docs.jwplayer.com/players/docs/android-overview#requirements) \| [iOS](https://docs.jwplayer.com/players/docs/ios-overview#requirements))|

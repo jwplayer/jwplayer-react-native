@@ -108,14 +108,11 @@ Follow these steps to configure the media playback experience in your app:
     description: 'My beautiful track',
     startTime: 0,
     file: 'http://file.com/file.mp3',
-    autostart: true,
-    repeat: false,
-    displayDescription: true,
-    displayTitle: true,
     tracks: [
       {
         file: 'http://file.com/english.vtt',
-        label: 'en'
+        label: 'en',
+        default: true
       },
       {
         file: 'http://file.com/spanish.srt',
@@ -197,6 +194,7 @@ Follow these steps to configure the media playback experience in your app:
 <br />
 
 ℹ️ See [Props](/docs/props.md) for all the available `config` prop fields.
+
 ℹ️ See [Legacy Readme](/docs/legacy_readme.md) for all the available `config` prop fields when using a legacy configuration.
 
 <br />

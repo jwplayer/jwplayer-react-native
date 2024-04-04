@@ -22,14 +22,13 @@ With the exception of `license` and `playlist`, all other fields are optional.
 | [`mute`](https://docs.jwplayer.com/players/reference/setup-options#mute)                 | boolean | A, I | |
 | [`nextupoffset`](https://docs.jwplayer.com/players/reference/setup-options#nextupoffset) | string &#124; number | A, I | |
 | `pid`                                                                                    | string  | A, I | Unique identifier of the player |
+| [`playlist`](https://docs.jwplayer.com/players/reference/setup-options#playlist)         | JwPlaylistItem[ ] &#124; string | A, I | |
 | [`preload`](https://docs.jwplayer.com/players/reference/setup-options#preload)           | boolean | A, I | |
 | [`repeat`](https://docs.jwplayer.com/players/reference/setup-options#repeat) | boolean | A, I | |
 | [`stretching`](https://docs.jwplayer.com/players/reference/setup-options#stretching)     | JwStretching | A, I | |
 | `thumbnailPreview`                                                                       | JwThumbnailPreview| A, I | |
 | `useTextureView`                                                                         | boolean | A    | |
 
-
-|playlist                          |                   |JwPlaylistItem[ ] &#124; string|TRUE    |                 |
 |sources                           |                   |JwSource[ ]|TRUE    |                 |
 |file                              |                   |string|TRUE    |                 |
 |playlistIndex                     |                   |number|TRUE    |                 |

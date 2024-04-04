@@ -38,7 +38,7 @@ export default () => {
   return (
     <PlayerContainer
       children={renderPlayer()}
-      text="Welcome to react-native-jw-media-player"
+      text="Welcome to jwplayer-react-native"
     />
   );
 };

@@ -1,10 +1,10 @@
-import React, {useRef, useEffect, useState} from 'react';
-import {Text, StyleSheet} from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { Text, StyleSheet, Platform } from 'react-native';
 import Player from '../components/Player';
 import PlayerContainer from '../components/PlayerContainer';
 
 /* utils */
-import RNFS from 'react-native-fs';
+var RNFS = require('react-native-fs');
 
 export default () => {
   const playerRef = useRef([]);
@@ -15,16 +15,22 @@ export default () => {
   }, []);
 
   const getLocalFile = async () => {
-    const data = await RNFS.readDir(RNFS.MainBundlePath);
-    const local = data?.find(file => file.name === 'local_file.mp4')?.path;
-    setLocalFile('file://' + local);
+    if (Platform.OS === 'ios') {
+      const data = await RNFS.readDir(RNFS.MainBundlePath)
+      const local = data?.find(file => file.name === 'local_file.mp4')?.path;
+      setLocalFile('file://' + local);
+    } else {
+      const data = await RNFS.readDirAssets('');
+      const local = data?.find(file => file.name == 'local_file.mp4')?.path;
+      setLocalFile('asset:///' + local);
+    }
   };
 
   const renderPlayer = () => {
     return localFile ? (
       <Player
         ref={playerRef}
-        style={{flex: 1}}
+        style={{ flex: 1 }}
         config={{
           autostart: true,
           playlist: [
@@ -45,7 +51,7 @@ export default () => {
   return (
     <PlayerContainer
       children={renderPlayer()}
-      text="Welcome to react-native-jw-media-player"
+      text="Welcome to jwplayer-react-native"
     />
   );
 };

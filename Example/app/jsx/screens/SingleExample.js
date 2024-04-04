@@ -20,6 +20,28 @@ export default () => {
     StatusBar.setHidden(false);
   };
 
+  let jwConfig = {
+    "title": "Single Inline Linear Preroll",
+    "playlist": [
+      {
+        "title": "Single Inline Linear Preroll",
+        "file": "https://content.bitsontherun.com/videos/q1fx20VZ-52qL9xLP.mp4",
+        "adschedule": {
+          "adBreak1": {
+            "offset": "pre",
+            "ad": {
+              "source": "googima",
+              "tag": "https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator="
+            }
+          }
+        }
+      }
+    ],
+    "advertising": {
+      "client": "googima"
+    }
+  }
+
   const renderPlayer = () => {
     return (
       <Player
@@ -27,15 +49,10 @@ export default () => {
         style={{flex: 1}}
         config={{
           autostart: true,
-          playlist: [
-            {
-              file: 'https://playertest.longtailvideo.com/adaptive/oceans/oceans.m3u8',
-              image: 'https://d3el35u4qe4frz.cloudfront.net/bkaovAYt-480.jpg',
-            },
-          ],
           styling: {
             colors: {},
           },
+          ...jwConfig
         }}
         onTime={onTime}
         onFullScreen={onFullScreen}
@@ -47,7 +64,7 @@ export default () => {
   return (
     <PlayerContainer
       children={renderPlayer()}
-      text="Welcome to react-native-jw-media-player"
+      text="Welcome to jwplayer-react-native"
     />
   );
 };

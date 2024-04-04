@@ -13,7 +13,7 @@
 #import "RNBootSplash.h"
 #import <GoogleCast/GoogleCast.h>
 
-static NSString *const kReceiverAppID = @"RNJWPlayer";
+static NSString *const kReceiverAppID = @"CC1AD845";
 
 #if RCT_NEW_ARCH_ENABLED
 #import <React/CoreModulesPlugins.h>

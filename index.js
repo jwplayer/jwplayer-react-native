@@ -169,9 +169,11 @@ const advertisingPropTypes = PropTypes.oneOfType([
 ]);
 
 export default class JWPlayer extends Component {
+	// [TODO] -- Match the JwConfig type from index.d.ts as oneOfType
 	static propTypes = {
 		config: PropTypes.shape({
 			license: PropTypes.string.isRequired,
+			forceLegacyConfig: PropTypes.bool,
 			backgroundAudioEnabled: PropTypes.bool,
 			category: PropTypes.oneOf([
 				'Ambient',
@@ -210,7 +212,7 @@ export default class JWPlayer extends Component {
 			controls: PropTypes.bool,
 			repeat: PropTypes.bool,
 			preload: PropTypes.oneOf(['auto', 'none']),
-			playlist: PropTypes.arrayOf(
+			playlist: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(
 				PropTypes.shape({
 					file: PropTypes.string,
 					sources: PropTypes.arrayOf(
@@ -241,7 +243,7 @@ export default class JWPlayer extends Component {
 					adVmap: PropTypes.string,
 					startTime: PropTypes.number,
 				})
-			),
+			)]),
 			advertising: advertisingPropTypes,
 
 			// controller only

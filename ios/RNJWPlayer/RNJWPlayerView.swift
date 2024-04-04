@@ -277,10 +277,8 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func setNewConfig(config: [String : Any]) {
-//        let data:Data! = try? JSONSerialization.data(withJSONObject: config, options:.prettyPrinted)
-//        let c = try? JSONDecoder().decode(Config.self, from: data)
-//
-//        let jwConfig = try? Config(config)
+        let data:Data! = try? JSONSerialization.data(withJSONObject: config, options:.prettyPrinted)
+        let jwConfig = try? JWJSONParser.configFromJSON(data)
         
         currentConfig = config
 
@@ -309,9 +307,17 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
             do {
                 let viewOnly = config["viewOnly"] as? Bool
                 if viewOnly == true {
-                    self.setupPlayerView(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
+                    if jwConfig != nil{
+                        self.setupPlayerView(config: config, playerConfig: jwConfig!)
+                    } else {
+                        self.setupPlayerView(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
+                    }
                 } else {
-                    self.setupPlayerViewController(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
+                    if jwConfig != nil{
+                        self.setupPlayerViewController(config: config, playerConfig: jwConfig!)
+                    } else {
+                        self.setupPlayerViewController(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
+                    }
                 }
             } catch {
                 print(error)
@@ -513,6 +519,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
             }
         }
 
+        // TODO this was broken when using `.playlist(string)`
         do {
             let skinStyling = try skinStylingBuilder.build()
             DispatchQueue.main.async { [self] in

@@ -379,6 +379,20 @@ If you use a different provider for DRM or this does not work for your use case,
 
 ### Picture in Picture (PiP)
 
+#### Android PiP
 
+1. Read and understand the requirements for PiP in the Android SDK.
+2. In the activity where the player is embedded, add the following code.
+   ```java
+   @Override
+   public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+    super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+
+    Intent intent = new Intent("onPictureInPictureModeChanged");
+    intent.putExtra("isInPictureInPictureMode", isInPictureInPictureMode);
+    intent.putExtra("newConfig", newConfig);
+    this.sendBroadcast(intent);
+   }
+   ```
 
 #### [CHANGELOG](https://github.com/chaimPaneth/react-native-jw-media-player/releases)

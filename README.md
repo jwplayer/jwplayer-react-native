@@ -379,6 +379,8 @@ If you use a different provider for DRM or this does not work for your use case,
 
 ### Picture in Picture (PiP)
 
+[Android](#android-pip) | [iOS](#ios-pip)
+
 #### Android PiP
 
 1. Read and understand the requirements for PiP in the [Android SDK](https://docs.jwplayer.com/players/docs/android-invoke-picture-in-picture-playback).
@@ -394,6 +396,8 @@ If you use a different provider for DRM or this does not work for your use case,
     this.sendBroadcast(intent);
    }
    ```
+
+<br />
 
 #### iOS PiP
 

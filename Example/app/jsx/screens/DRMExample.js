@@ -6,11 +6,13 @@ import PlayerContainer from '../components/PlayerContainer';
 
 export default () => {
   const playerRef = useRef([]);
-  const [isEmulator, setIsEmulator] = useState(false);
+  const [isEmulator, setIsEmulator] = useState(true); // force true for potential race condition
 
   /**
    * `jwSignedConfigPlaylist` is an example of the return for a JW Platform signed URL as
    * described here https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback
+   * 
+   * ** I do not currently work with iOS, use legacy example **
    * 
    * For the legacy examples, see `renderIOSPlayer` and `renderAndroidPlayer`
    */
@@ -55,7 +57,6 @@ export default () => {
     const EZDRMCertificateEndpoint =
       'https://fps.ezdrm.com/demo/video/eleisure.cer';
     const EZDRMVideoEndpoint = 'https://fps.ezdrm.com/demo/video/ezdrm.m3u8';
-
     return (
       <Player
         ref={playerRef}
@@ -147,11 +148,13 @@ export default () => {
             </Text>
             {' link to run on a real device.'}
           </Text>
+        ) : Platform.OS === 'ios' ? (
+          renderIOSPlayer() // enforce legacy for now
         ) : (
-          renderPlayer()
+          renderAndroidPlayer()
         )
       }
-      text="Welcome to jwplayer-react-native"
+      text="Welcome to react-native-jw-media-player"
     />
   );
 };

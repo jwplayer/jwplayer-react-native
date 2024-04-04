@@ -16,18 +16,19 @@ With the exception of `license` and `playlist`, all other fields are optional.
 | --- | --- | --- | --- |
 | `allowCrossProtocolRedirectsSupport`                                                     | boolean | A    | |
 | [`autostart`](https://docs.jwplayer.com/players/reference/setup-options#autostart)       | boolean | A, I | |
+| [`displaydescription`](https://docs.jwplayer.com/players/reference/setup-options#displaydescription) | boolean| A, I | |
+| [`displaytitle`](https://docs.jwplayer.com/players/reference/setup-options#displaytitle) | boolean | A    | |
 | `forceLegacyConfig`                                                                      | boolean | A, I | Determines whether to use the legacy configuration settings |
 | [`mute`](https://docs.jwplayer.com/players/reference/setup-options#mute)                 | boolean | A, I | |
 | [`nextupoffset`](https://docs.jwplayer.com/players/reference/setup-options#nextupoffset) | string &#124; number | A, I | |
 | `pid`                                                                                    | string  | A, I | Unique identifier of the player |
+| [`preload`](https://docs.jwplayer.com/players/reference/setup-options#preload)           | boolean | A, I | |
 | [`repeat`](https://docs.jwplayer.com/players/reference/setup-options#repeat) | boolean | A, I | |
+| [`stretching`](https://docs.jwplayer.com/players/reference/setup-options#stretching)     | JwStretching | A, I | |
+| `thumbnailPreview`                                                                       | JwThumbnailPreview| A, I | |
 | `useTextureView`                                                                         | boolean | A    | |
 
-|displaytitle                      |                   |boolean|TRUE    |                 |
-|displaydescription                |                   |boolean|TRUE    |                 |
-|stretching                        |                   |JwStretching|TRUE    |                 |
-|thumbnailPreview                  |                   |JwThumbnailPreview|TRUE    |                 |
-|preload                           |                   |boolean|TRUE    |                 |
+
 |playlist                          |                   |JwPlaylistItem[ ] &#124; string|TRUE    |                 |
 |sources                           |                   |JwSource[ ]|TRUE    |                 |
 |file                              |                   |string|TRUE    |                 |

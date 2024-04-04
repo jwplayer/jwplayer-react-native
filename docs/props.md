@@ -14,15 +14,15 @@ With the exception of `license` and `playlist`, all other fields are optional.
 
 | Field | Type | Platform |  Additional Notes |
 | --- | --- | --- | --- |
-| [`autostart`](https://docs.jwplayer.com/players/reference/setup-options#autostart)       | boolean | A, I |                                                             |
+| `allowCrossProtocolRedirectsSupport`                                                     | boolean | A    | |
+| [`autostart`](https://docs.jwplayer.com/players/reference/setup-options#autostart)       | boolean | A, I | |
 | `forceLegacyConfig`                                                                      | boolean | A, I | Determines whether to use the legacy configuration settings |
-| [`mute`](https://docs.jwplayer.com/players/reference/setup-options#mute)</a>             | boolean | A, I |                                                             |
-| [`nextupoffset`](https://docs.jwplayer.com/players/reference/setup-options#nextupoffset) | string &#124; number | A, I |
-| `pid`                                                                                    | string  | A, I | Unique identifier of the player                             |
-| `useTextureView`                                                                         | boolean | A    |                                                             |
+| [`mute`](https://docs.jwplayer.com/players/reference/setup-options#mute)                 | boolean | A, I | |
+| [`nextupoffset`](https://docs.jwplayer.com/players/reference/setup-options#nextupoffset) | string &#124; number | A, I | |
+| `pid`                                                                                    | string  | A, I | Unique identifier of the player |
+| [`repeat`](https://docs.jwplayer.com/players/reference/setup-options#repeat) | boolean | A, I | |
+| `useTextureView`                                                                         | boolean | A    | |
 
-|repeat                            |                   |boolean|TRUE    |                 |
-|allowCrossProtocolRedirectsSupport|                   |boolean|TRUE    |A                |
 |displaytitle                      |                   |boolean|TRUE    |                 |
 |displaydescription                |                   |boolean|TRUE    |                 |
 |stretching                        |                   |JwStretching|TRUE    |                 |

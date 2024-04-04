@@ -398,8 +398,8 @@ If you use a different provider for DRM or this does not work for your use case,
 #### iOS PiP
 
 1. Read and understand the requirements for PiP in the [iOS SDK](https://docs.jwplayer.com/players/docs/ios-invoke-picture-in-picture-playback). PiP mode is enabled by JWP for the `PlayerViewController`.
-2. (`viewOnly:true` only) Set the `pipEnabled` prop to `true`.
-3. (`viewOnly:true` only ) Call `togglePIP()` to enable or disable PiP.
+2. (viewOnly:true only) Set the `pipEnabled` prop to `true`.
+3. (viewOnly:true only) Call `togglePIP()` to enable or disable PiP.
 
 
 

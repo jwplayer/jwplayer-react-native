@@ -1,8 +1,9 @@
-# react-native-jw-media-player
+# jwplayer-react-native
 
-<img src="https://img.shields.io/badge/Version-1.0.0-blue?style=flat&color=blue />
+[![Version](https://img.shields.io/badge/Version-1.0.0-blue?style=flat&color=blue)](https://github.com/jwplayer/jwplayer-react-native)
+[![NPM version](https://img.shields.io/npm/v/%40jwplayer%2Fjwplayer-react-native)](https://www.npmjs.com/package/@jwplayer/jwplayer-react-native)
 
-⚠️ This **README** is for `react-native-jw-media-player` version `0.2.0` and higher, for previous version check out the [Old README](./Pre.0.2.0_README.md). Beginning with version `0.2.0`, this library uses [JWP's `JWPlayerKit ` (iOS)]((https://developer.jwplayer.com/jwplayer/docs/ios-get-started)) and [SDK 4 (Android)]((https://developer.jwplayer.com/jwplayer/docs/android-get-started)).
+⚠️ This **README** is for `jwplayer-react-native` version `1.0.0` and higher, for previous versions from the original author, [Chaim Paneth](https://github.com/chaimPaneth) via [Orthodox Union](https://www.ou.org/), see [react-native-jw-media-player](https://github.com/chaimPaneth/react-native-jw-media-player). Beginning with version `0.2.0`, this library uses [JWP's `JWPlayerKit ` (iOS)]((https://developer.jwplayer.com/jwplayer/docs/ios-get-started)) and [SDK 4 (Android)]((https://developer.jwplayer.com/jwplayer/docs/android-get-started)).
 
 <br />
 
@@ -10,7 +11,7 @@
 
 <br />
 
-The `react-native-jw-media-player` library is a bridge that enables using the native JWP Android and iOS SDKs in React Native applications.
+The `jwplayer-react-native` library is a bridge that enables using the native JWP Android and iOS SDKs in React Native applications.
 
 <img width="200" alt="sample" src="./images/1.png"> <img width="200" alt="sample" src="./images/2.png"> <img width="200" alt="sample" src="./images/3.png">
 
@@ -85,7 +86,7 @@ Follow these steps to configure the media playback experience in your app:
   ```javascript
   ...
 
-  import JWPlayer, { JWPlayerState } from 'react-native-jw-media-player';
+  import JWPlayer, { JWPlayerState } from '@jwplayer/jwplayer-react-native';
 
   ...
 
@@ -196,12 +197,13 @@ Follow these steps to configure the media playback experience in your app:
 <br />
 
 ℹ️ See [Props](/docs/props.md) for all the available `config` prop fields.
+ℹ️ See [Legacy Readme](/docs/legacy_readme.md) for all the available `config` prop fields when using a legacy configuration.
 
 <br />
 
 ### Example Project
 
-This repository contains the **Example** project. This project showcases several basic implementations of the `<JWPlayer>` view and can be used as a resource while working with the `react-native-jw-media-player` library:
+This repository contains the **Example** project. This project showcases several basic implementations of the `<JWPlayer>` view and can be used as a resource while working with the `jwplayer-react-native` library:
 
 - Test pull requests (PRs) or modifications
 - Experiment with the available media playback features
@@ -409,17 +411,16 @@ If you use a different provider for DRM or this does not work for your use case,
 
 ## Contributing
 
-- Boiler plate about contributing to an OSS project.
-- Expectations (need help) are for work for all, not just for you
-   - Code shouldn't be a one-off solution for your use case
-- PRs should coorelate to an open Issue unless there's a good reason (we don't want phantom PRs appearing changing the wheel if it's not required)
-- Keep work small as required. Large PRs aren't fun for anyone
+- All contributions should correlate to an open issue. We hope to avoid doubling the work between contributors. 
+- Changes shouldn't be a one-off solution for your use case.
+- Keep work small as required. Large PRs aren't fun for anyone and will take longer to review.
 
 <br /><br />
 
 ## Issues
 
-- Follow format for Bugs/Features/Questions.
-- Provide as much information as possible
-- For quickest support, reach out to JW support via __ after creating an issue on this repo. (Yet to be confirmed as an ok path with Support, but imo this is ideal)
+- Follow the format for Bugs/Features/Questions.
 - If submitting a bug, always attempt to recreate the issue in our Example app
+- Provide as much relevant information as possible
+- For the quickest support, reach out to JW support via this [link](https://support.jwplayer.com/hc/en-us/requests/new) after creating an issue on this repo. Providing the `Issue` number and additional, potentially proprietary/sensitive information. 
+

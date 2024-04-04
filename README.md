@@ -6,7 +6,7 @@
 
 <br />
 
-[Prerequisites](#prerequisites) | [Installation](#installation) | [Usage](#usage) | [Advanced Topics](#advanced-topics)
+[Prerequisites](#prerequisites) | [Installation](#installation) | [Usage](#usage) | [Advanced Topics](#advanced-topics) | [Contributing](#contributing) | [Issues](#issues)
 
 <br />
 
@@ -407,6 +407,19 @@ If you use a different provider for DRM or this does not work for your use case,
 
 <br /><br />
 
-## Contributions
+## Contributing
 
-#### [CHANGELOG](https://github.com/chaimPaneth/react-native-jw-media-player/releases)
+- Boiler plate about contributing to an OSS project.
+- Expectations (need help) are for work for all, not just for you
+   - Code shouldn't be a one-off solution for your use case
+- PRs should coorelate to an open Issue unless there's a good reason (we don't want phantom PRs appearing changing the wheel if it's not required)
+- Keep work small as required. Large PRs aren't fun for anyone
+
+<br /><br />
+
+## Issues
+
+- Follow format for Bugs/Features/Questions.
+- Provide as much information as possible
+- For quickest support, reach out to JW support via __ after creating an issue on this repo. (Yet to be confirmed as an ok path with Support, but imo this is ideal)
+- If submitting a bug, always attempt to recreate the issue in our Example app

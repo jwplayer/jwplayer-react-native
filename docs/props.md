@@ -2,10 +2,10 @@
 
 This wrapper implements the native methods exposed by the [Android](https://sdk.jwplayer.com/android/v4/reference/com/jwplayer/pub/api/JsonHelper.html) and [iOS](https://sdk.jwplayer.com/ios/v4/reference/Classes/JWJSONParser.html) SDK for parsing JSON objects into player configs. This allows for easy parsing of the [JW Delivery API](https://docs.jwplayer.com/platform/reference/embed-content-with-the-delivery-api#delivery-api-v2-endpoints) into easy to use configurations.
 
-| Prop | Type | Description | Default |
-| --- | --- | --- | --- |
-| `config` | Object | **(REQUIRED)** `JWConfig` object<br /><br />See: [Config](#config) | `undefined` |
-| `controls` | Boolean | Determines if player controls are displayed | `true` |
+| Prop | Type | Platform | Description | Default |
+| --- | --- | --- | --- | --- |
+| `config` | object | A, I | **(REQUIRED)** `JWConfig` object<br />See: [Config](#config) | `undefined` |
+| `controls` | boolean | A, I | Determines if player controls are displayed | `true` |
 
 <br /><br />
 
@@ -14,8 +14,8 @@ With the exception of `license` and `playlist`, all other fields are optional.
 
 | Field | Type | Platform |  Additional Notes |
 | --- | --- | --- | --- |
-| `license`                                                                                | string |A, I | **REQUIRED** Platform-specific license key ([Android](https://docs.jwplayer.com/players/docs/android-overview#requirements) \| [iOS](https://docs.jwplayer.com/players/docs/ios-overview#requirements))|
-| [`playlist`](https://docs.jwplayer.com/players/reference/setup-options#playlist)         | JwPlaylistItem[ ] &#124; string | A, I | **REQUIRED** |
+| `license`                                                                                | string |A, I | **(REQUIRED)** Platform-specific license key<br />([Android](https://docs.jwplayer.com/players/docs/android-overview#requirements) \| [iOS](https://docs.jwplayer.com/players/docs/ios-overview#requirements))|
+| [`playlist`](https://docs.jwplayer.com/players/reference/setup-options#playlist)         | JwPlaylistItem[ ] &#124; string | A, I | **(REQUIRED)** |
 | [`advertising`](https://docs.jwplayer.com/players/reference/advertising-config-ref)                                                                            |JwAdvertisingConfig | A, I | |
 | `allowCrossProtocolRedirectsSupport`                                                     | boolean | A    | |
 | [`autostart`](https://docs.jwplayer.com/players/reference/setup-options#autostart)       | boolean | A, I | |
@@ -39,31 +39,3 @@ With the exception of `license` and `playlist`, all other fields are optional.
 | `uiConfig`                                                                               | JwUiConfig | A, I | |
 | `useTextureView`                                                                         | boolean | A    | |
 
-
-
-|Field                             |Description        |Type|Optional|Platform Specific|
-|----------------------------------|-------------------|----|--------|-----------------|
-|pid                               |player ID          |string|TRUE    |                 |
-|mute                              |                   |boolean|TRUE    |                 |
-|forceLegacyConfig                 |non-jw json        |boolean|TRUE    |                 |
-|useTextureView                    |                   |boolean|TRUE    |A                |
-|autostart                         |                   |boolean|TRUE    |                 |
-|nextupoffset                      |                   |string &#124; number|TRUE    |                 |
-|repeat                            |                   |boolean|TRUE    |                 |
-|allowCrossProtocolRedirectsSupport|                   |boolean|TRUE    |A                |
-|displaytitle                      |                   |boolean|TRUE    |                 |
-|displaydescription                |                   |boolean|TRUE    |                 |
-|stretching                        |                   |JwStretching|TRUE    |                 |
-|thumbnailPreview                  |                   |JwThumbnailPreview|TRUE    |                 |
-|preload                           |                   |boolean|TRUE    |                 |
-|playlist                          |                   |JwPlaylistItem[ ] &#124; string|TRUE    |                 |
-|sources                           |                   |JwSource[ ]|TRUE    |                 |
-|file                              |                   |string|TRUE    |                 |
-|playlistIndex                     |                   |number|TRUE    |                 |
-|related                           |                   |JwRelatedConfig|TRUE    |                 |
-|uiConfig                          |                   |JwUiConfig|TRUE    |                 |
-|logoView                          |                   |JwLogoView|TRUE    |                 |
-|advertising                       |                   |JwAdvertisingConfig|TRUE    |                 |
-|playbackRates                     |                   |number[ ]|TRUE    |                 |
-|playbackRateControls              |                   |boolean|TRUE    |                 |
-|license                           |non-jw json        |string|FALSE   |                 |

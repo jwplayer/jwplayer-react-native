@@ -1,7 +1,7 @@
 import React, {forwardRef} from 'react';
 import {Platform} from 'react-native';
 
-import JWPlayer from 'jwplayer-react-native';
+import JWPlayer from '@jwplayer/jwplayer-react-native';
 
 import {IOS_API_KEY, ANDROID_API_KEY} from '@env';
 

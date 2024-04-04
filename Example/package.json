@@ -8,12 +8,12 @@
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint .",
-    "postinstall": "rm -rf ./node_modules/jwplayer-react-native/Example ./node_modules/jwplayer-react-native/images ./node_modules/jwplayer-react-native/node_modules ./node_modules/jwplayer-react-native/yarn.lock"
+    "postinstall": "rm -rf ./node_modules/@jwplayer/jwplayer-react-native/Example ./node_modules/@jwplayer/jwplayer-react-native/images ./node_modules/@jwplayer/jwplayer-react-native/node_modules ./node_modules/@jwplayer/jwplayer-react-native/yarn.lock"
   },
   "dependencies": {
+    "@jwplayer/jwplayer-react-native": "../../jwplayer-react-native",
     "@react-navigation/native": "6.1.7",
     "@react-navigation/native-stack": "6.9.13",
-    "jwplayer-react-native": "../../jwplayer-react-native",
     "react": "18.1.0",
     "react-native": "0.70.14",
     "react-native-bootsplash": "4.1.5",

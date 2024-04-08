@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint index.js example/index.js example/src",
     "badges:license": "badge license MIT :green > ./badges/license.svg",
-    "badges:version": "badge license $npm_package_version :blue > ./badges/version.svg"
+    "badges:version": "badge version $npm_package_version :blue > ./badges/version.svg"
   },
   "pre-commit": [
     "lint"

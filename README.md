@@ -354,7 +354,7 @@ Only Widevine is supported.
 
 Follow these steps to enable DRM:
 1. Set up your Android app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/android-play-drm-protected-content).
-2. Define `config.file` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
+2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
 
 *❗️DO NOT sign and store your API secerets from your application.❗️*
 
@@ -366,12 +366,14 @@ If you use a different provider for DRM or this does not work for your use case,
 
 Only Fairplay is supported.
 
-Follow these steps to enable DRM:
-1. Set up your iOS app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/ios-play-drm-protected-content).
-2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
+The below is currently not fully supported by the iOS SDK, so please refer to `Example` app, or the [legacy DRM documentation](docs/legacy_readme.md#drm). For now, you must still provide the DRM asset in the `config.playlist` as a legacy object `[{fairplayCertUrl: string,processSpcUrl: string,file: string}]`
 
-*❗️DO NOT sign and store your API secerets from your application.❗️*
-
+> Follow these steps to enable DRM:
+> 1. Set up your iOS app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/ios-play-drm-protected-content).
+> 2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
+>
+> *❗️DO NOT sign and store your API secerets from your application.❗️*
+> 
 If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWP signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
 
 <br /><br />

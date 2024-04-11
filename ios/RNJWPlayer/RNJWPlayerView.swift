@@ -277,6 +277,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func setNewConfig(config: [String : Any]) {
+        let forceLegacyConfig = config["forceLegacyConfig"] as? Bool?
         let data:Data! = try? JSONSerialization.data(withJSONObject: config, options:.prettyPrinted)
         let jwConfig = try? JWJSONParser.configFromJSON(data)
         
@@ -307,25 +308,45 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
             do {
                 let viewOnly = config["viewOnly"] as? Bool
                 if viewOnly == true {
-                    if jwConfig != nil{
-                        self.setupPlayerView(config: config, playerConfig: jwConfig!)
-                    } else {
+                    if forceLegacyConfig == true {
                         self.setupPlayerView(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
+                    } else {
+                        self.setupPlayerView(config: config, playerConfig: jwConfig!)
                     }
                 } else {
-                    if jwConfig != nil{
-                        self.setupPlayerViewController(config: config, playerConfig: jwConfig!)
-                    } else {
+                    if forceLegacyConfig == true {
                         self.setupPlayerViewController(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
+
+                    } else {
+                        self.setupPlayerViewController(config: config, playerConfig: jwConfig!)
                     }
                 }
             } catch {
                 print(error)
             }
 
-            processSpcUrl = config["processSpcUrl"] as? String
-            fairplayCertUrl = config["fairplayCertUrl"] as? String
-            contentUUID = config["contentUUID"] as? String
+            if forceLegacyConfig == true {
+                // Take top level processSpcUrl/fairplayCertUrl if present
+                processSpcUrl = config["processSpcUrl"] as? String
+                fairplayCertUrl = config["fairplayCertUrl"] as? String
+                contentUUID = config["contentUUID"] as? String
+                
+                // Dangerous: check playlist for processSpcUrl / fairplayCertUrl in playlist
+                // Only checks first playlist item as multi-item DRM playlists are ill advised
+                if let playlist = config["playlist"] as? [AnyObject] {
+                    let item = playlist.first
+                    if let itemMap = item as? [String: Any] {
+                        if itemMap["processSpcUrl"] != nil {
+                            processSpcUrl = itemMap["processSpcUrl"] as? String
+                        }
+                        if itemMap["fairplayCertUrl"] != nil {
+                            fairplayCertUrl = itemMap["fairplayCertUrl"] as? String
+                        }
+                    }
+                }
+            } else {
+                // TODO -- Ensure JWJSONParser pulls out cert/spc for sources (Expected in JW iOS SDK v4.19.0)
+            }
         } else {
             pendingConfig = true
         }

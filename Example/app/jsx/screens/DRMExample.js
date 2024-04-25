@@ -53,10 +53,19 @@ export default () => {
 
   // legacy
   const renderIOSPlayer = () => {
-    const EZDRMLicenseAPIEndpoint = 'https://fps.ezdrm.com/api/licenses';
-    const EZDRMCertificateEndpoint =
-      'https://fps.ezdrm.com/demo/video/eleisure.cer';
-    const EZDRMVideoEndpoint = 'https://fps.ezdrm.com/demo/video/ezdrm.m3u8';
+    /**
+     * See https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback 
+     * for more information regarding generating below information and JWP Studio DRM. 
+     * 
+     * If using independent DRM provider, fill in the 
+     * SPC URL, and Certificate URL for the media asset.
+     */
+
+    // TODO fill in with your DRM content
+    const ProcessSPCUrl = '' 
+    const CertificateUrl ='';
+    const VideoFile = '';
+
     return (
       <Player
         ref={playerRef}
@@ -64,11 +73,12 @@ export default () => {
         config={{
           autostart: true,
           forceLegacyConfig: true,
+          // You can put the SPC and Cert url at the config level as well.
           playlist: [
             {
-              fairplayCertUrl: EZDRMCertificateEndpoint,
-              processSpcUrl: EZDRMLicenseAPIEndpoint,
-              file: EZDRMVideoEndpoint,
+              file: VideoFile,
+              processSpcUrl: ProcessSPCUrl,
+              certificateUrl: CertificateUrl          
             },
           ],
           styling: {

@@ -1,13 +1,13 @@
 {
   "name": "@jwplayer/jwplayer-react-native",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "description": "React-native Android/iOS plugin for JWPlayer SDK (https://www.jwplayer.com/)",
   "main": "index.js",
   "types": "./index.d.ts",
   "scripts": {
     "lint": "eslint index.js example/index.js example/src",
     "badges:license": "badge license MIT :green > ./badges/license.svg",
-    "badges:version": "badge license $npm_package_version :blue > ./badges/version.svg"
+    "badges:version": "badge version $npm_package_version :blue > ./badges/version.svg"
   },
   "pre-commit": [
     "lint"

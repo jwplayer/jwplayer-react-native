@@ -1,4 +1,4 @@
-declare module "jwplayer-react-native" {
+declare module "@jwplayer/jwplayer-react-native" {
   import React from "react";
   import { ViewStyle } from "react-native";
 

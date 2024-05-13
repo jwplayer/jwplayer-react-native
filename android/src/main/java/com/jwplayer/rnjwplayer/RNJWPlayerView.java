@@ -785,7 +785,10 @@ public class RNJWPlayerView extends RelativeLayout implements
         }
 
         // Legacy
-        // This isn't the ideal way to do this on Android
+        // This isn't the ideal way to do this on Android. All drawables/colors/themes shoudld
+        // be targed using styling. See `https://docs.jwplayer.com/players/docs/android-styling-guide`
+        // for more information on how best to override the JWP styles using XML. If you are unsure of a 
+        // color/drawable/theme, open an `Ask` issue.
         if (mColors != null) {
             if (mColors.hasKey("backgroundColor")) {
                 mPlayerView.setBackgroundColor(Color.parseColor("#" + mColors.getString("backgroundColor")));

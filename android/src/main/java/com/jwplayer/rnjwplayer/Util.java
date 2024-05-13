@@ -98,7 +98,7 @@ public class Util {
                     if (sourceProp.hasKey("file")) {
                         String file = sourceProp.getString("file");
                         String label = sourceProp.getString("label");
-                        boolean isDefault = sourceProp.getBoolean("default");
+                        boolean isDefault = sourceProp.hasKey("default") ? sourceProp.getBoolean("default") : false;
                         MediaSource source = new MediaSource.Builder().file(file).label(label).isDefault(isDefault).build();
                         sources.add(source);
                     }
@@ -147,7 +147,7 @@ public class Util {
                     if (trackProp.hasKey("file")) {
                         String file = trackProp.getString("file");
                         String label = trackProp.getString("label");
-                        boolean isDefault = trackProp.getBoolean("default");
+                        boolean isDefault = trackProp.hasKey("default") ? trackProp.getBoolean("default") : false;
                         Caption caption = new Caption.Builder().file(file).label(label).kind(CaptionType.CAPTIONS).isDefault(isDefault).build();
                         tracks.add(caption);
                     }

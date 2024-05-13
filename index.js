@@ -254,6 +254,8 @@ export default class JWPlayer extends Component {
 				'hidden',
 				'onscreen',
 			]),
+			// All `Styling` is only intended to be used with iOS. Android requires overloading
+			// of the JWP IDs seen here: https://docs.jwplayer.com/players/docs/android-styling-guide
 			styling: PropTypes.shape({
 				colors: PropTypes.shape({
 					buttons: PropTypes.string,

@@ -2,4 +2,6 @@
 <resources>
     <color name="bootsplash_background">#FFFFFF</color>
     <color name="bootsplash_icon_background">#EC0041</color>
+    <color name="jw_seekbar_thumb">#E02929</color>
+    <!-- Sample of overrindg a JW color -->
 </resources>

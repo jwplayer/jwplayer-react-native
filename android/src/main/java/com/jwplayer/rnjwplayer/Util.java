@@ -154,7 +154,6 @@ public class Util {
                             kind = getCaptionType(trackProp.getString("kind").toUpperCase(Locale.US));
                         }
                         boolean isDefault = trackProp.hasKey("default") ? trackProp.getBoolean("default") : false;
-                        Caption caption = new Caption.Builder().file(file).label(label).kind(kind).isDefault(isDefault).build();
                         tracks.add(caption);
                     }
                 }

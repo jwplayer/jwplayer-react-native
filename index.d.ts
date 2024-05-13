@@ -353,6 +353,9 @@ declare module "@jwplayer/jwplayer-react-native" {
     size?: number;
   }
   type EdgeStyles = "none" | "dropshadow" | "raised" | "depressed" | "uniform";
+
+  // All `Styling` is only intended to be used with iOS. Android requires overloading
+  // of the JWP IDs seen here: https://docs.jwplayer.com/players/docs/android-styling-guide
   interface Styling {
     colors?: {
       buttons?: string;

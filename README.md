@@ -138,7 +138,7 @@ Follow these steps to configure the media playback experience in your app:
         : 'YOUR_IOS_SDK_KEY',
     backgroundAudioEnabled: true,
     autostart: true,
-    styling: {
+    styling: { // only (mostly) compatible with iOS
       colors: {
         timeslider: {
           rail: "0000FF",

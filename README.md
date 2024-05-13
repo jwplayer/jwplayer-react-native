@@ -238,7 +238,7 @@ Follow these steps to run the example project:
 
 ## Advanced Topics
 
-[Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm) | [Picture in Picture (PiP)](#picture-in-picture-pip)
+[Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm) | [Picture in Picture (PiP)](#picture-in-picture-pip) | [Styling](#styling)
 
 <br />
 
@@ -405,6 +405,24 @@ If you use a different provider for DRM or this does not work for your use case,
 1. Read and understand the requirements for PiP in the [iOS SDK](https://docs.jwplayer.com/players/docs/ios-invoke-picture-in-picture-playback). PiP mode is enabled by JWP for the `PlayerViewController`.
 2. (viewOnly:true only) Set the `pipEnabled` prop to `true`.
 3. (viewOnly:true only) Call `togglePIP()` to enable or disable PiP.
+
+<br /><br />
+
+### Styling
+
+[Android](#android-styling) | [iOS](#ios-styling)
+
+#### Android Styling
+The `styling` prop will not work when using the modern prop convention that matches the JWP Delivery API. Even when using the `forceLegacyConfig` prop, Android may not respect your choices.
+
+Android styling is best handled through overring JWP IDs in your apps resources files. See the documentation [here](https://docs.jwplayer.com/players/docs/android-styling-guide). 
+
+A sample of overring a color via XML can be seen in this [colors file](Example/android/app/src/main/res/values/colors.xml). The color specified here is the default, but if you wish to change it, the color will be updated on the player.
+
+<br />
+
+#### iOS Styling
+You can use the styling elements as defined in the [Legacy Readme](/docs/legacy_readme.md#styling). 
 
 <br /><br />
 

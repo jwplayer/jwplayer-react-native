@@ -216,7 +216,7 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface JwTrack {
     id?: string;
     file?: string;
-    kind: string;
+    kind: TrackKind;
     label?: string;
     default?: boolean;
   }
@@ -251,9 +251,13 @@ declare module "@jwplayer/jwplayer-react-native" {
     label: string;
     default?: boolean;
   }
+
+  type TrackKind = "captions" | "chapters" | "thumbnails";
+
   interface Track {
     file: string;
     label: string;
+    kind: TrackKind;
     default?: boolean;
   }
   interface JWAdSettings {

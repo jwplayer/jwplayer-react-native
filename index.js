@@ -232,6 +232,8 @@ export default class JWPlayer extends Component {
 						PropTypes.shape({
 							file: PropTypes.string,
 							label: PropTypes.string,
+							kind: PropTypes.oneOf(['captions', 'thumbnails', 'chapters']),
+							default: PropTypes.bool
 						})
 					),
 					adSchedule: PropTypes.arrayOf(

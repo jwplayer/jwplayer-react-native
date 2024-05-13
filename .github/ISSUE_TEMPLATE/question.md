@@ -2,8 +2,8 @@
 name: Question
 about: Ask a question about the project or product
 title: "[ASK]"
-labels: ''
-assignees: ''
+labels: 'needs-grooming'
+assignees: '@jwplayer/team_sdks'
 
 ---
 

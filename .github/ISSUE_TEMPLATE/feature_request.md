@@ -2,8 +2,8 @@
 name: Feature request
 about: Suggest an idea for this project
 title: "[FEAT]"
-labels: ''
-assignees: ''
+labels: 'needs-grooming'
+assignees: '@jwplayer/team_sdks'
 
 ---
 

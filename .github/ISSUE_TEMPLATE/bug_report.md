@@ -2,8 +2,8 @@
 name: Bug report
 about: Create a report to help us improve
 title: "[BUG]"
-labels: ''
-assignees: ''
+labels: "needs-grooming"
+assignees: '@jwplayer/team_sdks'
 
 ---
 

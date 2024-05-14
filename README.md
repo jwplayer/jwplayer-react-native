@@ -49,7 +49,7 @@ Follow these steps to add the library to your Android project:
            }
    ```
 
-For more details and guidance regarding configuration and requirements, see the [JWP Android SDK documentation](https://docs.jwplayer.com/players/docs/android-add-the-sdk).
+For more details and guidance regarding configuration and requirements, see the [JWP Android SDK documentation](https://docs.jwplayer.com/players/docs/android-overview#requirements.
 
 <br />
 

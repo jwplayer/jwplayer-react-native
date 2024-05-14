@@ -49,8 +49,9 @@ Follow these steps to add the library to your Android project:
            }
    ```
 
+For more details and guidance regarding configuration and requirements, see the [JWP Android SDK documentation](https://docs.jwplayer.com/players/docs/android-add-the-sdk).
 
-<br /><br />
+<br />
 
 ### iOS
 
@@ -70,6 +71,8 @@ Follow these steps to add the library to your iOS project:
      ```
    pod install
    ```
+
+For more details and guidance regarding configuration and requirements, see the [JWP iOS SDK documentation](https://docs.jwplayer.com/players/docs/ios-overview#requirements).
 
 <br /><br />
 

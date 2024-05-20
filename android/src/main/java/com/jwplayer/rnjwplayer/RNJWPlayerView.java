@@ -1451,6 +1451,16 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putBoolean("active", castEvent.isActive());
         event.putBoolean("available", castEvent.isAvailable());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCasting", event);
+        // stop/start the background audio service if it's running and we're casting
+        if (castEvent.isActive()) {
+            doUnbindService();
+        } else {
+            if (backgroundAudioEnabled) {
+                mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
+                    .build();
+                doBindService();
+            }
+        }
     }
 
     // LifecycleEventListener

@@ -1364,7 +1364,7 @@
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
 "@jwplayer/jwplayer-react-native@../../jwplayer-react-native":
-  version "1.0.0"
+  version "1.0.1"
   dependencies:
     badge-maker "^3.3.1"
 

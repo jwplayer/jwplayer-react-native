@@ -486,6 +486,9 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface PlaylistEventProps {
     playlist: PlaylistItem[]
   }
+  interface LoadEventProps {
+    loadTime: number;
+  }
   interface PlaylistItemEventProps {
     playlistItem: PlaylistItem
   }
@@ -511,6 +514,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     forceLegacyConfig?: boolean;
     onPlayerReady?: () => void;
     onPlaylist?: (event: BaseEvent<PlaylistEventProps>) => void;
+    onLoaded? : (event: BaseEvent<LoadEventProps>) => void;
     onBeforePlay?: () => void;
     onBeforeComplete?: () => void;
     onComplete?: () => void;

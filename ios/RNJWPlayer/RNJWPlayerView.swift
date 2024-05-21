@@ -1192,7 +1192,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func jwplayer(_ player:JWPlayer, didFinishLoadingWithTime loadTime:TimeInterval) {
-        self.onLoaded?([:])
+        self.onLoaded?(["loadTime":loadTime])
     }
 
     func jwplayer(_ player:JWPlayer, isAttemptingToPlay playlistItem:JWPlayerItem, reason:JWPlayReason) {

@@ -282,7 +282,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     func setNewConfig(config: [String : Any]) {
         let forceLegacyConfig = config["forceLegacyConfig"] as? Bool?
         let data:Data! = try? JSONSerialization.data(withJSONObject: config, options:.prettyPrinted)
-        let jwConfig = try? JWJSONParser.configFromJSON(data)
+        let jwConfig = try? JWJSONParser.config(from:data)
         
         currentConfig = config
 
@@ -1074,11 +1074,11 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     
     // MARK: Time events
 
-    func onAdTimeEvent(time:JWTimeData) {
+    func onAdTimeEvent(_ time:JWTimeData) {
         self.onAdTime?(["position": time.position, "duration": time.duration])
     }
 
-    func onMediaTimeEvent(time:JWTimeData) {
+    func onMediaTimeEvent(_ time:JWTimeData) {
         self.onTime?(["position": time.position, "duration": time.duration])
     }
 

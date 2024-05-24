@@ -9,11 +9,13 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!--    READ_MEDIA_IMAGES, READ_MEDIA_VIDEO or READ_MEDIA_AUDIO.-->
 
     <application>
         <service
             android:name="com.jwplayer.pub.api.background.MediaService"
+            android:foregroundServiceType="mediaPlayback"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />

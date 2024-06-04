@@ -36,8 +36,10 @@
   "homepage": "https://github.com/jwplayer/jwplayer-react-native#readme",
   "devDependencies": {
     "badge-maker": "^3.3.1",
-    "lodash": ">= 4.17.21",
     "react": ">= 18.2.0",
     "react-native": ">= 0.72.5"
+  },
+  "dependencies": {
+    "lodash.isequalwith": "^4.4.0"
   }
 }

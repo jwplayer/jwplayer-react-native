@@ -319,6 +319,7 @@ export default class JWPlayer extends Component {
 		}),
 		onPlayerReady: PropTypes.func,
 		onPlaylist: PropTypes.func,
+		onLoaded: PropTypes.func,
 		changePlaylist: PropTypes.func,
 		play: PropTypes.func,
 		pause: PropTypes.func,

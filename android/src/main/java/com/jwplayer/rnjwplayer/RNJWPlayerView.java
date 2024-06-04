@@ -1269,6 +1269,13 @@ public class RNJWPlayerView extends RelativeLayout implements
             doBindService();
             requestAudioFocus();
         }
+        WritableMap onFirstFrame = Arguments.createMap();
+        onFirstFrame.putString("message", "onLoaded");
+        onFirstFrame.putDouble("loadTime", firstFrameEvent.getLoadTime());
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
+            getId(),
+            "topFirstFrame",
+            onFirstFrame);
     }
 
     @Override

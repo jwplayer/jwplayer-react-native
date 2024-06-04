@@ -178,6 +178,7 @@ Follow these steps to configure the media playback experience in your app:
       onPlayerError={event => this.onPlayerError(event)}
       onBuffer={() => this.onBuffer()}
       onTime={event => this.onTime(event)}
+      onLoaded={event => this.onLoaded(event)}
       onFullScreen={() => this.onFullScreen()}
       onFullScreenExit={() => this.onFullScreenExit()}
     />

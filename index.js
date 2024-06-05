@@ -6,7 +6,7 @@ import {
 	findNodeHandle,
 } from 'react-native';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
+import isEqualWith from 'lodash.isequalwith';
 
 const RNJWPlayerManager =
 	Platform.OS === 'ios'
@@ -390,7 +390,7 @@ export default class JWPlayer extends Component {
 		var { config, controls } = nextProps;
 		var thisConfig = this.props.config || {};
 
-		var result = !_.isEqualWith(
+		var result = !isEqualWith(
 			config,
 			thisConfig,
 			(value1, value2, key) => {

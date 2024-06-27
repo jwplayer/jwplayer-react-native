@@ -28,14 +28,14 @@ Pod::Spec.new do |s|
 
   if defined?($RNJWPlayerUseGoogleCast)
     Pod::UI.puts "RNJWPlayer: enable Google Cast"
-    s.dependency 'google-cast-sdk', '4.8.1'
+    s.dependency 'google-cast-sdk', '~> 4.8'
     s.pod_target_xcconfig = {
       'OTHER_SWIFT_FLAGS' => '$(inherited) -D USE_GOOGLE_CAST'
     }
   end
   if defined?($RNJWPlayerUseGoogleIMA)
     Pod::UI.puts "RNJWPlayer: enable IMA SDK"
-    s.dependency 'GoogleAds-IMA-iOS-SDK', '3.22.0'
+    s.dependency 'GoogleAds-IMA-iOS-SDK', '~> 3.22'
     s.pod_target_xcconfig = {
       'OTHER_SWIFT_FLAGS' => '$(inherited) -D USE_GOOGLE_IMA'
     }

@@ -23,6 +23,7 @@ export default forwardRef((props, ref) => {
       config={{
         license: Platform.select({ios: IOS_API_KEY, android: ANDROID_API_KEY}),
         backgroundAudioEnabled: true,
+        fullScreenOnLandscape: false,
         styling: {
           colors: {},
         },

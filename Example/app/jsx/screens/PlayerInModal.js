@@ -11,20 +11,13 @@ export default () => {
     const [modalVisible, setModalVisible] = useState(false);
 
     let jwConfig = {
-        "title": "Single Inline Linear Preroll",
+        "title": "Basic Modal implementation",
         "fullScreenOnLandscape": true,
         "landscapeOnFullScreen": true,
+        "playerInModal": true,
         "playlist": [
             {
                 "file": "https://content.bitsontherun.com/videos/q1fx20VZ-52qL9xLP.mp4",
-                "tracks": [
-                    {
-                        file: "https://cdn.jwplayer.com/strips/xzxKu91o-120.vtt",
-                        label: 'track1',
-                        default: true,
-                        kind: "thumbnails",
-                    }
-                ]
             }
         ]
     }
@@ -44,7 +37,6 @@ export default () => {
                         style={{ flex: 1 }}
                         config={{
                             autostart: true,
-                            playerInModal: true,
                             styling: {
                                 colors: {},
                             },

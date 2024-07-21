@@ -93,6 +93,8 @@ RCT_EXTERN_METHOD(setVolume: (nonnull NSNumber *)reactTag :(nonnull NSNumber *)v
 
 RCT_EXTERN_METHOD(togglePIP: (nonnull NSNumber *)reactTag)
 
+#if USE_GOOGLE_CAST
+
 RCT_EXTERN_METHOD(setUpCastController: (nonnull NSNumber *)reactTag)
 
 RCT_EXTERN_METHOD(presentCastDialog: (nonnull NSNumber *)reactTag)
@@ -102,6 +104,8 @@ RCT_EXTERN_METHOD(connectedDevice: (nonnull NSNumber *)reactTag :(RCTPromiseReso
 RCT_EXTERN_METHOD(availableDevices: (nonnull NSNumber *)reactTag: (RCTPromiseResolveBlock)resolve: (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(castState: (nonnull NSNumber *)reactTag :(RCTPromiseResolveBlock)resolve :(RCTPromiseRejectBlock)reject)
+
+#endif
 
 RCT_EXTERN_METHOD(getAudioTracks: (nonnull NSNumber *)reactTag: (RCTPromiseResolveBlock)resolve: (RCTPromiseRejectBlock)reject)
 

@@ -2,7 +2,10 @@ package com.jwplayer.rnjwplayer;
 
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -13,10 +16,12 @@ import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.os.Build;
 import android.util.Log;
+import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -106,6 +111,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.json.JSONObject;
 
@@ -212,6 +218,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     private ThemedReactContext mThemedReactContext;
 
     private MediaServiceController mMediaServiceController;
+    private PipHandlerReceiver mReceiver = null;
 
     private void doBindService() {
         if (mMediaServiceController != null) {
@@ -233,7 +240,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     }
 
     private static Context getNonBuggyContext(ThemedReactContext reactContext,
-            ReactApplicationContext appContext) {
+                                              ReactApplicationContext appContext) {
         Context superContext = reactContext;
         if (!contextHasBug(appContext.getCurrentActivity())) {
             superContext = appContext.getCurrentActivity();
@@ -290,6 +297,8 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     public void destroyPlayer() {
         if (mPlayer != null) {
+            unRegisterReceiver();
+            mPlayer.deregisterActivityForPip();
             mPlayer.stop();
 
             mPlayer.removeListeners(this,
@@ -348,7 +357,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.PIP_OPEN
             );
 
-            mPlayer  = null;
+            mPlayer = null;
             mPlayerView = null;
 
             getReactContext().removeLifecycleEventListener(this);
@@ -519,12 +528,12 @@ public class RNJWPlayerView extends RelativeLayout implements
 
         @Override
         public void onAllowRotationChanged(boolean b) {
-            Log.e(TAG, "onAllowRotationChanged: " + b );
+            Log.e(TAG, "onAllowRotationChanged: " + b);
         }
 
         @Override
         public void onAllowFullscreenPortraitChanged(boolean allowFullscreenPortrait) {
-            Log.e(TAG, "onAllowFullscreenPortraitChanged: " + allowFullscreenPortrait );
+            Log.e(TAG, "onAllowFullscreenPortraitChanged: " + allowFullscreenPortrait);
         }
 
         @Override
@@ -540,10 +549,96 @@ public class RNJWPlayerView extends RelativeLayout implements
         }
     }
 
+    private ArrayList<Integer> rootViewChildrenOriginalVisibility = new ArrayList<Integer>();
+
+    private class PipHandlerReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) {
+                return;
+            }
+            if (Objects.equals(intent.getAction(), "onPictureInPictureModeChanged")) {
+                if (intent.hasExtra("newConfig") && intent.hasExtra("isInPictureInPictureMode")) {
+                    // Tell the JWP SDK we are toggling so it can handle toolbar / internal setup
+                    mPlayer.onPictureInPictureModeChanged(intent.getBooleanExtra("isInPictureInPictureMode", false), intent.getParcelableExtra("newConfig"));
+
+                    View decorView = mActivity.getWindow().getDecorView();
+                    ViewGroup rootView = decorView.findViewById(android.R.id.content);
+
+                    ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT);
+
+                    if (intent.getBooleanExtra("isInPictureInPictureMode", false)) {
+                        // Going into Picture in Picture
+                        ViewGroup parent = (ViewGroup) mPlayerView.getParent();
+
+                        // Remove the player view temporarily
+                        if (parent != null) {
+                            parent.removeView(mPlayerView);
+                        }
+
+                        // Hide all views but player view and keep a handle on them for later
+                        for (int i = 0; i < rootView.getChildCount(); i++) {
+                            if (rootView.getChildAt(i) != mPlayerView) {
+                                rootViewChildrenOriginalVisibility.add(rootView.getChildAt(i).getVisibility());
+                                rootView.getChildAt(i).setVisibility(View.GONE);
+                            }
+                        }
+                        // Add player view back (This is safe since the JWP SDK has already calculated the PiP size/aspect off the View)
+                        rootView.addView(mPlayerView, layoutParams);
+                    } else {
+                        // Exiting Picture in Picture
+
+                        // Toggle controls to ensure we don't lose them -- weird UX bug fix where controls got lost
+                        mPlayer.setForceControlsVisibility(true);
+                        mPlayer.setForceControlsVisibility(false);
+
+                        // Strip player view
+                        rootView.removeView(mPlayerView);
+
+                        // Add visibility back to  any other controls
+                        for (int i = 0; i < rootView.getChildCount(); i++) {
+                            rootView.getChildAt(i).setVisibility(rootViewChildrenOriginalVisibility.get(i));
+                        }
+                        // Clear our list of views
+                        rootViewChildrenOriginalVisibility.clear();
+                        // Add player view back in main spot
+                        addView(mPlayerView, 0, layoutParams);
+                    }
+                }
+            }
+        }
+    }
+
+    private void registerReceiver() {
+        mReceiver = new PipHandlerReceiver();
+        IntentFilter intentFilter = new IntentFilter("onPictureInPictureModeChanged");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // Must be Exported to get intents
+                mActivity.registerReceiver(mReceiver, intentFilter, Context.RECEIVER_EXPORTED);
+            } else {
+                mActivity.registerReceiver(mReceiver, intentFilter); // Safe API level < 34
+            }
+        } else {
+            mActivity.registerReceiver(mReceiver, intentFilter); // Safe API level < 34
+        }
+    }
+
+    private void unRegisterReceiver() {
+        if (mReceiver != null) {
+            mActivity.unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
+
+    }
+
     public void setConfig(ReadableMap prop) {
         if (mConfig == null || !mConfig.equals(prop)) {
             if (mConfig != null && isOnlyDiff(prop, "playlist") && mPlayer != null) { // still safe check, even with JW
-                                                                                      // JSON change
+                // JSON change
                 PlayerConfig oldConfig = mPlayer.getConfig();
                 PlayerConfig config = new PlayerConfig.Builder()
                         .autostart(oldConfig.getAutostart())
@@ -610,7 +705,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     boolean playlistNotTheSame(ReadableMap prop) {
         return prop.hasKey("playlist") && mPlaylistProp != prop.getArray("playlist") && !Arrays
-                .deepEquals(new ReadableArray[] { mPlaylistProp }, new ReadableArray[] { prop.getArray("playlist") });
+                .deepEquals(new ReadableArray[]{mPlaylistProp}, new ReadableArray[]{prop.getArray("playlist")});
     }
 
     private void setupPlayer(ReadableMap prop) {
@@ -621,7 +716,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         PlayerConfig jwConfig = null;
         Boolean forceLegacy = prop.hasKey("forceLegacyConfig") ? prop.getBoolean("forceLegacyConfig") : false;
         Boolean isJwConfig = false;
-        if(!forceLegacy){
+        if (!forceLegacy) {
             try {
                 obj = MapUtil.toJSONObject(prop);
                 jwConfig = JsonHelper.parseConfigJson(obj);
@@ -778,9 +873,11 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (mActivity != null && prop.hasKey("pipEnabled")) {
             boolean pipEnabled = prop.getBoolean("pipEnabled");
             if (pipEnabled) {
+                registerReceiver();
                 mPlayer.registerActivityForPip(mActivity, mActivity.getSupportActionBar());
             } else {
                 mPlayer.deregisterActivityForPip();
+                unRegisterReceiver();
             }
         }
 
@@ -1273,9 +1370,9 @@ public class RNJWPlayerView extends RelativeLayout implements
         onFirstFrame.putString("message", "onLoaded");
         onFirstFrame.putDouble("loadTime", firstFrameEvent.getLoadTime());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-            getId(),
-            "topFirstFrame",
-            onFirstFrame);
+                getId(),
+                "topFirstFrame",
+                onFirstFrame);
     }
 
     @Override
@@ -1464,7 +1561,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         } else {
             if (backgroundAudioEnabled) {
                 mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
-                    .build();
+                        .build();
                 doBindService();
             }
         }

@@ -448,6 +448,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     landscapeOnFullScreen?: boolean;
     portraitOnExitFullScreen?: boolean;
     exitFullScreenOnPortrait?: boolean;
+    playerInModal?: boolean;
     playlist?: PlaylistItem[];
     stretching?: string;
     related?: Related;

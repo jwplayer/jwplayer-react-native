@@ -306,6 +306,7 @@ export default class JWPlayer extends Component {
 			offlineImage: PropTypes.string,
 			forceFullScreenOnLandscape: PropTypes.bool,
 			forceLandscapeOnFullScreen: PropTypes.bool,
+			playerInModal: PropTypes.bool,
 			enableLockScreenControls: PropTypes.bool,
 			stretching: PropTypes.oneOf([
 				'uniform',

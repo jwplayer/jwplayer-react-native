@@ -53,7 +53,6 @@ public class MainActivity extends ReactActivity {
   @Override
   public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
     super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
-
     Intent intent = new Intent("onPictureInPictureModeChanged");
     intent.putExtra("isInPictureInPictureMode", isInPictureInPictureMode);
     intent.putExtra("newConfig", newConfig);

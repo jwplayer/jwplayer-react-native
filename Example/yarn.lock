@@ -1364,7 +1364,7 @@
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
 "@jwplayer/jwplayer-react-native@../../jwplayer-react-native":
-  version "1.0.1"
+  version "1.0.2"
   dependencies:
     lodash.isequalwith "^4.4.0"
 

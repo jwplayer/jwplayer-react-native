@@ -2,7 +2,10 @@ package com.jwplayer.rnjwplayer;
 
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -12,11 +15,15 @@ import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -96,7 +103,12 @@ import com.jwplayer.pub.api.events.listeners.AdvertisingEvents;
 import com.jwplayer.pub.api.events.listeners.CastingEvents;
 import com.jwplayer.pub.api.events.listeners.PipPluginEvents;
 import com.jwplayer.pub.api.events.listeners.VideoPlayerEvents;
+import com.jwplayer.pub.api.fullscreen.ExtensibleFullscreenHandler;
+import com.jwplayer.pub.api.fullscreen.FullscreenDialog;
 import com.jwplayer.pub.api.fullscreen.FullscreenHandler;
+import com.jwplayer.pub.api.fullscreen.delegates.DeviceOrientationDelegate;
+import com.jwplayer.pub.api.fullscreen.delegates.DialogLayoutDelegate;
+import com.jwplayer.pub.api.fullscreen.delegates.SystemUiDelegate;
 import com.jwplayer.pub.api.license.LicenseUtil;
 import com.jwplayer.pub.api.media.playlists.PlaylistItem;
 import com.jwplayer.ui.views.CueMarkerSeekbar;
@@ -106,6 +118,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.json.JSONObject;
 
@@ -183,6 +196,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     Boolean fullScreenOnLandscape = false;
     Boolean portraitOnExitFullScreen = false;
     Boolean exitFullScreenOnPortrait = false;
+    Boolean playerInModal = false;
 
     Number currentPlayingIndex;
 
@@ -212,6 +226,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     private ThemedReactContext mThemedReactContext;
 
     private MediaServiceController mMediaServiceController;
+    private PipHandlerReceiver mReceiver = null;
 
     private void doBindService() {
         if (mMediaServiceController != null) {
@@ -233,7 +248,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     }
 
     private static Context getNonBuggyContext(ThemedReactContext reactContext,
-            ReactApplicationContext appContext) {
+                                              ReactApplicationContext appContext) {
         Context superContext = reactContext;
         if (!contextHasBug(appContext.getCurrentActivity())) {
             superContext = appContext.getCurrentActivity();
@@ -290,6 +305,8 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     public void destroyPlayer() {
         if (mPlayer != null) {
+            unRegisterReceiver();
+            mPlayer.deregisterActivityForPip();
             mPlayer.stop();
 
             mPlayer.removeListeners(this,
@@ -348,7 +365,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.PIP_OPEN
             );
 
-            mPlayer  = null;
+            mPlayer = null;
             mPlayerView = null;
 
             getReactContext().removeLifecycleEventListener(this);
@@ -427,10 +444,114 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.PIP_OPEN
             );
 
-            mPlayer.setFullscreenHandler(new fullscreenHandler());
+            if (playerInModal) {
+                mPlayer.setFullscreenHandler(createModalFullscreenHandler());
+            } else {
+                mPlayer.setFullscreenHandler(new fullscreenHandler());
+            }
 
             mPlayer.allowBackgroundAudio(backgroundAudioEnabled);
         }
+    }
+
+    /**
+     * Helper to build the a generic `ExtensibleFullscreenHandler` with small tweaks to play nice with Modals
+     * @return {@link ExtensibleFullscreenHandler}
+     */
+    private ExtensibleFullscreenHandler createModalFullscreenHandler() {
+        DeviceOrientationDelegate delegate = getDeviceOrientationDelegate();
+        FullscreenDialog dialog = new FullscreenDialog(
+                mActivity,
+                mActivity,
+                android.R.style.Theme_Black_NoTitleBar_Fullscreen
+        );
+
+        return new ExtensibleFullscreenHandler(
+                new DialogLayoutDelegate(
+                        mPlayerView,
+                        dialog
+                ),
+                delegate,
+                new SystemUiDelegate(
+                        mActivity,
+                        mActivity.getLifecycle(),
+                        new Handler(),
+                        dialog.getWindow().getDecorView()
+                )
+        ) {
+            @Override
+            public void onFullscreenRequested() {
+                // if landscape is priorty we have to turn off full-screen portrait before allowing
+                // the default call for full-screen
+                mPlayer.allowFullscreenPortrait(!landscapeOnFullScreen);
+                super.onFullscreenRequested();
+                // safely set it back on UI thread after work can be finished
+                final Handler handler = new Handler(Looper.getMainLooper());
+                handler.postDelayed(() -> {
+                    if (mPlayer != null) {
+                        mPlayer.allowFullscreenPortrait(true);
+                    }
+                }, 100);
+                WritableMap eventEnterFullscreen = Arguments.createMap();
+                eventEnterFullscreen.putString("message", "onFullscreenRequested");
+                getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
+                        getId(),
+                        "topFullScreenRequested",
+                        eventEnterFullscreen);
+            }
+
+            @Override
+            public void onFullscreenExitRequested() {
+                super.onFullscreenExitRequested();
+
+                WritableMap eventExitFullscreen = Arguments.createMap();
+                eventExitFullscreen.putString("message", "onFullscreenExitRequested");
+                getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
+                        getId(),
+                        "topFullScreenExitRequested",
+                        eventExitFullscreen);
+            }
+        };
+    }
+
+    /**
+     * Add logic here for your custom orientation implementation
+     *
+     * @return Default {@link DeviceOrientationDelegate}
+     */
+    private DeviceOrientationDelegate getDeviceOrientationDelegate() {
+        DeviceOrientationDelegate delegate = new DeviceOrientationDelegate(
+                mActivity,
+                mActivity.getLifecycle(),
+                new Handler()
+        ) {
+            @Override
+            public void setFullscreen(boolean fullscreen) {
+                super.setFullscreen(fullscreen);
+            }
+
+            @Override
+            public void onAllowRotationChanged(boolean allowRotation) {
+                super.onAllowRotationChanged(allowRotation);
+            }
+
+            @Override
+            protected void doRotation(boolean fullscreen, boolean allowFullscreenPortrait) {
+                super.doRotation(fullscreen, allowFullscreenPortrait);
+            }
+
+            @Override
+            protected void doRotationListener() {
+                super.doRotationListener();
+            }
+
+            @Override
+            public void onAllowFullscreenPortrait(boolean allowFullscreenPortrait) {
+                super.onAllowFullscreenPortrait(allowFullscreenPortrait);
+            }
+        };
+        delegate.onAllowRotationChanged(true);
+        return delegate;
     }
 
     private class fullscreenHandler implements FullscreenHandler {
@@ -504,8 +625,15 @@ public class RNJWPlayerView extends RelativeLayout implements
                     mPlayerViewContainer.addView(mPlayerView, new ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT));
-                    mPlayerView.layout(mPlayerViewContainer.getLeft(), mPlayerViewContainer.getTop(),
-                            mPlayerViewContainer.getRight(), mPlayerViewContainer.getBottom());
+                    // returning from full-screen portrait requires a different measure
+                    if (mActivity.getResources().getConfiguration().orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    ) {
+                        mPlayerView.layout(mPlayerView.getLeft(), mPlayerViewContainer.getTop(),
+                                mPlayerViewContainer.getMeasuredWidth(), mPlayerViewContainer.getBottom());
+                    } else {
+                        mPlayerView.layout(mPlayerViewContainer.getLeft(), mPlayerViewContainer.getTop(),
+                                mPlayerViewContainer.getRight(), mPlayerViewContainer.getBottom());
+                    }
                 }
             });
 
@@ -519,12 +647,12 @@ public class RNJWPlayerView extends RelativeLayout implements
 
         @Override
         public void onAllowRotationChanged(boolean b) {
-            Log.e(TAG, "onAllowRotationChanged: " + b );
+            Log.e(TAG, "onAllowRotationChanged: " + b);
         }
 
         @Override
         public void onAllowFullscreenPortraitChanged(boolean allowFullscreenPortrait) {
-            Log.e(TAG, "onAllowFullscreenPortraitChanged: " + allowFullscreenPortrait );
+            Log.e(TAG, "onAllowFullscreenPortraitChanged: " + allowFullscreenPortrait);
         }
 
         @Override
@@ -540,10 +668,96 @@ public class RNJWPlayerView extends RelativeLayout implements
         }
     }
 
+    private ArrayList<Integer> rootViewChildrenOriginalVisibility = new ArrayList<Integer>();
+
+    private class PipHandlerReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) {
+                return;
+            }
+            if (Objects.equals(intent.getAction(), "onPictureInPictureModeChanged")) {
+                if (intent.hasExtra("newConfig") && intent.hasExtra("isInPictureInPictureMode")) {
+                    // Tell the JWP SDK we are toggling so it can handle toolbar / internal setup
+                    mPlayer.onPictureInPictureModeChanged(intent.getBooleanExtra("isInPictureInPictureMode", false), intent.getParcelableExtra("newConfig"));
+
+                    View decorView = mActivity.getWindow().getDecorView();
+                    ViewGroup rootView = decorView.findViewById(android.R.id.content);
+
+                    ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT);
+
+                    if (intent.getBooleanExtra("isInPictureInPictureMode", false)) {
+                        // Going into Picture in Picture
+                        ViewGroup parent = (ViewGroup) mPlayerView.getParent();
+
+                        // Remove the player view temporarily
+                        if (parent != null) {
+                            parent.removeView(mPlayerView);
+                        }
+
+                        // Hide all views but player view and keep a handle on them for later
+                        for (int i = 0; i < rootView.getChildCount(); i++) {
+                            if (rootView.getChildAt(i) != mPlayerView) {
+                                rootViewChildrenOriginalVisibility.add(rootView.getChildAt(i).getVisibility());
+                                rootView.getChildAt(i).setVisibility(View.GONE);
+                            }
+                        }
+                        // Add player view back (This is safe since the JWP SDK has already calculated the PiP size/aspect off the View)
+                        rootView.addView(mPlayerView, layoutParams);
+                    } else {
+                        // Exiting Picture in Picture
+
+                        // Toggle controls to ensure we don't lose them -- weird UX bug fix where controls got lost
+                        mPlayer.setForceControlsVisibility(true);
+                        mPlayer.setForceControlsVisibility(false);
+
+                        // Strip player view
+                        rootView.removeView(mPlayerView);
+
+                        // Add visibility back to  any other controls
+                        for (int i = 0; i < rootView.getChildCount(); i++) {
+                            rootView.getChildAt(i).setVisibility(rootViewChildrenOriginalVisibility.get(i));
+                        }
+                        // Clear our list of views
+                        rootViewChildrenOriginalVisibility.clear();
+                        // Add player view back in main spot
+                        addView(mPlayerView, 0, layoutParams);
+                    }
+                }
+            }
+        }
+    }
+
+    private void registerReceiver() {
+        mReceiver = new PipHandlerReceiver();
+        IntentFilter intentFilter = new IntentFilter("onPictureInPictureModeChanged");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // Must be Exported to get intents
+                mActivity.registerReceiver(mReceiver, intentFilter, Context.RECEIVER_EXPORTED);
+            } else {
+                mActivity.registerReceiver(mReceiver, intentFilter); // Safe API level < 34
+            }
+        } else {
+            mActivity.registerReceiver(mReceiver, intentFilter); // Safe API level < 34
+        }
+    }
+
+    private void unRegisterReceiver() {
+        if (mReceiver != null) {
+            mActivity.unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
+
+    }
+
     public void setConfig(ReadableMap prop) {
         if (mConfig == null || !mConfig.equals(prop)) {
             if (mConfig != null && isOnlyDiff(prop, "playlist") && mPlayer != null) { // still safe check, even with JW
-                                                                                      // JSON change
+                // JSON change
                 PlayerConfig oldConfig = mPlayer.getConfig();
                 PlayerConfig config = new PlayerConfig.Builder()
                         .autostart(oldConfig.getAutostart())
@@ -610,7 +824,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     boolean playlistNotTheSame(ReadableMap prop) {
         return prop.hasKey("playlist") && mPlaylistProp != prop.getArray("playlist") && !Arrays
-                .deepEquals(new ReadableArray[] { mPlaylistProp }, new ReadableArray[] { prop.getArray("playlist") });
+                .deepEquals(new ReadableArray[]{mPlaylistProp}, new ReadableArray[]{prop.getArray("playlist")});
     }
 
     private void setupPlayer(ReadableMap prop) {
@@ -621,7 +835,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         PlayerConfig jwConfig = null;
         Boolean forceLegacy = prop.hasKey("forceLegacyConfig") ? prop.getBoolean("forceLegacyConfig") : false;
         Boolean isJwConfig = false;
-        if(!forceLegacy){
+        if (!forceLegacy) {
             try {
                 obj = MapUtil.toJSONObject(prop);
                 jwConfig = JsonHelper.parseConfigJson(obj);
@@ -761,6 +975,18 @@ public class RNJWPlayerView extends RelativeLayout implements
             mPlayerView.fullScreenOnLandscape = fullScreenOnLandscape;
         }
 
+        if (prop.hasKey("landscapeOnFullScreen")) {
+            landscapeOnFullScreen = prop.getBoolean("landscapeOnFullScreen");
+        }
+
+        if (prop.hasKey("portraitOnExitFullScreen")) {
+            portraitOnExitFullScreen = prop.getBoolean("fullScreenOnLandscape");
+        }
+
+        if (prop.hasKey("playerInModal")) {
+            playerInModal = prop.getBoolean("playerInModal");
+        }
+
         if (prop.hasKey("exitFullScreenOnPortrait")) {
             exitFullScreenOnPortrait = prop.getBoolean("exitFullScreenOnPortrait");
             mPlayerView.exitFullScreenOnPortrait = exitFullScreenOnPortrait;
@@ -778,14 +1004,19 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (mActivity != null && prop.hasKey("pipEnabled")) {
             boolean pipEnabled = prop.getBoolean("pipEnabled");
             if (pipEnabled) {
+                registerReceiver();
                 mPlayer.registerActivityForPip(mActivity, mActivity.getSupportActionBar());
             } else {
                 mPlayer.deregisterActivityForPip();
+                unRegisterReceiver();
             }
         }
 
         // Legacy
-        // This isn't the ideal way to do this on Android
+        // This isn't the ideal way to do this on Android. All drawables/colors/themes shoudld
+        // be targed using styling. See `https://docs.jwplayer.com/players/docs/android-styling-guide`
+        // for more information on how best to override the JWP styles using XML. If you are unsure of a 
+        // color/drawable/theme, open an `Ask` issue.
         if (mColors != null) {
             if (mColors.hasKey("backgroundColor")) {
                 mPlayerView.setBackgroundColor(Color.parseColor("#" + mColors.getString("backgroundColor")));
@@ -1266,6 +1497,13 @@ public class RNJWPlayerView extends RelativeLayout implements
             doBindService();
             requestAudioFocus();
         }
+        WritableMap onFirstFrame = Arguments.createMap();
+        onFirstFrame.putString("message", "onLoaded");
+        onFirstFrame.putDouble("loadTime", firstFrameEvent.getLoadTime());
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
+                getId(),
+                "topFirstFrame",
+                onFirstFrame);
     }
 
     @Override
@@ -1448,6 +1686,16 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putBoolean("active", castEvent.isActive());
         event.putBoolean("available", castEvent.isAvailable());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCasting", event);
+        // stop/start the background audio service if it's running and we're casting
+        if (castEvent.isActive()) {
+            doUnbindService();
+        } else {
+            if (backgroundAudioEnabled) {
+                mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
+                        .build();
+                doBindService();
+            }
+        }
     }
 
     // LifecycleEventListener

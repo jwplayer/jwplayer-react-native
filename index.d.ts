@@ -216,7 +216,7 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface JwTrack {
     id?: string;
     file?: string;
-    kind: string;
+    kind: TrackKind;
     label?: string;
     default?: boolean;
   }
@@ -251,9 +251,13 @@ declare module "@jwplayer/jwplayer-react-native" {
     label: string;
     default?: boolean;
   }
+
+  type TrackKind = "captions" | "chapters" | "thumbnails";
+
   interface Track {
     file: string;
     label: string;
+    kind: TrackKind;
     default?: boolean;
   }
   interface JWAdSettings {
@@ -349,6 +353,9 @@ declare module "@jwplayer/jwplayer-react-native" {
     size?: number;
   }
   type EdgeStyles = "none" | "dropshadow" | "raised" | "depressed" | "uniform";
+
+  // All `Styling` is only intended to be used with iOS. Android requires overloading
+  // of the JWP IDs seen here: https://docs.jwplayer.com/players/docs/android-styling-guide
   interface Styling {
     colors?: {
       buttons?: string;
@@ -441,6 +448,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     landscapeOnFullScreen?: boolean;
     portraitOnExitFullScreen?: boolean;
     exitFullScreenOnPortrait?: boolean;
+    playerInModal?: boolean;
     playlist?: PlaylistItem[];
     stretching?: string;
     related?: Related;
@@ -479,6 +487,9 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface PlaylistEventProps {
     playlist: PlaylistItem[]
   }
+  interface LoadEventProps {
+    loadTime: number;
+  }
   interface PlaylistItemEventProps {
     playlistItem: PlaylistItem
   }
@@ -504,6 +515,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     forceLegacyConfig?: boolean;
     onPlayerReady?: () => void;
     onPlaylist?: (event: BaseEvent<PlaylistEventProps>) => void;
+    onLoaded? : (event: BaseEvent<LoadEventProps>) => void;
     onBeforePlay?: () => void;
     onBeforeComplete?: () => void;
     onComplete?: () => void;

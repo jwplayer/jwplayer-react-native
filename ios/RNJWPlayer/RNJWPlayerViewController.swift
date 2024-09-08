@@ -280,7 +280,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     override func jwplayer(_ player:JWPlayer, didFinishLoadingWithTime loadTime:TimeInterval) {
         super.jwplayer(player, didFinishLoadingWithTime:loadTime)
-        parentView?.onLoaded?([:])
+        parentView?.onLoaded?(["loadTime":loadTime])
     }
 
     override func jwplayer(_ player:JWPlayer, isAttemptingToPlay playlistItem:JWPlayerItem, reason:JWPlayReason) {

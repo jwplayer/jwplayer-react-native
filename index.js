@@ -6,7 +6,7 @@ import {
 	findNodeHandle,
 } from 'react-native';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
+import isEqualWith from 'lodash.isequalwith';
 
 const RNJWPlayerManager =
 	Platform.OS === 'ios'
@@ -232,6 +232,8 @@ export default class JWPlayer extends Component {
 						PropTypes.shape({
 							file: PropTypes.string,
 							label: PropTypes.string,
+							kind: PropTypes.oneOf(['captions', 'thumbnails', 'chapters']),
+							default: PropTypes.bool
 						})
 					),
 					adSchedule: PropTypes.arrayOf(
@@ -252,6 +254,8 @@ export default class JWPlayer extends Component {
 				'hidden',
 				'onscreen',
 			]),
+			// All `Styling` is only intended to be used with iOS. Android requires overloading
+			// of the JWP IDs seen here: https://docs.jwplayer.com/players/docs/android-styling-guide
 			styling: PropTypes.shape({
 				colors: PropTypes.shape({
 					buttons: PropTypes.string,
@@ -302,6 +306,7 @@ export default class JWPlayer extends Component {
 			offlineImage: PropTypes.string,
 			forceFullScreenOnLandscape: PropTypes.bool,
 			forceLandscapeOnFullScreen: PropTypes.bool,
+			playerInModal: PropTypes.bool,
 			enableLockScreenControls: PropTypes.bool,
 			stretching: PropTypes.oneOf([
 				'uniform',
@@ -315,6 +320,7 @@ export default class JWPlayer extends Component {
 		}),
 		onPlayerReady: PropTypes.func,
 		onPlaylist: PropTypes.func,
+		onLoaded: PropTypes.func,
 		changePlaylist: PropTypes.func,
 		play: PropTypes.func,
 		pause: PropTypes.func,
@@ -385,7 +391,7 @@ export default class JWPlayer extends Component {
 		var { config, controls } = nextProps;
 		var thisConfig = this.props.config || {};
 
-		var result = !_.isEqualWith(
+		var result = !isEqualWith(
 			config,
 			thisConfig,
 			(value1, value2, key) => {

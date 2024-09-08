@@ -172,7 +172,7 @@ class RNJWPlayerViewManager: RCTViewManager {
         }
     }
     
-    @objc func setVolume(_ reactTag: NSNumber, _ volume: Double) {
+    @objc func setVolume(_ reactTag: NSNumber, _ volume: NSNumber) {
         self.bridge.uiManager.addUIBlock { uiManager, viewRegistry in
             guard let view = viewRegistry?[reactTag] as? RNJWPlayerView else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView, got: \(String(describing: viewRegistry?[reactTag]))")
@@ -180,9 +180,9 @@ class RNJWPlayerViewManager: RCTViewManager {
             }
 
             if let playerView = view.playerView {
-                playerView.player.volume = volume
+                playerView.player.volume = volume.doubleValue
             } else if let playerViewController = view.playerViewController {
-                playerViewController.player.volume = volume
+                playerViewController.player.volume = volume.doubleValue
             }
         }
     }

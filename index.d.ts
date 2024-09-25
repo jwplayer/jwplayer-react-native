@@ -26,7 +26,13 @@ declare module "@jwplayer/jwplayer-react-native" {
     advertising?: JwAdvertisingConfig;
     playbackRates?: number[];
     playbackRateControls?: boolean;
+    // Non-Json Parsing props
     license: string;
+    playerInModal?: boolean;
+    fullScreenOnLandscape?: boolean;
+    landscapeOnFullScreen?: boolean;
+    portraitOnExitFullScreen?: boolean;
+    exitFullScreenOnPortrait?: boolean;
   }
 
   type JwThumbnailPreview = 101 | 102 | 103;

@@ -299,7 +299,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
             }
             
             if backgroundAudioEnabled || pipEnabled {
-                let category = config["category"] as? String
+                let category = config["category"] != nil ? config["category"] as? String : "playback" // default category for playback
                 let categoryOptions = config["categoryOptions"] as? [String]
                 let mode = config["mode"] as? String
 
@@ -1518,29 +1518,32 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
         }
 
         var options: AVAudioSession.CategoryOptions = []
-        if categoryOptions.contains("MixWithOthers") {
-            options.insert(.mixWithOthers)
-        }
-        if categoryOptions.contains("DuckOthers") {
-            options.insert(.duckOthers)
-        }
-        if categoryOptions.contains("AllowBluetooth") {
-            options.insert(.allowBluetooth)
-        }
-        if categoryOptions.contains("InterruptSpokenAudioAndMix") {
-            options.insert(.interruptSpokenAudioAndMixWithOthers)
-        }
-        if categoryOptions.contains("AllowBluetoothA2DP") {
-            options.insert(.allowBluetoothA2DP)
-        }
-        if categoryOptions.contains("AllowAirPlay") {
-            options.insert(.allowAirPlay)
-        }
-        if categoryOptions.contains("OverrideMutedMicrophone") {
-            if #available(iOS 14.5, *) {
-                options.insert(.overrideMutedMicrophoneInterruption)
-            } else {
-                // Handle the case for earlier versions if needed
+        // If the user doesn't specify any options
+        if categoryOptions != nil {
+            if categoryOptions.contains("MixWithOthers") {
+                options.insert(.mixWithOthers)
+            }
+            if categoryOptions.contains("DuckOthers") {
+                options.insert(.duckOthers)
+            }
+            if categoryOptions.contains("AllowBluetooth") {
+                options.insert(.allowBluetooth)
+            }
+            if categoryOptions.contains("InterruptSpokenAudioAndMix") {
+                options.insert(.interruptSpokenAudioAndMixWithOthers)
+            }
+            if categoryOptions.contains("AllowBluetoothA2DP") {
+                options.insert(.allowBluetoothA2DP)
+            }
+            if categoryOptions.contains("AllowAirPlay") {
+                options.insert(.allowAirPlay)
+            }
+            if categoryOptions.contains("OverrideMutedMicrophone") {
+                if #available(iOS 14.5, *) {
+                    options.insert(.overrideMutedMicrophoneInterruption)
+                } else {
+                    // Handle the case for earlier versions if needed
+                }
             }
         }
         

@@ -9,7 +9,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -21,9 +20,7 @@ import com.jwplayer.pub.api.PlayerState;
 import com.jwplayer.pub.api.media.adaptive.QualityLevel;
 import com.jwplayer.pub.api.configuration.PlayerConfig;
 import com.jwplayer.pub.api.media.audio.AudioTrack;
-import com.jwplayer.pub.api.media.playlists.PlaylistItem;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class RNJWPlayerModule extends ReactContextBaseJavaModule {
@@ -250,8 +247,11 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
           RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
 
           if (playerView != null && playerView.mPlayerView != null) {
-            playerView.mPlayerView.getPlayer().pause();
-            playerView.userPaused = true;
+            if(!playerView.getIsCastActive()){
+              playerView.mPlayerView.getPlayer().pause();
+              playerView.userPaused = true;
+
+            }
           }
         }
       });
@@ -269,8 +269,10 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
           RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
 
           if (playerView != null && playerView.mPlayerView != null) {
-            playerView.mPlayerView.getPlayer().stop();
-            playerView.userPaused = true;
+            if(!playerView.getIsCastActive()){
+              playerView.mPlayerView.getPlayer().stop();
+              playerView.userPaused = true;
+            }
           }
         }
       });

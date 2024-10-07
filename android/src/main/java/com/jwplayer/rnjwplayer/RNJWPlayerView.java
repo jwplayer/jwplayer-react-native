@@ -18,16 +18,20 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleEventObserver;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.Arguments;
@@ -41,8 +45,8 @@ import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.JWPlayer;
+import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.UiGroup;
 import com.jwplayer.pub.api.background.MediaServiceController;
 import com.jwplayer.pub.api.configuration.PlayerConfig;
@@ -113,14 +117,14 @@ import com.jwplayer.pub.api.license.LicenseUtil;
 import com.jwplayer.pub.api.media.playlists.PlaylistItem;
 import com.jwplayer.ui.views.CueMarkerSeekbar;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import org.json.JSONObject;
 
 public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnFullscreenListener,
@@ -179,7 +183,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
         AudioManager.OnAudioFocusChangeListener,
 
-        LifecycleEventListener {
+        LifecycleEventListener, LifecycleOwner {
     public RNJWPlayer mPlayerView = null;
     public JWPlayer mPlayer = null;
 
@@ -269,6 +273,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         super(getNonBuggyContext(reactContext, appContext));
         mAppContext = appContext;
 
+        registry.setCurrentState(Lifecycle.State.CREATED);
         mThemedReactContext = reactContext;
 
         mActivity = (ReactActivity) getActivity();
@@ -276,10 +281,24 @@ public class RNJWPlayerView extends RelativeLayout implements
             mWindow = mActivity.getWindow();
         }
 
+        if (mActivity != null) {
+            mActivity.getLifecycle().addObserver(lifecycleObserver);
+        }
+
         mRootView = mActivity.findViewById(android.R.id.content);
 
         getReactContext().addLifecycleEventListener(this);
     }
+
+    private LifecycleObserver lifecycleObserver = new LifecycleEventObserver() {
+        @Override
+        public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
+            if (event.getTargetState() == Lifecycle.State.DESTROYED) {
+                return; // no op: handled elsewhere
+            }
+            registry.setCurrentState(event.getTargetState());
+        }
+    };
 
     public ReactApplicationContext getAppContext() {
         return mAppContext;
@@ -303,11 +322,37 @@ public class RNJWPlayerView extends RelativeLayout implements
         return mThemedReactContext.getReactApplicationContext().getCurrentActivity();
     }
 
+    // The registry for lifecycle events. Required by player object. Main use case if for garbage collection / teardown
+    private final LifecycleRegistry registry = new LifecycleRegistry(this);
+
+    @NonNull
+    @Override
+    public Lifecycle getLifecycle() {
+        return registry;
+    }
+
+    // // closest to `ondestroy` for a view without listening to the activity event
+    // // The activity event can be deceptive in React-Native
+    // @Override
+    // protected void onDetachedFromWindow() {
+    //     super.onDetachedFromWindow();
+    //     registry.setCurrentState(Lifecycle.State.DESTROYED);
+    // }
+
     public void destroyPlayer() {
         if (mPlayer != null) {
             unRegisterReceiver();
+
+            // Only call stop if we are not casting as stop will break the current cast session
+            if (!mIsCastActive) {
+                mPlayer.stop();
+            }
+            // send signal to JW SDK player is destroyed
+            registry.setCurrentState(Lifecycle.State.DESTROYED);
+
+            // Stop listening to activities lifecycle
+            mActivity.getLifecycle().removeObserver(lifecycleObserver);
             mPlayer.deregisterActivityForPip();
-            mPlayer.stop();
 
             mPlayer.removeListeners(this,
                     // VideoPlayerEvents
@@ -456,6 +501,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     /**
      * Helper to build the a generic `ExtensibleFullscreenHandler` with small tweaks to play nice with Modals
+     *
      * @return {@link ExtensibleFullscreenHandler}
      */
     private ExtensibleFullscreenHandler createModalFullscreenHandler() {
@@ -966,6 +1012,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                 LinearLayout.LayoutParams.MATCH_PARENT));
         addView(mPlayerView);
 
+        // Ensure we have a valid state before applying to the player
+        registry.setCurrentState(Lifecycle.State.STARTED);
+
+        mPlayer = mPlayerView.getPlayer(this);
+
         if (prop.hasKey("controls")) { // Hack for controls hiding not working right away
             mPlayerView.getPlayer().setControls(prop.getBoolean("controls"));
         }
@@ -991,8 +1042,6 @@ public class RNJWPlayerView extends RelativeLayout implements
             exitFullScreenOnPortrait = prop.getBoolean("exitFullScreenOnPortrait");
             mPlayerView.exitFullScreenOnPortrait = exitFullScreenOnPortrait;
         }
-
-        mPlayer = mPlayerView.getPlayer();
 
         if (isJwConfig) {
             mPlayer.setup(jwConfig);
@@ -1678,6 +1727,17 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     // Casting events
 
+    private boolean mIsCastActive = false;
+
+    /**
+     * Get if this player-view is currently casting
+     *
+     * @return true if casting
+     */
+    public boolean getIsCastActive() {
+        return mIsCastActive;
+    }
+
     @Override
     public void onCast(CastEvent castEvent) {
         WritableMap event = Arguments.createMap();
@@ -1686,6 +1746,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putBoolean("active", castEvent.isActive());
         event.putBoolean("available", castEvent.isAvailable());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCasting", event);
+        mIsCastActive = castEvent.isActive();
         // stop/start the background audio service if it's running and we're casting
         if (castEvent.isActive()) {
             doUnbindService();

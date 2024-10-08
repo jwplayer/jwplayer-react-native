@@ -2,6 +2,7 @@ package com.jwplayer.rnjwplayer;
 
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -48,6 +49,7 @@ import com.google.gson.Gson;
 import com.jwplayer.pub.api.JWPlayer;
 import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.UiGroup;
+import com.jwplayer.pub.api.background.MediaService;
 import com.jwplayer.pub.api.background.MediaServiceController;
 import com.jwplayer.pub.api.configuration.PlayerConfig;
 import com.jwplayer.pub.api.configuration.UiConfig;
@@ -234,7 +236,13 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     private void doBindService() {
         if (mMediaServiceController != null) {
-            mMediaServiceController.bindService();
+            if (!isBackgroundAudioServiceRunning()) {
+                // This may not be your expected behavior, but is necessary to avoid crashing
+                // Do not use multiple player instances with background audio enabled
+
+                // don't rebind me if the service is already active with a player.
+                mMediaServiceController.bindService();
+            }
         }
     }
 
@@ -267,6 +275,18 @@ public class RNJWPlayerView extends RelativeLayout implements
             }
         }
         return superContext;
+    }
+
+    private boolean isBackgroundAudioServiceRunning() {
+        ActivityManager manager = (ActivityManager) mAppContext.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (MediaService.class.getName().equals(service.service.getClassName())) {
+                Log.w(TAG, "MediaService is already running with another player loaded. To avoid crashing, this player, "
+                        + mPlayerView.getTag() + "  will not be loaded into the background service.");
+                return true;
+            }
+        }
+        return false;
     }
 
     public RNJWPlayerView(ThemedReactContext reactContext, ReactApplicationContext appContext) {
@@ -1064,7 +1084,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         // Legacy
         // This isn't the ideal way to do this on Android. All drawables/colors/themes shoudld
         // be targed using styling. See `https://docs.jwplayer.com/players/docs/android-styling-guide`
-        // for more information on how best to override the JWP styles using XML. If you are unsure of a 
+        // for more information on how best to override the JWP styles using XML. If you are unsure of a
         // color/drawable/theme, open an `Ask` issue.
         if (mColors != null) {
             if (mColors.hasKey("backgroundColor")) {
@@ -1121,8 +1141,6 @@ public class RNJWPlayerView extends RelativeLayout implements
 
         if (backgroundAudioEnabled) {
             audioManager = (AudioManager) simpleContext.getSystemService(Context.AUDIO_SERVICE);
-            // Throws a fatal error if using a playlistURL instead of manually created playlist
-            // Related to SDK-11346
             mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
                     .build();
         }

@@ -483,6 +483,15 @@ declare module "@jwplayer/jwplayer-react-native" {
     rate: number;
     at: number;
   }
+  interface PlayerSetupErrorProps {
+    errorMessage?: string;
+    errorCode?: number;
+  }
+  interface PlayerErrorProps {
+    error?: string;
+    errorCode?: number;
+    description?: string; // Android Only
+  }
   interface TimeEventProps {
     position: number;
     duration: number;
@@ -504,15 +513,17 @@ declare module "@jwplayer/jwplayer-react-native" {
     error: string;
   }
   interface PlayerWarningEventProps {
-    code: string;
-    warning: string;
+    code?: number;
+    warning?: string;
+    adErrorCode?: number; // Android only
   }
   interface AdEventProps {
     client?: string;
     reason?: string;
     type: number;
   }
-  type NativeError = (event: BaseEvent<PlayerErrorEventProps>) => void;
+  // Overloaded type to be used in multiple error events
+  type NativeError = (event: BaseEvent<PlayerErrorEventProps> | BaseEvent<PlayerSetupErrorProps> | BaseEvent<PlayerErrorProps>) => void;
   type NativeWarning = (event: BaseEvent<PlayerWarningEventProps>) => void;
   interface PropsType {
     config: Config | JwConfig;
@@ -532,9 +543,9 @@ declare module "@jwplayer/jwplayer-react-native" {
     onRateChanged?: (event?: BaseEvent<RateChangedEventProps>) => void;
     onSetupPlayerError?: NativeError;
     onPlayerError?: NativeError;
-    onPlayerWarning?: NativeWarning;
-    onPlayerAdError?: NativeError;
-    onPlayerAdWarning?: NativeWarning;
+    onPlayerWarning?: NativeWarning; 
+    onPlayerAdError?: NativeError; 
+    onPlayerAdWarning?: NativeWarning; 
     onAdEvent?: (event: BaseEvent<AdEventProps>) => void;
     onAdTime?: (event: BaseEvent<TimeEventProps>) => void;
     onBuffer?: () => void;

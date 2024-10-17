@@ -1015,7 +1015,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         // Legacy
         // This isn't the ideal way to do this on Android. All drawables/colors/themes shoudld
         // be targed using styling. See `https://docs.jwplayer.com/players/docs/android-styling-guide`
-        // for more information on how best to override the JWP styles using XML. If you are unsure of a 
+        // for more information on how best to override the JWP styles using XML. If you are unsure of a
         // color/drawable/theme, open an `Ask` issue.
         if (mColors != null) {
             if (mColors.hasKey("backgroundColor")) {
@@ -1331,7 +1331,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onPlayerAdWarning");
         event.putInt("code", adWarningEvent.getCode());
         event.putInt("adErrorCode", adWarningEvent.getAdErrorCode());
-        event.putString("error", adWarningEvent.getMessage());
+        event.putString("warning", adWarningEvent.getMessage());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerAdWarning", event);
     }
 
@@ -1485,6 +1485,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (ex != null) {
             event.putString("error", ex.toString());
             event.putString("description", errorEvent.getMessage());
+            event.putInt("errorCode", errorEvent.getErrorCode());
         }
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerError", event);
 
@@ -1635,6 +1636,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onSetupError(SetupErrorEvent setupErrorEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onSetupError");
+        event.putString("errorMessage", setupErrorEvent.getMessage());
+        event.putInt("errorCode", setupErrorEvent.getCode());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topSetupPlayerError", event);
 
         updateWakeLock(false);

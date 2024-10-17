@@ -85,6 +85,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     @objc var onCasting: RCTDirectEventBlock?
     @objc var onCastingEnded: RCTDirectEventBlock?
     @objc var onCastingFailed: RCTDirectEventBlock?
+    @objc var onCaptionsChanged: RCTDirectEventBlock?
     
     init() {
         super.init(frame: CGRect(x: 20, y: 0, width: UIScreen.main.bounds.width - 40, height: 300))
@@ -1400,7 +1401,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func jwplayer(_ player:JWPlayer, captionTrackChanged index:Int) {
-
+        self.onCaptionsChanged?(["index": index])
     }
 
     func jwplayer(_ player: JWPlayer, visualQualityChanged currentVisualQuality: JWVisualQuality) {
@@ -1416,7 +1417,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func jwplayer(_ player:JWPlayer, updatedCaptionList options:[JWMediaSelectionOption]) {
-
+        // this needs to map back to 'onCaptionsList' in RN/index.d.ts
     }
 
     // MARK: - JWPlayer audio session && interruption handling

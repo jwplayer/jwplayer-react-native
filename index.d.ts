@@ -512,6 +512,9 @@ declare module "@jwplayer/jwplayer-react-native" {
     reason?: string;
     type: number;
   }
+  interface CaptionsChangedEventProps {
+    index?: number;
+  }
   type NativeError = (event: BaseEvent<PlayerErrorEventProps>) => void;
   type NativeWarning = (event: BaseEvent<PlayerWarningEventProps>) => void;
   interface PropsType {
@@ -546,6 +549,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     onControlBarVisible?: (event: BaseEvent<ControlBarVisibleEventProps>) => void;
     onPlaylistComplete?: () => void;
     onPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;
+    onCaptionsChanged?: (event: BaseEvent<CaptionsChangedEventProps>) => void;
+    // onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
     onAudioTracks?: () => void;
     shouldComponentUpdate?: (nextProps: any, nextState: any) => boolean;
   }
@@ -577,6 +582,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     getCurrentAudioTrack(): Promise<number | null>;
     setCurrentAudioTrack(index: number): void;
     setCurrentCaptions(index: number): void;
+    getCurrentCaptions(): Promise<number | null>; 
     setVisibility(visibility: boolean, controls: JWControlType[]): void;
   }
 }

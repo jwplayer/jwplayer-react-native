@@ -564,7 +564,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     setControls(show: boolean): void;
     setLockScreenControls(show: boolean): void;
     seekTo(time: number): void;
-    loadPlaylist(playlistItems: PlaylistItem[]): void;
+    loadPlaylist(playlistItems: PlaylistItem[] | JwPlaylistItem[] | string): void;
     setFullscreen(fullScreen: boolean): void;
     position(): Promise<number>;
     setUpCastController(): void;

@@ -1418,6 +1418,8 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
     func jwplayer(_ player:JWPlayer, updatedCaptionList options:[JWMediaSelectionOption]) {
         // this needs to map back to 'onCaptionsList' in RN/index.d.ts
+
+        
     }
 
     // MARK: - JWPlayer audio session && interruption handling

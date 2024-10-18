@@ -1441,11 +1441,9 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     @Override
     public void onCaptionsChanged(CaptionsChangedEvent captionsChangedEvent) {
-        
         WritableMap event = Arguments.createMap();
         event.putString("message", "onCaptionsChanged");
         event.putInt("index", captionsChangedEvent.getCurrentTrack());
-        Log.e("onCaptionsChanged", event.toString());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsChanged", event);
     }
 

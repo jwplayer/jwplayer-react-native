@@ -467,6 +467,8 @@ class RNJWPlayerViewManager: RCTViewManager {
             var playlistArray = [JWPlayerItem]()
 
             for item in playlist {
+                // TODO Update this to better parse JWP Playlist Items: 
+                // awaiting JWP SDK exposure of JWJSONParser.playlist
                 if let playerItem = try? view.getPlayerItem(item: item as! [String: Any]) {
                     playlistArray.append(playerItem)
                 }

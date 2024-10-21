@@ -86,6 +86,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     @objc var onCastingEnded: RCTDirectEventBlock?
     @objc var onCastingFailed: RCTDirectEventBlock?
     @objc var onCaptionsChanged: RCTDirectEventBlock?
+    @objc var onCaptionsList: RCTDirectEventBlock?
     
     init() {
         super.init(frame: CGRect(x: 20, y: 0, width: UIScreen.main.bounds.width - 40, height: 300))
@@ -1418,7 +1419,16 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
     func jwplayer(_ player:JWPlayer, updatedCaptionList options:[JWMediaSelectionOption]) {
         // this needs to map back to 'onCaptionsList' in RN/index.d.ts
+    // index: number;
+    // file: string;
+    // label: string;
+    // default: string;
 
+    // 1 - captionTracks returns all the captions
+    // 2 - currentCaptionsTrack gets index of cuurent
+    print("onCaptionsList", player.currentCaptionsTrack)
+    print("trackList", player.captionTracks)
+    // self.onCaptionsList?(["index": player.currentCaptionsTrack, "tracks": tracks])
         
     }
 

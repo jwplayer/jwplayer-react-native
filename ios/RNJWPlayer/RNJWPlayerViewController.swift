@@ -588,6 +588,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     override func jwplayer(_ player:JWPlayer, captionTrackChanged index:Int) {
         super.jwplayer(player, captionTrackChanged:index)
+        parentView.onCaptionsChanged?(["index": index])
     }
 
     override func jwplayer(_ player:JWPlayer, qualityLevelChanged currentLevel:Int) {

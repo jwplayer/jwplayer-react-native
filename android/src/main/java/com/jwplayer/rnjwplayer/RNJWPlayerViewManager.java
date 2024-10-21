@@ -162,7 +162,7 @@ public class RNJWPlayerViewManager extends SimpleViewManager<RNJWPlayerView> {
             .put("topCaptionsList",
                     MapBuilder.of(
                             "phasedRegistrationNames",
-                            MapBuilder.of("bubbled", "getCaptionsList")))
+                            MapBuilder.of("bubbled", "onCaptionsList")))
             .put("topCasting",
                     MapBuilder.of(
                             "phasedRegistrationNames",

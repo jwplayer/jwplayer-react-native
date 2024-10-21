@@ -515,6 +515,12 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface CaptionsChangedEventProps {
     index?: number;
   }
+  interface CaptionsListEventProps {
+    index: number;
+    file: string;
+    label: string;
+    default: string;
+  }
   type NativeError = (event: BaseEvent<PlayerErrorEventProps>) => void;
   type NativeWarning = (event: BaseEvent<PlayerWarningEventProps>) => void;
   interface PropsType {
@@ -550,7 +556,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     onPlaylistComplete?: () => void;
     onPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;
     onCaptionsChanged?: (event: BaseEvent<CaptionsChangedEventProps>) => void;
-    // onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
+    onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
     onAudioTracks?: () => void;
     shouldComponentUpdate?: (nextProps: any, nextState: any) => boolean;
   }

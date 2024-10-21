@@ -55,13 +55,13 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     override func jwplayer(_ player:JWPlayer, failedWithError code:UInt, message:String) {
         super.jwplayer(player, failedWithError:code, message:message)
-        parentView?.onPlayerError?(["error": message])
+        parentView?.onPlayerError?(["error": message, "errorCode": code])
         parentView?.playerFailed = true
     }
 
     override func jwplayer(_ player:JWPlayer, failedWithSetupError code:UInt, message:String) {
         super.jwplayer(player, failedWithSetupError:code, message:message)
-        parentView?.onSetupPlayerError?(["error": message])
+        parentView?.onSetupPlayerError?(["errorMessage": message, "errorCode": code])
         parentView?.playerFailed = true
     }
 
@@ -78,7 +78,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     override func jwplayer(_ player:JWPlayer, encounteredAdWarning code:UInt, message:String) {
         super.jwplayer(player, encounteredAdWarning:code, message:message)
-        parentView?.onPlayerAdWarning?(["warning": message])
+        parentView?.onPlayerAdWarning?(["warning": message, "code": code])
     }
 
 

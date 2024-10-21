@@ -960,12 +960,12 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func jwplayer(_ player:JWPlayer, failedWithError code:UInt, message:String) {
-        self.onPlayerError?(["error": message])
+        self.onPlayerError?(["error": message, "errorCode": code])
         playerFailed = true
     }
 
     func jwplayer(_ player:JWPlayer, failedWithSetupError code:UInt, message:String) {
-        self.onSetupPlayerError?(["error": message])
+        self.onSetupPlayerError?(["errorMessage": message, "errorCode": code])
         playerFailed = true
     }
 
@@ -979,7 +979,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
 
     func jwplayer(_ player:JWPlayer, encounteredAdWarning code:UInt, message:String) {
-        self.onPlayerAdWarning?(["warning": message])
+        self.onPlayerAdWarning?(["warning": message, "code": code])
     }
 
 

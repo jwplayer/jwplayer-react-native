@@ -1437,6 +1437,39 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     }
 
+    // Captions Events
+
+    @Override
+    public void onCaptionsChanged(CaptionsChangedEvent captionsChangedEvent) {
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "onCaptionsChanged");
+        event.putInt("index", captionsChangedEvent.getCurrentTrack());
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsChanged", event);
+    }
+
+    @Override
+    public void onCaptionsList(CaptionsListEvent captionsListEvent) {
+        WritableMap event = Arguments.createMap();
+        List<Caption> captionTrackList = captionsListEvent.getCaptions();
+        WritableArray captionTracks = Arguments.createArray();
+        if (captionTrackList != null) {
+            for(int i = 0; i < captionTrackList.size(); i++) {
+                WritableMap captionTrack = Arguments.createMap();
+                Caption track = captionTrackList.get(i);
+                // captionTrack.putString("equals": track.equals());
+                captionTrack.putString("file": track.getFile());
+                // captionTrack.putString("kind": track.getKind()); // may not need
+                captionTrack.putString("label": track.getLabel());
+                captionTrack.putString("default": track.isDefault());
+                captionTracks.pushMap(captionTrack);
+            }
+        }
+        event.putString("message", "onCaptionsList")
+        event.putInt("index", captionsListEvent.getCurrentCaptionsIndex());
+        event.putArray("tracks", captionTracks);
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsList", event);
+    }
+
     // Player Events
 
     @Override
@@ -1650,16 +1683,6 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putDouble("position", timeEvent.getPosition());
         event.putDouble("duration", timeEvent.getDuration());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topTime", event);
-    }
-
-    @Override
-    public void onCaptionsChanged(CaptionsChangedEvent captionsChangedEvent) {
-
-    }
-
-    @Override
-    public void onCaptionsList(CaptionsListEvent captionsListEvent) {
-
     }
 
     @Override

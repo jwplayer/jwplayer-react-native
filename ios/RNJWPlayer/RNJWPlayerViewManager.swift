@@ -420,6 +420,25 @@ class RNJWPlayerViewManager: RCTViewManager {
         }
     }
 
+    @objc func getCurrentCaptions(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
+        self.bridge.uiManager.addUIBlock { uiManager, viewRegistry in
+            guard let view = viewRegistry?[reactTag] as? RNJWPlayerView else {
+                let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no player"])
+                reject("no_player", "Invalid view returned from registry, expecting RNJWPlayerView", error)
+                return
+            }
+
+            if let playerView = view.playerView {
+                resolve(NSNumber(value: playerView.player.currentCaptionsTrack))
+            } else if let playerViewController = view.playerViewController {
+                resolve(NSNumber(value: playerViewController.player.currentCaptionsTrack))
+            } else {
+                let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no player"])
+                reject("no_player", "There is no player", error)
+            }
+        }
+    }
+
     @objc func setLicenseKey(_ reactTag: NSNumber, _ license: String) {
         self.bridge.uiManager.addUIBlock { uiManager, viewRegistry in
             guard let view = viewRegistry?[reactTag] as? RNJWPlayerView else {

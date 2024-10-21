@@ -371,6 +371,8 @@ export default class JWPlayer extends Component {
 		setCurrentAudioTrack: PropTypes.func,
 		setCurrentCaptions: PropTypes.func,
 		onCaptionsChanged: PropTypes.func,
+		getCurrentCaptions: PropTypes.func,
+		onCaptionsChanged: PropTypes.func,
 		onCaptionsList: PropTypes.func,
 		getCurrentCaptions: PropTypes.func,
 		onAudioTracks: PropTypes.func,
@@ -689,6 +691,21 @@ export default class JWPlayer extends Component {
 				this.getRNJWPlayerBridgeHandle(),
 				index
 			);
+		}
+	}
+	
+	async getCurrentCaptions() {
+		if (RNJWPlayerManager) {
+			try {
+				var currentCaptionTrack =
+					await RNJWPlayerManager.getCurrentCaptions(
+						this.getRNJWPlayerBridgeHandle()
+					);
+				return currentCaptionTrack;
+			} catch (e) {
+				console.error(e);
+				return null;
+			}
 		}
 	}
 

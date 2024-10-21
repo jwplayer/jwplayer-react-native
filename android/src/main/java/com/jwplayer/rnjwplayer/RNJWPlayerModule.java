@@ -515,7 +515,6 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
           RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
 
           if (playerView != null && playerView.mPlayer != null) {
-            Log.d("PlayerModule", String.valueOf(playerView.mPlayer.getCurrentCaptions()));
             promise.resolve(playerView.mPlayer.getCurrentCaptions());
           } else {
             promise.reject("RNJW Error", "Player is null");

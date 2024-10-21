@@ -18,12 +18,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -41,8 +39,8 @@ import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.JWPlayer;
+import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.UiGroup;
 import com.jwplayer.pub.api.background.MediaServiceController;
 import com.jwplayer.pub.api.configuration.PlayerConfig;
@@ -113,14 +111,14 @@ import com.jwplayer.pub.api.license.LicenseUtil;
 import com.jwplayer.pub.api.media.playlists.PlaylistItem;
 import com.jwplayer.ui.views.CueMarkerSeekbar;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import org.json.JSONObject;
 
 public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnFullscreenListener,
@@ -622,6 +620,9 @@ public class RNJWPlayerView extends RelativeLayout implements
             mPlayerViewContainer.post(new Runnable() {
                 @Override
                 public void run() {
+                    // View may not have been removed properly (especially if returning from PiP)
+                    mPlayerViewContainer.removeView(mPlayerView);
+                    
                     mPlayerViewContainer.addView(mPlayerView, new ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT));
@@ -713,6 +714,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                         // Toggle controls to ensure we don't lose them -- weird UX bug fix where controls got lost
                         mPlayer.setForceControlsVisibility(true);
                         mPlayer.setForceControlsVisibility(false);
+
+                        // If player was in fullscreen when going into PiP, we need to force it back out
+                        if (mPlayer.getFullscreen()) {
+                            mPlayer.setFullscreen(false, true);
+                        }
 
                         // Strip player view
                         rootView.removeView(mPlayerView);

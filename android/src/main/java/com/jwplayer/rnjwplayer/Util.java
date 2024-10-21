@@ -2,16 +2,20 @@ package com.jwplayer.rnjwplayer;
 
 import static androidx.media3.common.util.Util.toByteArray;
 
+import android.util.Log;
 import android.util.Patterns;
 import android.webkit.URLUtil;
 
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.media.ads.AdBreak;
 import com.jwplayer.pub.api.media.captions.Caption;
 import com.jwplayer.pub.api.media.captions.CaptionType;
 import com.jwplayer.pub.api.media.playlists.MediaSource;
 import com.jwplayer.pub.api.media.playlists.PlaylistItem;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,8 +24,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Locale;
+import java.util.Map;
 
 public class Util {
 
@@ -62,7 +66,7 @@ public class Util {
         }
     }
 
-    public static boolean isValidURL(String url){
+    public static boolean isValidURL(String url) {
         return URLUtil.isValidUrl(url) && Patterns.WEB_URL.matcher(url).matches();
     }
 
@@ -75,14 +79,28 @@ public class Util {
         while (playlistItems.size() > j) {
             ReadableMap playlistItem = playlistItems.getMap(j);
 
-            PlaylistItem newPlayListItem = getPlaylistItem((playlistItem));
-            playlist.add(newPlayListItem);
+            JSONObject obj;
+            PlaylistItem item = null;
+            // Try since legacy config may or may not conform to this standard
+            try {
+                obj = MapUtil.toJSONObject(playlistItem);
+                item = JsonHelper.parsePlaylistItemJson(obj);
+            } catch (Exception ex) {
+                Log.e("createPlaylist", ex.toString());
+            }
+            if (item != null) {
+                playlist.add(item);
+            } else {
+                // Try to use the legacy format
+                PlaylistItem newPlayListItem = getPlaylistItem((playlistItem));
+                playlist.add(newPlayListItem);
+            }
             j++;
         }
         return playlist;
     }
 
-    public static PlaylistItem getPlaylistItem (ReadableMap playlistItem) {
+    public static PlaylistItem getPlaylistItem(ReadableMap playlistItem) {
         PlaylistItem.Builder itemBuilder = new PlaylistItem.Builder();
 
         if (playlistItem.hasKey("file")) {
@@ -194,11 +212,12 @@ public class Util {
 
     /**
      * Internal helper for parsing a caption type from a known string
+     *
      * @param type one of "CAPTIONS", "CHAPTERS", "THUMBNAILS"
      * @return the correct Enum CaptionType
      */
-    public static CaptionType getCaptionType(String type){
-        for (CaptionType captionType: CaptionType.values()) {
+    public static CaptionType getCaptionType(String type) {
+        for (CaptionType captionType : CaptionType.values()) {
             if (captionType.name().equals(type)) {
                 return CaptionType.valueOf(type);
             }

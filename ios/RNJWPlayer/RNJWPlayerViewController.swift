@@ -263,11 +263,6 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     // MARK: - JWPlayer State Delegate
 
-    override func jwplayerContentIsBuffering(_ player:JWPlayer) {
-        super.jwplayerContentIsBuffering(player)
-        parentView?.onBuffer?([:])
-    }
-
     override func jwplayer(_ player:JWPlayer, isBufferingWithReason reason:JWBufferReason) {
         super.jwplayer(player, isBufferingWithReason:reason)
         parentView?.onBuffer?([:])

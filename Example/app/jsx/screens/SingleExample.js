@@ -16,6 +16,10 @@ export default () => {
     console.log(e.nativeEvent)
   }
 
+  const onCaptionsList = (e) => {
+    // console.log("onCaptionsList", e.nativeEvent)
+  }
+
   const onFullScreen = () => {
     StatusBar.setHidden(true);
   };
@@ -45,6 +49,7 @@ export default () => {
         onFullScreen={onFullScreen}
         onFullScreenExit={onFullScreenExit}
         onCaptionsChanged={onCaptionsChanged}
+        onCaptionsList={onCaptionsList}
       />
     );
   };

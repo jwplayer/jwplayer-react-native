@@ -1418,18 +1418,15 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func jwplayer(_ player:JWPlayer, updatedCaptionList options:[JWMediaSelectionOption]) {
-        // this needs to map back to 'onCaptionsList' in RN/index.d.ts
-    // index: number;
-    // file: string;
-    // label: string;
-    // default: string;
-
-    // 1 - captionTracks returns all the captions
-    // 2 - currentCaptionsTrack gets index of cuurent
-    print("onCaptionsList", player.currentCaptionsTrack)
-    print("trackList", player.captionTracks)
-    // self.onCaptionsList?(["index": player.currentCaptionsTrack, "tracks": tracks])
-        
+        var tracks: [[String: Any]] = []
+        for track in player.captionsTracks {
+            var dict: [String: Any] = [:]
+            dict["label"] = track.name
+            dict["default"] = track.defaultOption  
+            tracks.append(dict)
+        }
+        let currentIndex = player.currentCaptionsTrack
+        self.onCaptionsList?(["index": currentIndex, "tracks": tracks])
     }
 
     // MARK: - JWPlayer audio session && interruption handling

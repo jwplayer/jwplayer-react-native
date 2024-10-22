@@ -12,14 +12,6 @@ export default () => {
     // console.log('onTime was called with: ', position, duration);
   };
 
-  const onCaptionsChanged = (e) => {
-    // console.log("onCaptionsChanged", e.nativeEvent)
-  }
-
-  const onCaptionsList = (e) => {
-    // console.log("onCaptionsList", e.nativeEvent)
-  }
-
   const onFullScreen = () => {
     StatusBar.setHidden(true);
   };
@@ -65,8 +57,6 @@ export default () => {
         onTime={onTime}
         onFullScreen={onFullScreen}
         onFullScreenExit={onFullScreenExit}
-        onCaptionsChanged={onCaptionsChanged}
-        onCaptionsList={onCaptionsList}
       />
     );
   };

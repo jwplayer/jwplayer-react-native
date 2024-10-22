@@ -528,7 +528,7 @@ declare module "@jwplayer/jwplayer-react-native" {
   }
   interface CaptionsListEventProps {
     index: number;
-    file: string;
+    file?: string;
     label: string;
     default: string;
   }

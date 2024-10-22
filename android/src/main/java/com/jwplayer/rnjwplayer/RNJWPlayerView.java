@@ -35,6 +35,7 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
@@ -110,6 +111,7 @@ import com.jwplayer.pub.api.fullscreen.delegates.DeviceOrientationDelegate;
 import com.jwplayer.pub.api.fullscreen.delegates.DialogLayoutDelegate;
 import com.jwplayer.pub.api.fullscreen.delegates.SystemUiDelegate;
 import com.jwplayer.pub.api.license.LicenseUtil;
+import com.jwplayer.pub.api.media.captions.Caption;
 import com.jwplayer.pub.api.media.playlists.PlaylistItem;
 import com.jwplayer.ui.views.CueMarkerSeekbar;
 
@@ -1456,18 +1458,17 @@ public class RNJWPlayerView extends RelativeLayout implements
             for(int i = 0; i < captionTrackList.size(); i++) {
                 WritableMap captionTrack = Arguments.createMap();
                 Caption track = captionTrackList.get(i);
-                // captionTrack.putString("equals": track.equals());
-                captionTrack.putString("file": track.getFile());
-                // captionTrack.putString("kind": track.getKind()); // may not need
-                captionTrack.putString("label": track.getLabel());
-                captionTrack.putString("default": track.isDefault());
+                captionTrack.putString("file", track.getFile());
+                captionTrack.putString("label", track.getLabel());
+                captionTrack.putBoolean("default", track.isDefault());
                 captionTracks.pushMap(captionTrack);
             }
         }
-        event.putString("message", "onCaptionsList")
-        event.putInt("index", captionsListEvent.getCurrentCaptionsIndex());
+        event.putString("message", "onCaptionsList");
+        event.putInt("index", captionsListEvent.getCurrentCaptionIndex());
         event.putArray("tracks", captionTracks);
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsList", event);
+
     }
 
     // Player Events

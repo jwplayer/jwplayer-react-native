@@ -601,6 +601,21 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     override func jwplayer(_ player:JWPlayer, updatedCaptionList options:[JWMediaSelectionOption]) {
         super.jwplayer(player, updatedCaptionList:options)
+        // this needs to map back to 'onCaptionsList' in RN/index.d.ts
+        
+        print("onCaptionsList", player.currentCaptionsTrack)
+        print("trackList", player.captionsTracks)
+        var tracks: [[String: Any]] = []
+        for track in player.captionsTracks {
+            var dict: [String: Any] = [:]
+            dict["label"] = track.name
+            dict["default"] = track.defaultOption
+            
+            tracks.append(dict)
+        }
+        let currentIndex = player.currentCaptionsTrack
+        print(currentIndex)
+        print(tracks)
     }
 
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {

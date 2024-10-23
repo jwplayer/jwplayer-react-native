@@ -523,6 +523,15 @@ declare module "@jwplayer/jwplayer-react-native" {
     type: number;
   }
   // Overloaded type to be used in multiple error events
+  interface CaptionsChangedEventProps {
+    index?: number;
+  }
+  interface CaptionsListEventProps {
+    index: number;
+    file?: string;
+    label: string;
+    default: string;
+  }
   type NativeError = (event: BaseEvent<PlayerErrorEventProps> | BaseEvent<PlayerSetupErrorProps> | BaseEvent<PlayerErrorProps>) => void;
   type NativeWarning = (event: BaseEvent<PlayerWarningEventProps>) => void;
   interface PropsType {
@@ -557,6 +566,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     onControlBarVisible?: (event: BaseEvent<ControlBarVisibleEventProps>) => void;
     onPlaylistComplete?: () => void;
     onPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;
+    onCaptionsChanged?: (event: BaseEvent<CaptionsChangedEventProps>) => void;
+    onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
     onAudioTracks?: () => void;
     shouldComponentUpdate?: (nextProps: any, nextState: any) => boolean;
   }
@@ -588,6 +599,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     getCurrentAudioTrack(): Promise<number | null>;
     setCurrentAudioTrack(index: number): void;
     setCurrentCaptions(index: number): void;
+    getCurrentCaptions(): Promise<number | null>; 
     setVisibility(visibility: boolean, controls: JWControlType[]): void;
   }
 }

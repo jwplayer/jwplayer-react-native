@@ -588,6 +588,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     override func jwplayer(_ player:JWPlayer, captionTrackChanged index:Int) {
         super.jwplayer(player, captionTrackChanged:index)
+        parentView.onCaptionsChanged?(["index": index])
     }
 
     override func jwplayer(_ player:JWPlayer, qualityLevelChanged currentLevel:Int) {
@@ -600,6 +601,16 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     override func jwplayer(_ player:JWPlayer, updatedCaptionList options:[JWMediaSelectionOption]) {
         super.jwplayer(player, updatedCaptionList:options)
+
+        var tracks: [[String: Any]] = []
+        for track in player.captionsTracks {
+            var dict: [String: Any] = [:]
+            dict["label"] = track.name
+            dict["default"] = track.defaultOption  
+            tracks.append(dict)
+        }
+        let currentIndex = player.currentCaptionsTrack
+        parentView.onCaptionsList?(["index": currentIndex, "tracks": tracks])
     }
 
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {

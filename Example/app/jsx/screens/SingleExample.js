@@ -39,7 +39,7 @@ export default () => {
     ],
     "advertising": {
       "client": "googima"
-    }    
+    }
   }
 
   const renderPlayer = () => {

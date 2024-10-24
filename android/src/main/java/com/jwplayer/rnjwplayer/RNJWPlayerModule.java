@@ -507,22 +507,44 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
         }
     }
 
+
+    @ReactMethod
+    public void getCurrentCaptions(final int reactTag, final Promise promise) {
+      try {
+        UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
+        uiManager.addUIBlock(new UIBlock() {
+          public void execute (NativeViewHierarchyManager nvhm) {
+            RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
+
+            if (playerView != null && playerView.mPlayer != null) {
+              promise.resolve(playerView.mPlayer.getCurrentCaptions());
+            } else {
+              promise.reject("RNJW Error", "Player is null");
+            }
+          }
+        });
+      } catch (IllegalViewOperationException e) {
+        throw e;
+      }  
+    }
+
+
     private int stateToInt(PlayerState playerState) {
-        switch (playerState) {
-            case IDLE:
-                return 0;
-            case BUFFERING:
-                return 1;
-            case PLAYING:
-                return 2;
-            case PAUSED:
-                return 3;
-            case COMPLETE:
-                return 4;
-            case ERROR:
-                return 5;
-            default:
-                return -1;
-        }
+      switch (playerState) {
+        case IDLE:
+          return 0;
+        case BUFFERING:
+          return 1;
+        case PLAYING:
+          return 2;
+        case PAUSED:
+          return 3;
+        case COMPLETE:
+          return 4;
+        case ERROR:
+          return 5;
+        default:
+          return -1;
+       }
     }
 }

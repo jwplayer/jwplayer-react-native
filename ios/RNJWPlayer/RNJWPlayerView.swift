@@ -85,6 +85,8 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     @objc var onCasting: RCTDirectEventBlock?
     @objc var onCastingEnded: RCTDirectEventBlock?
     @objc var onCastingFailed: RCTDirectEventBlock?
+    @objc var onCaptionsChanged: RCTDirectEventBlock?
+    @objc var onCaptionsList: RCTDirectEventBlock?
     
     init() {
         super.init(frame: CGRect(x: 20, y: 0, width: UIScreen.main.bounds.width - 40, height: 300))
@@ -960,12 +962,12 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func jwplayer(_ player:JWPlayer, failedWithError code:UInt, message:String) {
-        self.onPlayerError?(["error": message])
+        self.onPlayerError?(["error": message, "errorCode": code])
         playerFailed = true
     }
 
     func jwplayer(_ player:JWPlayer, failedWithSetupError code:UInt, message:String) {
-        self.onSetupPlayerError?(["error": message])
+        self.onSetupPlayerError?(["errorMessage": message, "errorCode": code])
         playerFailed = true
     }
 
@@ -979,7 +981,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
 
     func jwplayer(_ player:JWPlayer, encounteredAdWarning code:UInt, message:String) {
-        self.onPlayerAdWarning?(["warning": message])
+        self.onPlayerAdWarning?(["warning": message, "code": code])
     }
 
 
@@ -1400,7 +1402,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func jwplayer(_ player:JWPlayer, captionTrackChanged index:Int) {
-
+        self.onCaptionsChanged?(["index": index])
     }
 
     func jwplayer(_ player: JWPlayer, visualQualityChanged currentVisualQuality: JWVisualQuality) {
@@ -1416,7 +1418,15 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     }
 
     func jwplayer(_ player:JWPlayer, updatedCaptionList options:[JWMediaSelectionOption]) {
-
+        var tracks: [[String: Any]] = []
+        for track in player.captionsTracks {
+            var dict: [String: Any] = [:]
+            dict["label"] = track.name
+            dict["default"] = track.defaultOption  
+            tracks.append(dict)
+        }
+        let currentIndex = player.currentCaptionsTrack
+        self.onCaptionsList?(["index": currentIndex, "tracks": tracks])
     }
 
     // MARK: - JWPlayer audio session && interruption handling

@@ -18,12 +18,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -35,14 +33,15 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.JWPlayer;
+import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.UiGroup;
 import com.jwplayer.pub.api.background.MediaServiceController;
 import com.jwplayer.pub.api.configuration.PlayerConfig;
@@ -110,8 +109,11 @@ import com.jwplayer.pub.api.fullscreen.delegates.DeviceOrientationDelegate;
 import com.jwplayer.pub.api.fullscreen.delegates.DialogLayoutDelegate;
 import com.jwplayer.pub.api.fullscreen.delegates.SystemUiDelegate;
 import com.jwplayer.pub.api.license.LicenseUtil;
+import com.jwplayer.pub.api.media.captions.Caption;
 import com.jwplayer.pub.api.media.playlists.PlaylistItem;
 import com.jwplayer.ui.views.CueMarkerSeekbar;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -119,8 +121,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import org.json.JSONObject;
 
 public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnFullscreenListener,
@@ -622,6 +622,9 @@ public class RNJWPlayerView extends RelativeLayout implements
             mPlayerViewContainer.post(new Runnable() {
                 @Override
                 public void run() {
+                    // View may not have been removed properly (especially if returning from PiP)
+                    mPlayerViewContainer.removeView(mPlayerView);
+                    
                     mPlayerViewContainer.addView(mPlayerView, new ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT));
@@ -713,6 +716,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                         // Toggle controls to ensure we don't lose them -- weird UX bug fix where controls got lost
                         mPlayer.setForceControlsVisibility(true);
                         mPlayer.setForceControlsVisibility(false);
+
+                        // If player was in fullscreen when going into PiP, we need to force it back out
+                        if (mPlayer.getFullscreen()) {
+                            mPlayer.setFullscreen(false, true);
+                        }
 
                         // Strip player view
                         rootView.removeView(mPlayerView);
@@ -1015,7 +1023,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         // Legacy
         // This isn't the ideal way to do this on Android. All drawables/colors/themes shoudld
         // be targed using styling. See `https://docs.jwplayer.com/players/docs/android-styling-guide`
-        // for more information on how best to override the JWP styles using XML. If you are unsure of a 
+        // for more information on how best to override the JWP styles using XML. If you are unsure of a
         // color/drawable/theme, open an `Ask` issue.
         if (mColors != null) {
             if (mColors.hasKey("backgroundColor")) {
@@ -1331,7 +1339,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onPlayerAdWarning");
         event.putInt("code", adWarningEvent.getCode());
         event.putInt("adErrorCode", adWarningEvent.getAdErrorCode());
-        event.putString("error", adWarningEvent.getMessage());
+        event.putString("warning", adWarningEvent.getMessage());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerAdWarning", event);
     }
 
@@ -1437,6 +1445,38 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     }
 
+    // Captions Events
+
+    @Override
+    public void onCaptionsChanged(CaptionsChangedEvent captionsChangedEvent) {
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "onCaptionsChanged");
+        event.putInt("index", captionsChangedEvent.getCurrentTrack());
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsChanged", event);
+    }
+
+    @Override
+    public void onCaptionsList(CaptionsListEvent captionsListEvent) {
+        WritableMap event = Arguments.createMap();
+        List<Caption> captionTrackList = captionsListEvent.getCaptions();
+        WritableArray captionTracks = Arguments.createArray();
+        if (captionTrackList != null) {
+            for(int i = 0; i < captionTrackList.size(); i++) {
+                WritableMap captionTrack = Arguments.createMap();
+                Caption track = captionTrackList.get(i);
+                captionTrack.putString("file", track.getFile());
+                captionTrack.putString("label", track.getLabel());
+                captionTrack.putBoolean("default", track.isDefault());
+                captionTracks.pushMap(captionTrack);
+            }
+        }
+        event.putString("message", "onCaptionsList");
+        event.putInt("index", captionsListEvent.getCurrentCaptionIndex());
+        event.putArray("tracks", captionTracks);
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsList", event);
+
+    }
+
     // Player Events
 
     @Override
@@ -1485,6 +1525,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (ex != null) {
             event.putString("error", ex.toString());
             event.putString("description", errorEvent.getMessage());
+            event.putInt("errorCode", errorEvent.getErrorCode());
         }
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerError", event);
 
@@ -1635,6 +1676,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onSetupError(SetupErrorEvent setupErrorEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onSetupError");
+        event.putString("errorMessage", setupErrorEvent.getMessage());
+        event.putInt("errorCode", setupErrorEvent.getCode());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topSetupPlayerError", event);
 
         updateWakeLock(false);
@@ -1647,16 +1690,6 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putDouble("position", timeEvent.getPosition());
         event.putDouble("duration", timeEvent.getDuration());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topTime", event);
-    }
-
-    @Override
-    public void onCaptionsChanged(CaptionsChangedEvent captionsChangedEvent) {
-
-    }
-
-    @Override
-    public void onCaptionsList(CaptionsListEvent captionsListEvent) {
-
     }
 
     @Override

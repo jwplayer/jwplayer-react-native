@@ -412,10 +412,14 @@ class RNJWPlayerViewManager: RCTViewManager {
                 return
             }
 
-            if let playerView = view.playerView {
-                playerView.player.currentCaptionsTrack = index.intValue + 1
-            } else if let playerViewController = view.playerViewController {
-                playerViewController.player.currentCaptionsTrack = index.intValue + 1
+            do {
+                if let playerView = view.playerView {
+                    try playerView.player.setCaptionTrack(index: index.intValue)
+                } else if let playerViewController = view.playerViewController {
+                    try playerViewController.player.setCaptionTrack(index: index.intValue)
+                }
+            } catch {
+                print("Error setting caption track: \(error)")
             }
         }
     }

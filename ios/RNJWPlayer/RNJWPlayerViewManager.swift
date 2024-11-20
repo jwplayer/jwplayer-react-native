@@ -412,10 +412,14 @@ class RNJWPlayerViewManager: RCTViewManager {
                 return
             }
 
-            if let playerView = view.playerView {
-                playerView.player.currentCaptionsTrack = index.intValue + 1
-            } else if let playerViewController = view.playerViewController {
-                playerViewController.player.currentCaptionsTrack = index.intValue + 1
+            do {
+                if let playerView = view.playerView {
+                    try playerView.player.setCaptionTrack(index: index.intValue)
+                } else if let playerViewController = view.playerViewController {
+                    try playerViewController.player.setCaptionTrack(index: index.intValue)
+                }
+            } catch {
+                print("Error setting caption track: \(error)")
             }
         }
     }
@@ -476,7 +480,7 @@ class RNJWPlayerViewManager: RCTViewManager {
         }
     }
 
-    @objc func loadPlaylist(_ reactTag: NSNumber, _ playlist: [Any]) {
+    @objc func loadPlaylist(_ reactTag: NSNumber, _ playlist: Any) {
         self.bridge.uiManager.addUIBlock { uiManager, viewRegistry in
             guard let view = viewRegistry?[reactTag] as? RNJWPlayerView else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView, got: \(String(describing: viewRegistry?[reactTag]))")
@@ -485,17 +489,28 @@ class RNJWPlayerViewManager: RCTViewManager {
 
             var playlistArray = [JWPlayerItem]()
 
-            for item in playlist {
-                if let playerItem = try? view.getPlayerItem(item: item as! [String: Any]) {
-                    playlistArray.append(playerItem)
+            if playlist is NSArray {
+                for item in playlist as! [Any] {
+                    // TODO Update this to better parse JWP Playlist Items:
+                    // awaiting JWP SDK exposure of JWJSONParser.playlist
+                    if let playerItem = try? view.getPlayerItem(item: item as! [String: Any]) {
+                        playlistArray.append(playerItem)
+                    }
+                }
+                
+                if let playerView = view.playerView {
+                    playerView.player.loadPlaylist(items: playlistArray)
+                } else if let playerViewController = view.playerViewController {
+                    playerViewController.player.loadPlaylist(items: playlistArray)
+                }
+            } else {
+                if let playerView = view.playerView {
+                    playerView.player.loadPlaylist(url: URL(string: playlist as! String)!)
+                } else if let playerViewController = view.playerViewController {
+                    playerViewController.player.loadPlaylist(url: URL(string: playlist as! String)!)
                 }
             }
-
-            if let playerView = view.playerView {
-                playerView.player.loadPlaylist(items: playlistArray)
-            } else if let playerViewController = view.playerViewController {
-                playerViewController.player.loadPlaylist(items: playlistArray)
-            }
+           
         }
     }
 

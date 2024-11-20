@@ -80,6 +80,45 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void loadPlaylist(final int reactTag, final String playlistUrl) {
+        try {
+        UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
+        uiManager.addUIBlock(new UIBlock() {
+            public void execute (NativeViewHierarchyManager nvhm) {
+            RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
+
+            if (playerView != null && playerView.mPlayerView != null) {
+                JWPlayer player = playerView.mPlayerView.getPlayer();
+
+                PlayerConfig oldConfig = player.getConfig();
+                PlayerConfig config = new PlayerConfig.Builder()
+                        .autostart(oldConfig.getAutostart())
+                        .nextUpOffset(oldConfig.getNextUpOffset())
+                        .repeat(oldConfig.getRepeat())
+                        .relatedConfig(oldConfig.getRelatedConfig())
+                        .displayDescription(oldConfig.getDisplayDescription())
+                        .displayTitle(oldConfig.getDisplayTitle())
+                        .advertisingConfig(oldConfig.getAdvertisingConfig())
+                        .stretching(oldConfig.getStretching())
+                        .uiConfig(oldConfig.getUiConfig())
+                        .playlistUrl(playlistUrl)
+                        .allowCrossProtocolRedirects(oldConfig.getAllowCrossProtocolRedirects())
+                        .preload(oldConfig.getPreload())
+                        .useTextureView(oldConfig.useTextureView())
+                        .thumbnailPreview(oldConfig.getThumbnailPreview())
+                        .mute(oldConfig.getMute())
+                        .build();
+
+                player.setup(config);
+            }
+            }
+        });
+        } catch (IllegalViewOperationException e) {
+        throw e;
+        }
+    }
+
+    @ReactMethod
     public void play(final int reactTag) {
         try {
             UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);

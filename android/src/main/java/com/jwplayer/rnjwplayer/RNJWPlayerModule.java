@@ -80,6 +80,45 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+        try {
+        UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
+        uiManager.addUIBlock(new UIBlock() {
+            public void execute (NativeViewHierarchyManager nvhm) {
+            RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
+    public void loadPlaylist(final int reactTag, final String playlistUrl) {
+
+            if (playerView != null && playerView.mPlayerView != null) {
+                JWPlayer player = playerView.mPlayerView.getPlayer();
+
+                PlayerConfig oldConfig = player.getConfig();
+                PlayerConfig config = new PlayerConfig.Builder()
+                        .autostart(oldConfig.getAutostart())
+                        .nextUpOffset(oldConfig.getNextUpOffset())
+                        .repeat(oldConfig.getRepeat())
+                        .relatedConfig(oldConfig.getRelatedConfig())
+                        .displayDescription(oldConfig.getDisplayDescription())
+                        .displayTitle(oldConfig.getDisplayTitle())
+                        .advertisingConfig(oldConfig.getAdvertisingConfig())
+                        .stretching(oldConfig.getStretching())
+                        .uiConfig(oldConfig.getUiConfig())
+                        .playlistUrl(playlistUrl)
+                        .allowCrossProtocolRedirects(oldConfig.getAllowCrossProtocolRedirects())
+                        .preload(oldConfig.getPreload())
+                        .useTextureView(oldConfig.useTextureView())
+                        .thumbnailPreview(oldConfig.getThumbnailPreview())
+                        .mute(oldConfig.getMute())
+                        .build();
+
+                player.setup(config);
+            }
+            }
+        });
+        } catch (IllegalViewOperationException e) {
+        throw e;
+        }
+    }
+
+    @ReactMethod
     public void play(final int reactTag) {
         try {
             UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
@@ -150,6 +189,7 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
                 public void execute(NativeViewHierarchyManager nvhm) {
                     RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
 
+    public void getCurrentQuality(final int reactTag, final Promise promise) {
                     if (playerView != null && playerView.mPlayerView != null) {
                         playerView.mPlayerView.getPlayer().setPlaybackRate(speed);
                     }
@@ -507,22 +547,44 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
         }
     }
 
+
+    @ReactMethod
+    public void getCurrentCaptions(final int reactTag, final Promise promise) {
+      try {
+        UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
+        uiManager.addUIBlock(new UIBlock() {
+          public void execute (NativeViewHierarchyManager nvhm) {
+            RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
+
+            if (playerView != null && playerView.mPlayer != null) {
+              promise.resolve(playerView.mPlayer.getCurrentCaptions());
+            } else {
+              promise.reject("RNJW Error", "Player is null");
+            }
+          }
+        });
+      } catch (IllegalViewOperationException e) {
+        throw e;
+      }  
+    }
+
+
     private int stateToInt(PlayerState playerState) {
-        switch (playerState) {
-            case IDLE:
-                return 0;
-            case BUFFERING:
-                return 1;
-            case PLAYING:
-                return 2;
-            case PAUSED:
-                return 3;
-            case COMPLETE:
-                return 4;
-            case ERROR:
-                return 5;
-            default:
-                return -1;
-        }
+      switch (playerState) {
+        case IDLE:
+          return 0;
+        case BUFFERING:
+          return 1;
+        case PLAYING:
+          return 2;
+        case PAUSED:
+          return 3;
+        case COMPLETE:
+          return 4;
+        case ERROR:
+          return 5;
+        default:
+          return -1;
+       }
     }
 }

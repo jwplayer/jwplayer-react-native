@@ -32,6 +32,8 @@ RCT_EXPORT_VIEW_PROPERTY(onPlaylistItem, RCTDirectEventBlock);
 
 /* av events */
 RCT_EXPORT_VIEW_PROPERTY(onAudioTracks, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onCaptionsChanged, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onCaptionsList, RCTDirectEventBlock);
 
 /* player events */
 RCT_EXPORT_VIEW_PROPERTY(onPlayerReady, RCTDirectEventBlock);
@@ -121,7 +123,7 @@ RCT_EXTERN_METHOD(setLockScreenControls: (nonnull NSNumber *)reactTag: (BOOL)sho
 
 RCT_EXTERN_METHOD(setCurrentCaptions: (nonnull NSNumber *)reactTag: (nonnull NSNumber *)index)
 
-RCT_EXTERN_METHOD(setCurrentCaptions: (nonnull NSNumber *)reactTag: (nonnull NSNumber *)index)
+RCT_EXTERN_METHOD(getCurrentCaptions: (nonnull NSNumber *)reactTag :(RCTPromiseResolveBlock)resolve :(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(setLicenseKey: (nonnull NSNumber *)reactTag: (nonnull NSString *)license)
 
@@ -130,6 +132,8 @@ RCT_EXTERN_METHOD(quite)
 RCT_EXTERN_METHOD(reset)
 
 RCT_EXTERN_METHOD(loadPlaylist: (nonnull NSNumber *)reactTag: (nonnull NSArray *)playlist)
+
+RCT_EXTERN_METHOD(loadPlaylist: (nonnull NSNumber *)reactTag: (nonnull NSString *)playlist)
 
 RCT_EXTERN_METHOD(setFullscreen: (nonnull NSNumber *)reactTag: (BOOL)fullscreen)
 

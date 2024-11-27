@@ -2,6 +2,7 @@ package com.jwplayer.rnjwplayer;
 
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -39,6 +40,7 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
@@ -48,6 +50,7 @@ import com.google.gson.Gson;
 import com.jwplayer.pub.api.JWPlayer;
 import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.UiGroup;
+import com.jwplayer.pub.api.background.MediaService;
 import com.jwplayer.pub.api.background.MediaServiceController;
 import com.jwplayer.pub.api.configuration.PlayerConfig;
 import com.jwplayer.pub.api.configuration.UiConfig;
@@ -114,6 +117,7 @@ import com.jwplayer.pub.api.fullscreen.delegates.DeviceOrientationDelegate;
 import com.jwplayer.pub.api.fullscreen.delegates.DialogLayoutDelegate;
 import com.jwplayer.pub.api.fullscreen.delegates.SystemUiDelegate;
 import com.jwplayer.pub.api.license.LicenseUtil;
+import com.jwplayer.pub.api.media.captions.Caption;
 import com.jwplayer.pub.api.media.playlists.PlaylistItem;
 import com.jwplayer.ui.views.CueMarkerSeekbar;
 
@@ -234,7 +238,13 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     private void doBindService() {
         if (mMediaServiceController != null) {
-            mMediaServiceController.bindService();
+            if (!isBackgroundAudioServiceRunning()) {
+                // This may not be your expected behavior, but is necessary to avoid crashing
+                // Do not use multiple player instances with background audio enabled
+
+                // don't rebind me if the service is already active with a player.
+                mMediaServiceController.bindService();
+            }
         }
     }
 
@@ -267,6 +277,18 @@ public class RNJWPlayerView extends RelativeLayout implements
             }
         }
         return superContext;
+    }
+
+    private boolean isBackgroundAudioServiceRunning() {
+        ActivityManager manager = (ActivityManager) mAppContext.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (MediaService.class.getName().equals(service.service.getClassName())) {
+                Log.w(TAG, "MediaService is already running with another player loaded. To avoid crashing, this player, "
+                        + mPlayerView.getTag() + "  will not be loaded into the background service.");
+                return true;
+            }
+        }
+        return false;
     }
 
     public RNJWPlayerView(ThemedReactContext reactContext, ReactApplicationContext appContext) {
@@ -668,6 +690,9 @@ public class RNJWPlayerView extends RelativeLayout implements
             mPlayerViewContainer.post(new Runnable() {
                 @Override
                 public void run() {
+                    // View may not have been removed properly (especially if returning from PiP)
+                    mPlayerViewContainer.removeView(mPlayerView);
+                    
                     mPlayerViewContainer.addView(mPlayerView, new ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT));
@@ -759,6 +784,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                         // Toggle controls to ensure we don't lose them -- weird UX bug fix where controls got lost
                         mPlayer.setForceControlsVisibility(true);
                         mPlayer.setForceControlsVisibility(false);
+
+                        // If player was in fullscreen when going into PiP, we need to force it back out
+                        if (mPlayer.getFullscreen()) {
+                            mPlayer.setFullscreen(false, true);
+                        }
 
                         // Strip player view
                         rootView.removeView(mPlayerView);
@@ -1064,7 +1094,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         // Legacy
         // This isn't the ideal way to do this on Android. All drawables/colors/themes shoudld
         // be targed using styling. See `https://docs.jwplayer.com/players/docs/android-styling-guide`
-        // for more information on how best to override the JWP styles using XML. If you are unsure of a 
+        // for more information on how best to override the JWP styles using XML. If you are unsure of a
         // color/drawable/theme, open an `Ask` issue.
         if (mColors != null) {
             if (mColors.hasKey("backgroundColor")) {
@@ -1121,8 +1151,6 @@ public class RNJWPlayerView extends RelativeLayout implements
 
         if (backgroundAudioEnabled) {
             audioManager = (AudioManager) simpleContext.getSystemService(Context.AUDIO_SERVICE);
-            // Throws a fatal error if using a playlistURL instead of manually created playlist
-            // Related to SDK-11346
             mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
                     .build();
         }
@@ -1380,7 +1408,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onPlayerAdWarning");
         event.putInt("code", adWarningEvent.getCode());
         event.putInt("adErrorCode", adWarningEvent.getAdErrorCode());
-        event.putString("error", adWarningEvent.getMessage());
+        event.putString("warning", adWarningEvent.getMessage());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerAdWarning", event);
     }
 
@@ -1486,6 +1514,38 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     }
 
+    // Captions Events
+
+    @Override
+    public void onCaptionsChanged(CaptionsChangedEvent captionsChangedEvent) {
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "onCaptionsChanged");
+        event.putInt("index", captionsChangedEvent.getCurrentTrack());
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsChanged", event);
+    }
+
+    @Override
+    public void onCaptionsList(CaptionsListEvent captionsListEvent) {
+        WritableMap event = Arguments.createMap();
+        List<Caption> captionTrackList = captionsListEvent.getCaptions();
+        WritableArray captionTracks = Arguments.createArray();
+        if (captionTrackList != null) {
+            for(int i = 0; i < captionTrackList.size(); i++) {
+                WritableMap captionTrack = Arguments.createMap();
+                Caption track = captionTrackList.get(i);
+                captionTrack.putString("file", track.getFile());
+                captionTrack.putString("label", track.getLabel());
+                captionTrack.putBoolean("default", track.isDefault());
+                captionTracks.pushMap(captionTrack);
+            }
+        }
+        event.putString("message", "onCaptionsList");
+        event.putInt("index", captionsListEvent.getCurrentCaptionIndex());
+        event.putArray("tracks", captionTracks);
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsList", event);
+
+    }
+
     // Player Events
 
     @Override
@@ -1534,6 +1594,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (ex != null) {
             event.putString("error", ex.toString());
             event.putString("description", errorEvent.getMessage());
+            event.putInt("errorCode", errorEvent.getErrorCode());
         }
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerError", event);
 
@@ -1684,6 +1745,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onSetupError(SetupErrorEvent setupErrorEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onSetupError");
+        event.putString("errorMessage", setupErrorEvent.getMessage());
+        event.putInt("errorCode", setupErrorEvent.getCode());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topSetupPlayerError", event);
 
         updateWakeLock(false);
@@ -1696,16 +1759,6 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putDouble("position", timeEvent.getPosition());
         event.putDouble("duration", timeEvent.getDuration());
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topTime", event);
-    }
-
-    @Override
-    public void onCaptionsChanged(CaptionsChangedEvent captionsChangedEvent) {
-
-    }
-
-    @Override
-    public void onCaptionsList(CaptionsListEvent captionsListEvent) {
-
     }
 
     @Override

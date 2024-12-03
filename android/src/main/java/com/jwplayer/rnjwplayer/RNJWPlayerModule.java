@@ -1,8 +1,6 @@
 
 package com.jwplayer.rnjwplayer;
 
-import android.media.AudioManager;
-
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -440,15 +438,7 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
             uiManager.addUIBlock(new UIBlock() {
                 public void execute(NativeViewHierarchyManager nvhm) {
                     RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        int maxValue = playerView.audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                        if (volume <= maxValue) {
-                            playerView.audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
-                        } else {
-                            playerView.audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxValue, 0);
-                        }
-                    }
+                    playerView.mPlayerView.getPlayer().setVolume(volume);
                 }
             });
         } catch (IllegalViewOperationException e) {

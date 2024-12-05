@@ -365,10 +365,16 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (mPlayer != null) {
             unRegisterReceiver();
 
-            // Only call stop if we are not casting as stop will break the current cast session
-            if (!mIsCastActive) {
-                mPlayer.stop();
+            // If we are casting we need to break the cast session as there is no simple
+            // way to reconnect to an existing session if the player that created it is dead
+            
+            // If this doesn't match your use case, using a single player object and load content
+            // into it rather than creating a new player for every piece of content. 
+            if (mIsCastActive && BuildConfig.USE_CAST) {
+                CastHelper.killCastSession(getContext());
             }
+            mPlayer.stop();
+
             // send signal to JW SDK player is destroyed
             registry.setCurrentState(Lifecycle.State.DESTROYED);
 

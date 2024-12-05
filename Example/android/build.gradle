@@ -8,6 +8,8 @@ buildscript {
         targetSdkVersion = 33
         ndkVersion = "20.1.5948944"
         kotlinVersion = "1.8.0"
+        RNJWPlayerUseGoogleCast = true
+        RNJWPlayerUseGoogleIMA = true
     }
     repositories {
         google()

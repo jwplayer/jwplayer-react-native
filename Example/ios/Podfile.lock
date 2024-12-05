@@ -75,12 +75,12 @@ PODS:
   - glog (0.3.5)
   - google-cast-sdk (4.8.1):
     - Protobuf (~> 3.13)
-  - GoogleAds-IMA-iOS-SDK (3.22.0)
+  - GoogleAds-IMA-iOS-SDK (3.22.1)
   - hermes-engine (0.70.14)
-  - JWPlayerKit (4.19.2)
+  - JWPlayerKit (4.21.0)
   - libevent (2.1.12)
   - OpenSSL-Universal (1.1.1100)
-  - Protobuf (3.28.3)
+  - Protobuf (3.29.0)
   - RCT-Folly (2021.07.22.00):
     - boost
     - DoubleConversion
@@ -387,8 +387,8 @@ PODS:
     - React-Core
   - RNJWPlayer (1.0.2):
     - google-cast-sdk (= 4.8.1)
-    - GoogleAds-IMA-iOS-SDK (= 3.22.0)
-    - JWPlayerKit (= 4.19.2)
+    - GoogleAds-IMA-iOS-SDK (= 3.22.1)
+    - JWPlayerKit (= 4.21.0)
     - React-Core
   - RNScreens (3.25.0):
     - React-Core
@@ -598,12 +598,12 @@ SPEC CHECKSUMS:
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   google-cast-sdk: beb7a3ec3def0e3beb618a849b0f1ab2b15b5ebb
-  GoogleAds-IMA-iOS-SDK: e594350077f2838a335b40de079a12f0a16e1f6d
+  GoogleAds-IMA-iOS-SDK: 160c3616b8371b58016e30aaf441e71d6d9e8f7d
   hermes-engine: af3982923f6d1af884ece80592bd40be2c62e064
-  JWPlayerKit: ddc83cdd4864895dbc48b6edf84769aac4c410f0
+  JWPlayerKit: fbdeacb1de86b667fb80b5560734854c47af4c6a
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  Protobuf: 5a8a7781d8e1004302f108977ac2d5b99323146f
+  Protobuf: 4bd991351f557a31f4fadd3ce1cdab236ccb9ea5
   RCT-Folly: 0080d0a6ebf2577475bda044aa59e2ca1f909cda
   RCTRequired: 6f42727926c2ef4836fc23169586f3d8d7f5a6e4
   RCTTypeSafety: de9b538a8f20ae8c780bf38935f37f303b083fc8
@@ -637,7 +637,7 @@ SPEC CHECKSUMS:
   RNDeviceInfo: 1e3f62b9ec32f7754fac60bd06b8f8a27124e7f0
   RNFS: 2bd9eb49dc82fa9676382f0585b992c424cd59df
   RNGestureHandler: c0d04458598fcb26052494ae23dda8f8f5162b13
-  RNJWPlayer: fabfc95a234e9fbcf4fbdf168afa50bc8a9bce10
+  RNJWPlayer: c454ed16e9da248dcd32efbe6e941378e7485892
   RNScreens: 85d3880b52d34db7b8eeebe2f1a0e807c05e69fa
   RNVectorIcons: 8b5bb0fa61d54cd2020af4f24a51841ce365c7e9
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17

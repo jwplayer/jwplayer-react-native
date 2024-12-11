@@ -77,10 +77,10 @@ PODS:
     - Protobuf (~> 3.13)
   - GoogleAds-IMA-iOS-SDK (3.22.1)
   - hermes-engine (0.70.14)
-  - JWPlayerKit (4.21.0)
+  - JWPlayerKit (4.21.1)
   - libevent (2.1.12)
   - OpenSSL-Universal (1.1.1100)
-  - Protobuf (3.29.0)
+  - Protobuf (3.29.1)
   - RCT-Folly (2021.07.22.00):
     - boost
     - DoubleConversion
@@ -388,7 +388,7 @@ PODS:
   - RNJWPlayer (1.0.2):
     - google-cast-sdk (= 4.8.1)
     - GoogleAds-IMA-iOS-SDK (= 3.22.1)
-    - JWPlayerKit (= 4.21.0)
+    - JWPlayerKit (= 4.21.1)
     - React-Core
   - RNScreens (3.25.0):
     - React-Core
@@ -600,10 +600,10 @@ SPEC CHECKSUMS:
   google-cast-sdk: beb7a3ec3def0e3beb618a849b0f1ab2b15b5ebb
   GoogleAds-IMA-iOS-SDK: 160c3616b8371b58016e30aaf441e71d6d9e8f7d
   hermes-engine: af3982923f6d1af884ece80592bd40be2c62e064
-  JWPlayerKit: fbdeacb1de86b667fb80b5560734854c47af4c6a
+  JWPlayerKit: 6b521e25b52cce39bc5b300365c4226bf8de390a
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  Protobuf: 4bd991351f557a31f4fadd3ce1cdab236ccb9ea5
+  Protobuf: 0c5a9e64f38aed73b5d1ff88a20112ce195cf909
   RCT-Folly: 0080d0a6ebf2577475bda044aa59e2ca1f909cda
   RCTRequired: 6f42727926c2ef4836fc23169586f3d8d7f5a6e4
   RCTTypeSafety: de9b538a8f20ae8c780bf38935f37f303b083fc8
@@ -637,7 +637,7 @@ SPEC CHECKSUMS:
   RNDeviceInfo: 1e3f62b9ec32f7754fac60bd06b8f8a27124e7f0
   RNFS: 2bd9eb49dc82fa9676382f0585b992c424cd59df
   RNGestureHandler: c0d04458598fcb26052494ae23dda8f8f5162b13
-  RNJWPlayer: c454ed16e9da248dcd32efbe6e941378e7485892
+  RNJWPlayer: 0137fc0b5f06c3153935e257e3a7c5bff7de00a5
   RNScreens: 85d3880b52d34db7b8eeebe2f1a0e807c05e69fa
   RNVectorIcons: 8b5bb0fa61d54cd2020af4f24a51841ce365c7e9
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17

@@ -370,9 +370,6 @@ public class RNJWPlayerView extends RelativeLayout implements
             
             // If this doesn't match your use case, using a single player object and load content
             // into it rather than creating a new player for every piece of content. 
-            if (mIsCastActive && BuildConfig.USE_CAST) {
-                CastHelper.killCastSession(getContext());
-            }
             mPlayer.stop();
 
             // send signal to JW SDK player is destroyed

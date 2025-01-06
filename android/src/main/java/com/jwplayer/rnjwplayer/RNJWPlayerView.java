@@ -470,6 +470,8 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.SETUP_ERROR,
                     EventType.BUFFER,
                     EventType.TIME,
+                    EventType.AUDIO_TRACKS,
+                    EventType.AUDIO_TRACK_CHANGED,
                     EventType.PLAYLIST,
                     EventType.PLAYLIST_ITEM,
                     EventType.PLAYLIST_COMPLETE,

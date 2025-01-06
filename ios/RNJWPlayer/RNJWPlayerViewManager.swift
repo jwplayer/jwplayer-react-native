@@ -306,24 +306,22 @@ class RNJWPlayerViewManager: RCTViewManager {
                 return
             }
 
-            let audioTracks: [Any]? = view.playerView?.player.audioTracks ?? view.playerViewController?.player.audioTracks
-
-            if let audioTracks = audioTracks as? [[String: Any]] {
+            let audioTracks: [JWMediaSelectionOption]? = view.playerView?.player.audioTracks ?? view.playerViewController?.player.audioTracks
+        
+            // V4 tracks object instead of the V3 JSON object of old
+            if let audioTracks = audioTracks {
                 var results: [[String: Any]] = []
                 for track in audioTracks {
-                    if let language = track["language"], let autoSelect = track["autoselect"],
-                       let defaultTrack = track["defaulttrack"], let name = track["name"],
-                       let groupId = track["groupid"] {
+                    let track = track as JWMediaSelectionOption
                         let trackDict: [String: Any] = [
-                            "language": language,
-                            "autoSelect": autoSelect,
-                            "defaultTrack": defaultTrack,
-                            "name": name,
-                            "groupId": groupId
+                            "language": track.extendedLanguageTag ?? "UNKNOWN", // Intentionally defaulting to a non-spec language if none found
+//                            "autoSelect": autoSelect, // not available in V4
+                            "defaultTrack": track.defaultOption,
+                            "name": track.name
+//                            "groupId": groupId // not available in V4
                         ]
                         results.append(trackDict)
                     }
-                }
                 resolve(results)
             } else {
                 let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There are no audio tracks"])

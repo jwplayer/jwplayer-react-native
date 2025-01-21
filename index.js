@@ -381,8 +381,7 @@ export default class JWPlayer extends Component {
 
 		this._playerId = playerId++;
 		this.ref_key = `${RCT_RNJWPLAYER_REF}-${this._playerId}`;
-
-		this.quite();
+	
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {

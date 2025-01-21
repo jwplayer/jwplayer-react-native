@@ -1181,10 +1181,6 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
     // MARK: - JWPlayer State Delegate
 
-    func jwplayerContentIsBuffering(_ player:JWPlayer) {
-        self.onBuffer?([:])
-    }
-
     func jwplayer(_ player:JWPlayer, isBufferingWithReason reason:JWBufferReason) {
         self.onBuffer?([:])
     }
@@ -1234,6 +1230,10 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
     func jwplayerContentDidComplete(_ player:JWPlayer) {
         self.onComplete?([:])
+    }
+    
+    func jwplayerContentIsBuffering(_ player: any JWPlayerKit.JWPlayer) {
+
     }
 
     func jwplayer(_ player:JWPlayer, didLoadPlaylistItem item:JWPlayerItem, at index:UInt) {

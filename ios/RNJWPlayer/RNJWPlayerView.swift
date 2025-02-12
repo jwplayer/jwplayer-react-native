@@ -348,6 +348,8 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
                         self.setupPlayerViewController(config: config, playerConfig: jwConfig!)
                     }
                 }
+
+                self.setupPlaylistItemCallback()
             } catch {
                 print(error)
             }
@@ -359,6 +361,47 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     @objc func setControls(_ controls:Bool) {
         if let playerViewControllerView = playerViewController?.view {
             self.toggleUIGroup(view: playerViewControllerView, name: "JWPlayerKit.InterfaceView", ofSubview: nil, show: controls)
+        }
+    }
+
+    func setupPlaylistItemCallback() {
+        playerViewController.player.setPlaylistItemCallback { [weak self] item, index, completion in
+            print("setPlaylistItemCallback called with index \(index)")
+            guard let self = self else {
+                print("setPlaylistItemCallback: self is nil, resuming normally")
+                completion(item)
+                return
+            }
+            
+            if let onBeforeNextPlaylistItem = self.onBeforeNextPlaylistItem {
+                print("Storing completion handler and triggering onBeforeNextPlaylistItem")
+                // Store the completion handler first, before any other operations
+                self.onBeforeNextPlaylistItemCompletion = completion
+                print("Completion handler stored: \(self.onBeforeNextPlaylistItemCompletion != nil)")
+
+                do {
+                    let data = try JSONSerialization.data(withJSONObject: item.toJSONObject(), options: [.prettyPrinted])
+                    let jsonString = String(data: data, encoding: .utf8) ?? "{}"
+
+                    print("Triggering onBeforeNextPlaylistItem with index \(index)")
+                    print("Completion handler before event: \(self.onBeforeNextPlaylistItemCompletion != nil)")
+
+                    // Pass the playlist item to the React Native side
+                    onBeforeNextPlaylistItem([
+                        "playlistItem": jsonString,
+                        "index": index
+                    ])
+                    print("Completion handler after event: \(self.onBeforeNextPlaylistItemCompletion != nil)")
+                
+                } catch {
+                    print("Error serializing playlist item: \(error)")
+                    self.onBeforeNextPlaylistItemCompletion?(item) // Call completion handler directly on error
+                    self.onBeforeNextPlaylistItemCompletion = nil
+                }
+            } else {
+                print("No onBeforeNextPlaylistItem handler set, calling completion directly")
+                completion(item)
+            }
         }
     }
 

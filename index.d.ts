@@ -570,6 +570,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
     onAudioTracks?: () => void;
     shouldComponentUpdate?: (nextProps: any, nextState: any) => boolean;
+    onBeforeNextPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;
   }
 
   export default class JWPlayer extends React.Component<PropsType> {
@@ -601,5 +602,6 @@ declare module "@jwplayer/jwplayer-react-native" {
     setCurrentCaptions(index: number): void;
     getCurrentCaptions(): Promise<number | null>; 
     setVisibility(visibility: boolean, controls: JWControlType[]): void;
+    resolveNextPlaylistItem(playlistItem: PlaylistItem | JwPlaylistItem): void;
   }
 }

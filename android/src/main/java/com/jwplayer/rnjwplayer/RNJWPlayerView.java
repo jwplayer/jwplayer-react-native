@@ -129,6 +129,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnFullscreenListener,
@@ -156,6 +157,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnCaptionsListListener,
         VideoPlayerEvents.OnCaptionsChangedListener,
         VideoPlayerEvents.OnMetaListener,
+        VideoPlayerEvents.PlaylistItemCallbackListener,
 
         CastingEvents.OnCastListener,
 
@@ -235,6 +237,9 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     private MediaServiceController mMediaServiceController;
     private PipHandlerReceiver mReceiver = null;
+
+    // Add completion handler field
+    PlaylistItemDecision itemUpdatePromise = null;
 
     private void doBindService() {
         if (mMediaServiceController != null) {
@@ -521,9 +526,30 @@ public class RNJWPlayerView extends RelativeLayout implements
             } else {
                 mPlayer.setFullscreenHandler(new fullscreenHandler());
             }
-
             mPlayer.allowBackgroundAudio(backgroundAudioEnabled);
+            mPlayer.setPlaylistItemCallbackListener(this);
         }
+    }
+
+    public void resolveNextPlaylistItem(ReadableMap playlistItem) {
+        if (itemUpdatePromise == null) {
+            return;
+        }
+
+        if (playlistItem == null) {
+            itemUpdatePromise.continuePlayback();
+            itemUpdatePromise = null;
+            return;
+        }
+
+        try {
+            PlaylistItem updatedPlaylistItem = Util.getPlaylistItem(playlistItem);
+            itemUpdatePromise.modify(updatedPlaylistItem);
+        } catch (Exception exception) {
+            itemUpdatePromise.continuePlayback();
+        }
+
+        itemUpdatePromise = null;
     }
 
     /**
@@ -625,6 +651,18 @@ public class RNJWPlayerView extends RelativeLayout implements
         };
         delegate.onAllowRotationChanged(true);
         return delegate;
+    }
+
+    @Override
+    public void onBeforeNextPlaylistItem(PlaylistItemDecision PlaylistItemDecision, PlaylistItem nextItem, int indexOfNextItem) {
+        WritableMap event = Arguments.createMap();
+        Gson gson = new Gson();
+        event.putString("message", "onBeforeNextPlaylistItem");
+        event.putInt("index", indexOfNextItem);
+        event.putString("playlistItem", gson.toJson(nextItem));
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topBeforeNextPlaylistItem", event);
+
+        itemUpdatePromise = PlaylistItemDecision;
     }
 
     private class fullscreenHandler implements FullscreenHandler {

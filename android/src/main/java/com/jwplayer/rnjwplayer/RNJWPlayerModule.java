@@ -1,4 +1,3 @@
-
 package com.jwplayer.rnjwplayer;
 
 import com.facebook.react.bridge.Arguments;
@@ -7,6 +6,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -556,6 +556,23 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
       }  
     }
 
+    @ReactMethod
+    public void resolveNextPlaylistItem(final int reactTag, final ReadableMap playlistItem) {
+        try {
+            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
+            uiManager.addUIBlock(new UIBlock() {
+                public void execute(NativeViewHierarchyManager nvhm) {
+                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
+
+                    if (playerView != null) {
+                        playerView.resolveNextPlaylistItem(playlistItem);
+                    }
+                }
+            });
+        } catch (IllegalViewOperationException e) {
+            throw e;
+        }
+    }
 
     private int stateToInt(PlayerState playerState) {
       switch (playerState) {

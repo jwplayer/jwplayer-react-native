@@ -41,6 +41,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     var castController: JWCastController!
     var isCasting: Bool = false
     var availableDevices: [AnyObject]!
+    var onBeforeNextPlaylistItemCompletion: ((JWPlayerItem?) -> ())?
     
     @objc var onBuffer: RCTDirectEventBlock?
     @objc var onUpdateBuffer: RCTDirectEventBlock?
@@ -87,6 +88,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     @objc var onCastingFailed: RCTDirectEventBlock?
     @objc var onCaptionsChanged: RCTDirectEventBlock?
     @objc var onCaptionsList: RCTDirectEventBlock?
+    @objc var onBeforeNextPlaylistItem: RCTDirectEventBlock?
     
     init() {
         super.init(frame: CGRect(x: 20, y: 0, width: UIScreen.main.bounds.width - 40, height: 300))

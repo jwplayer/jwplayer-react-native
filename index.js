@@ -374,6 +374,8 @@ export default class JWPlayer extends Component {
 		onCaptionsChanged: PropTypes.func,
 		onCaptionsList: PropTypes.func,
 		onAudioTracks: PropTypes.func,
+		onBeforeNextPlaylistItem: PropTypes.func,
+		resolveNextPlaylistItem: PropTypes.func
 	};
 
 	constructor(props) {
@@ -703,6 +705,15 @@ export default class JWPlayer extends Component {
 				console.error(e);
 				return null;
 			}
+		}
+	}
+
+	resolveNextPlaylistItem(playlistItem) { 
+		if (RNJWPlayerManager) {
+			RNJWPlayerManager.resolveNextPlaylistItem(
+				this.getRNJWPlayerBridgeHandle(),
+				playlistItem
+			);
 		}
 	}
 

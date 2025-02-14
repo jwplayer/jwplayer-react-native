@@ -10,6 +10,7 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.jwplayer.pub.api.JsonHelper;
 import com.jwplayer.pub.api.media.ads.AdBreak;
+import com.jwplayer.pub.api.media.ads.AdClient;
 import com.jwplayer.pub.api.media.captions.Caption;
 import com.jwplayer.pub.api.media.captions.CaptionType;
 import com.jwplayer.pub.api.media.playlists.MediaSource;
@@ -255,5 +256,35 @@ public class Util {
     // Method to get the event type value
     public static int getEventTypeValue(AdEventType eventType) {
         return eventType.getValue();
+    }
+
+    public enum AdEventClient {
+        JWAdEventClientJWPlayer(0),
+        JWAdEventClientGoogleIMA(1),
+        JWAdEventClientGoogleIMADAI(2),
+        JWAdEventClientUnknown(3);
+
+        private final int value;
+
+        AdEventClient(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public static int getEventClientValue(AdClient client) {
+        switch (client) {
+            case IMA:
+                return AdEventClient.JWAdEventClientGoogleIMA.getValue();
+            case IMA_DAI:
+                return AdEventClient.JWAdEventClientGoogleIMADAI.getValue();
+            case VAST:
+                return AdEventClient.JWAdEventClientJWPlayer.getValue();
+            default:
+                return AdEventClient.JWAdEventClientUnknown.getValue();
+        }
     }
 }

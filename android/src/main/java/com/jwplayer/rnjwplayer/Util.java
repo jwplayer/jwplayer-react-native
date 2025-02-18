@@ -254,7 +254,7 @@ public class Util {
     }
 
     // Method to get the event type value
-    public static int getEventTypeValue(AdEventType eventType) {
+    public static int getAdEventTypeValue(AdEventType eventType) {
         return eventType.getValue();
     }
 
@@ -275,7 +275,7 @@ public class Util {
         }
     }
 
-    public static int getEventClientValue(AdClient client) {
+    public static int getAdEventClientValue(AdClient client) {
         switch (client) {
             case IMA:
                 return AdEventClient.JWAdEventClientGoogleIMA.getValue();

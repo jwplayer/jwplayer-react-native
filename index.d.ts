@@ -518,7 +518,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     adErrorCode?: number; // Android only
   }
   interface AdEventProps {
-    client?: number;
+    client: number;
     reason?: string;
     type: number;
   }

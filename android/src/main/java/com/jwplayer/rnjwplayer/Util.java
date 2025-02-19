@@ -9,8 +9,9 @@ import android.webkit.URLUtil;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.jwplayer.pub.api.JsonHelper;
+import com.jwplayer.pub.api.configuration.ads.AdvertisingConfig;
+import com.jwplayer.pub.api.events.Event;
 import com.jwplayer.pub.api.media.ads.AdBreak;
-import com.jwplayer.pub.api.media.ads.AdClient;
 import com.jwplayer.pub.api.media.captions.Caption;
 import com.jwplayer.pub.api.media.captions.CaptionType;
 import com.jwplayer.pub.api.media.playlists.MediaSource;
@@ -275,8 +276,13 @@ public class Util {
         }
     }
 
-    public static int getAdEventClientValue(AdClient client) {
-        switch (client) {
+    public static int getAdEventClientValue(Event adEvent) {
+        AdvertisingConfig adConfig = adEvent.getPlayer().getConfig().getAdvertisingConfig();
+        if (adConfig == null) {
+            return AdEventClient.JWAdEventClientUnknown.getValue();
+        }
+
+        switch (adConfig.getAdClient()) {
             case IMA:
                 return AdEventClient.JWAdEventClientGoogleIMA.getValue();
             case IMA_DAI:

@@ -1407,7 +1407,6 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putInt("code", adErrorEvent.getCode());
         event.putInt("adErrorCode", adErrorEvent.getAdErrorCode());
         event.putString("error", adErrorEvent.getMessage());
-        event.putInt("client", Util.getAdEventClientValue(adErrorEvent));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerAdError", event);
     }
 
@@ -1418,7 +1417,6 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putInt("code", adWarningEvent.getCode());
         event.putInt("adErrorCode", adWarningEvent.getAdErrorCode());
         event.putString("warning", adWarningEvent.getMessage());
-        event.putInt("client", Util.getAdEventClientValue(adWarningEvent));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerAdWarning", event);
     }
 

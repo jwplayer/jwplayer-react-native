@@ -1,4 +1,3 @@
-
 package com.jwplayer.rnjwplayer;
 
 import com.facebook.react.bridge.Arguments;
@@ -40,522 +39,273 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void loadPlaylist(final int reactTag, final ReadableArray playlistItems) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        JWPlayer player = playerView.mPlayerView.getPlayer();
-
-                        PlayerConfig oldConfig = player.getConfig();
-                        PlayerConfig config = new PlayerConfig.Builder()
-                                .autostart(oldConfig.getAutostart())
-                                .nextUpOffset(oldConfig.getNextUpOffset())
-                                .repeat(oldConfig.getRepeat())
-                                .relatedConfig(oldConfig.getRelatedConfig())
-                                .displayDescription(oldConfig.getDisplayDescription())
-                                .displayTitle(oldConfig.getDisplayTitle())
-                                .advertisingConfig(oldConfig.getAdvertisingConfig())
-                                .stretching(oldConfig.getStretching())
-                                .uiConfig(oldConfig.getUiConfig())
-                                .playlist(Util.createPlaylist(playlistItems))
-                                .allowCrossProtocolRedirects(oldConfig.getAllowCrossProtocolRedirects())
-                                .preload(oldConfig.getPreload())
-                                .useTextureView(oldConfig.useTextureView())
-                                .thumbnailPreview(oldConfig.getThumbnailPreview())
-                                .mute(oldConfig.getMute())
-                                .build();
-
-                        player.setup(config);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            JWPlayer player = playerView.mPlayerView.getPlayer();
+            PlayerConfig oldConfig = player.getConfig();
+            PlayerConfig config = new PlayerConfig.Builder()
+                    .autostart(oldConfig.getAutostart())
+                    .nextUpOffset(oldConfig.getNextUpOffset())
+                    .repeat(oldConfig.getRepeat())
+                    .relatedConfig(oldConfig.getRelatedConfig())
+                    .displayDescription(oldConfig.getDisplayDescription())
+                    .displayTitle(oldConfig.getDisplayTitle())
+                    .advertisingConfig(oldConfig.getAdvertisingConfig())
+                    .stretching(oldConfig.getStretching())
+                    .uiConfig(oldConfig.getUiConfig())
+                    .playlist(Util.createPlaylist(playlistItems))
+                    .allowCrossProtocolRedirects(oldConfig.getAllowCrossProtocolRedirects())
+                    .preload(oldConfig.getPreload())
+                    .useTextureView(oldConfig.useTextureView())
+                    .thumbnailPreview(oldConfig.getThumbnailPreview())
+                    .mute(oldConfig.getMute())
+                    .build();
+            player.setup(config);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void loadPlaylistWithUrl(final int reactTag, final String playlistUrl) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        JWPlayer player = playerView.mPlayerView.getPlayer();
-
-                        PlayerConfig oldConfig = player.getConfig();
-                        PlayerConfig config = new PlayerConfig.Builder()
-                                .autostart(oldConfig.getAutostart())
-                                .nextUpOffset(oldConfig.getNextUpOffset())
-                                .repeat(oldConfig.getRepeat())
-                                .relatedConfig(oldConfig.getRelatedConfig())
-                                .displayDescription(oldConfig.getDisplayDescription())
-                                .displayTitle(oldConfig.getDisplayTitle())
-                                .advertisingConfig(oldConfig.getAdvertisingConfig())
-                                .stretching(oldConfig.getStretching())
-                                .uiConfig(oldConfig.getUiConfig())
-                                .playlistUrl(playlistUrl)
-                                .allowCrossProtocolRedirects(oldConfig.getAllowCrossProtocolRedirects())
-                                .preload(oldConfig.getPreload())
-                                .useTextureView(oldConfig.useTextureView())
-                                .thumbnailPreview(oldConfig.getThumbnailPreview())
-                                .mute(oldConfig.getMute())
-                                .build();
-
-                        player.setup(config);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            JWPlayer player = playerView.mPlayerView.getPlayer();
+            PlayerConfig oldConfig = player.getConfig();
+            PlayerConfig config = new PlayerConfig.Builder()
+                    .autostart(oldConfig.getAutostart())
+                    .nextUpOffset(oldConfig.getNextUpOffset())
+                    .repeat(oldConfig.getRepeat())
+                    .relatedConfig(oldConfig.getRelatedConfig())
+                    .displayDescription(oldConfig.getDisplayDescription())
+                    .displayTitle(oldConfig.getDisplayTitle())
+                    .advertisingConfig(oldConfig.getAdvertisingConfig())
+                    .stretching(oldConfig.getStretching())
+                    .uiConfig(oldConfig.getUiConfig())
+                    .playlistUrl(playlistUrl)
+                    .allowCrossProtocolRedirects(oldConfig.getAllowCrossProtocolRedirects())
+                    .preload(oldConfig.getPreload())
+                    .useTextureView(oldConfig.useTextureView())
+                    .thumbnailPreview(oldConfig.getThumbnailPreview())
+                    .mute(oldConfig.getMute())
+                    .build();
+            player.setup(config);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void play(final int reactTag) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        playerView.mPlayerView.getPlayer().play();
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayerView.getPlayer().play();
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void toggleSpeed(final int reactTag) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        double rate = playerView.mPlayerView.getPlayer().getPlaybackRate();
-                        if (rate < 2) {
-                            playerView.mPlayerView.getPlayer().setPlaybackRate(rate += 0.5);
-                        } else {
-                            playerView.mPlayerView.getPlayer().setPlaybackRate((float) 0.5);
-                        }
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            double rate = playerView.mPlayerView.getPlayer().getPlaybackRate();
+            if (rate < 2) {
+                playerView.mPlayerView.getPlayer().setPlaybackRate(rate += 0.5);
+            } else {
+                playerView.mPlayerView.getPlayer().setPlaybackRate((float) 0.5);
+            }
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void togglePIP(final int reactTag) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        if (playerView.mPlayerView.getPlayer().isInPictureInPictureMode()) {
-                            playerView.mPlayerView.getPlayer().exitPictureInPictureMode();
-                        } else {
-                            playerView.mPlayerView.getPlayer().enterPictureInPictureMode();
-                        }
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            if (playerView.mPlayerView.getPlayer().isInPictureInPictureMode()) {
+                playerView.mPlayerView.getPlayer().exitPictureInPictureMode();
+            } else {
+                playerView.mPlayerView.getPlayer().enterPictureInPictureMode();
+            }
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void setSpeed(final int reactTag, final float speed) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        playerView.mPlayerView.getPlayer().setPlaybackRate(speed);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayerView.getPlayer().setPlaybackRate(speed);
+            return null;
+        }).addToUIManager();
     }
-
 
     @ReactMethod
     public void getCurrentQuality(final int reactTag, final Promise promise) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        int quality = playerView.mPlayerView.getPlayer().getCurrentQuality();
-                        promise.resolve(quality);
-                    } else {
-                        promise.reject("RNJW Error", "getCurrentQuality() Player is null");
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, promise, mReactContext, playerView -> {
+            int quality = playerView.mPlayerView.getPlayer().getCurrentQuality();
+            promise.resolve(quality);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void setCurrentQuality(final int reactTag, final int index) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        playerView.mPlayerView.getPlayer().setCurrentQuality(index);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayerView.getPlayer().setCurrentQuality(index);
+            return null;
+        }).addToUIManager();
     }
-
 
     @ReactMethod
     public void getQualityLevels(final int reactTag, final Promise promise) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        List<QualityLevel> qualityLevelsList = playerView.mPlayerView.getPlayer().getQualityLevels();
-                        if (qualityLevelsList == null) { //if qualitylevels are null than pass empty array.
-                            promise.resolve(null);
-                            return;
-                        }
-                        WritableArray qualityLevels = Arguments.createArray();
-                        for (int i = 0; i < qualityLevelsList.size(); i++) {
-                            WritableMap qualityLevel = Arguments.createMap();
-                            QualityLevel level = qualityLevelsList.get(i);
-                            qualityLevel.putInt("playListPosition", level.getPlaylistPosition());
-                            qualityLevel.putInt("bitRate", level.getBitrate());
-                            qualityLevel.putString("label", level.getLabel());
-                            qualityLevel.putInt("height", level.getHeight());
-                            qualityLevel.putInt("width", level.getWidth());
-                            qualityLevel.putInt("index", level.getTrackIndex());
-                            qualityLevels.pushMap(qualityLevel);
-                        }
-                        promise.resolve(qualityLevels);
-                    } else {
-                        promise.reject("RNJW Error", "getQualityLevels() Player is null");
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, promise, mReactContext, playerView -> {
+            List<QualityLevel> qualityLevelsList = playerView.mPlayerView.getPlayer().getQualityLevels();
+            if (qualityLevelsList == null) {
+                promise.resolve(null);
+                return null;
+            }
+            WritableArray qualityLevels = Arguments.createArray();
+            for (int i = 0; i < qualityLevelsList.size(); i++) {
+                WritableMap qualityLevel = Arguments.createMap();
+                QualityLevel level = qualityLevelsList.get(i);
+                qualityLevel.putInt("playListPosition", level.getPlaylistPosition());
+                qualityLevel.putInt("bitRate", level.getBitrate());
+                qualityLevel.putString("label", level.getLabel());
+                qualityLevel.putInt("height", level.getHeight());
+                qualityLevel.putInt("width", level.getWidth());
+                qualityLevel.putInt("index", level.getTrackIndex());
+                qualityLevels.pushMap(qualityLevel);
+            }
+            promise.resolve(qualityLevels);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void pause(final int reactTag) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        if (!playerView.getIsCastActive()) {
-                            playerView.mPlayerView.getPlayer().pause();
-                            playerView.userPaused = true;
-
-                        }
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            if (!playerView.getIsCastActive()) {
+                playerView.mPlayerView.getPlayer().pause();
+                playerView.userPaused = true;
+            }
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void stop(final int reactTag) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        if (!playerView.getIsCastActive()) {
-                            playerView.mPlayerView.getPlayer().stop();
-                            playerView.userPaused = true;
-                        }
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            if (!playerView.getIsCastActive()) {
+                playerView.mPlayerView.getPlayer().stop();
+                playerView.userPaused = true;
+            }
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void seekTo(final int reactTag, final double time) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        playerView.mPlayerView.getPlayer().seek(time);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayerView.getPlayer().seek(time);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void setPlaylistIndex(final int reactTag, final int index) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        playerView.mPlayerView.getPlayer().playlistItem(index);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayerView.getPlayer().playlistItem(index);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void setControls(final int reactTag, final boolean show) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        playerView.mPlayerView.getPlayer().setControls(show);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayerView.getPlayer().setControls(show);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void position(final int reactTag, final Promise promise) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        promise.resolve((Double.valueOf(playerView.mPlayerView.getPlayer().getPosition()).intValue()));
-                    } else {
-                        promise.reject("RNJW Error", "Player is null");
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            promise.reject("RNJW Error", e);
-        }
+        new JWPlayerUIBlock(reactTag, promise, mReactContext, playerView -> {
+            promise.resolve((Double.valueOf(playerView.mPlayerView.getPlayer().getPosition()).intValue()));
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void state(final int reactTag, final Promise promise) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        PlayerState playerState = playerView.mPlayerView.getPlayer().getState();
-                        promise.resolve(stateToInt(playerState));
-                    } else {
-                        promise.reject("RNJW Error", "Player is null");
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            promise.reject("RNJW Error", e);
-        }
+        new JWPlayerUIBlock(reactTag, promise, mReactContext, playerView -> {
+            PlayerState playerState = playerView.mPlayerView.getPlayer().getState();
+            promise.resolve(stateToInt(playerState));
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void setFullscreen(final int reactTag, final boolean fullscreen) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayerView != null) {
-                        playerView.mPlayerView.getPlayer().setFullscreen(fullscreen, fullscreen);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayerView.getPlayer().setFullscreen(fullscreen, fullscreen);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void setVolume(final int reactTag, final int volume) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-                    playerView.mPlayerView.getPlayer().setVolume(volume);
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayerView.getPlayer().setVolume(volume);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void getAudioTracks(final int reactTag, final Promise promise) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayer != null) {
-                        List<AudioTrack> audioTrackList = playerView.mPlayer.getAudioTracks();
-                        WritableArray audioTracks = Arguments.createArray();
-                        if (audioTrackList != null) {
-                            for (int i = 0; i < audioTrackList.size(); i++) {
-                                WritableMap audioTrack = Arguments.createMap();
-                                AudioTrack track = audioTrackList.get(i);
-                                audioTrack.putString("name", track.getName());
-                                audioTrack.putString("language", track.getLanguage());
-                                audioTrack.putString("groupId", track.getGroupId());
-                                audioTrack.putBoolean("defaultTrack", track.isDefaultTrack());
-                                audioTrack.putBoolean("autoSelect", track.isAutoSelect());
-                                audioTracks.pushMap(audioTrack);
-                            }
-                        }
-                        promise.resolve(audioTracks);
-                    } else {
-                        promise.reject("RNJW Error", "Player is null");
-                    }
+        new JWPlayerUIBlock(reactTag, promise, mReactContext, playerView -> {
+            List<AudioTrack> audioTrackList = playerView.mPlayer.getAudioTracks();
+            WritableArray audioTracks = Arguments.createArray();
+            if (audioTrackList != null) {
+                for (int i = 0; i < audioTrackList.size(); i++) {
+                    WritableMap audioTrack = Arguments.createMap();
+                    AudioTrack track = audioTrackList.get(i);
+                    audioTrack.putString("name", track.getName());
+                    audioTrack.putString("language", track.getLanguage());
+                    audioTrack.putString("groupId", track.getGroupId());
+                    audioTrack.putBoolean("defaultTrack", track.isDefaultTrack());
+                    audioTrack.putBoolean("autoSelect", track.isAutoSelect());
+                    audioTracks.pushMap(audioTrack);
                 }
-            });
-        } catch (IllegalViewOperationException e) {
-            promise.reject("RNJW Error", e);
-        }
+            }
+            promise.resolve(audioTracks);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void getCurrentAudioTrack(final int reactTag, final Promise promise) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayer != null) {
-                        promise.resolve(playerView.mPlayer.getCurrentAudioTrack());
-                    } else {
-                        promise.reject("RNJW Error", "Player is null");
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            promise.reject("RNJW Error", e);
-        }
+        new JWPlayerUIBlock(reactTag, promise, mReactContext, playerView -> {
+            promise.resolve(playerView.mPlayer.getCurrentAudioTrack());
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void setCurrentAudioTrack(final int reactTag, final int index) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayer != null) {
-                        playerView.mPlayer.setCurrentAudioTrack(index);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayer.setCurrentAudioTrack(index);
+            return null;
+        }).addToUIManager();
     }
 
     @ReactMethod
     public void setCurrentCaptions(final int reactTag, final int index) {
-        try {
-            UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-            uiManager.addUIBlock(new UIBlock() {
-                public void execute(NativeViewHierarchyManager nvhm) {
-                    RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-                    if (playerView != null && playerView.mPlayer != null) {
-                        playerView.mPlayer.setCurrentCaptions(index);
-                    }
-                }
-            });
-        } catch (IllegalViewOperationException e) {
-            throw e;
-        }
+        new JWPlayerUIBlock(reactTag, null, mReactContext, playerView -> {
+            playerView.mPlayer.setCurrentCaptions(index);
+            return null;
+        }).addToUIManager();
     }
-
 
     @ReactMethod
     public void getCurrentCaptions(final int reactTag, final Promise promise) {
-      try {
-        UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
-        uiManager.addUIBlock(new UIBlock() {
-          public void execute (NativeViewHierarchyManager nvhm) {
-            RNJWPlayerView playerView = (RNJWPlayerView) nvhm.resolveView(reactTag);
-
-            if (playerView != null && playerView.mPlayer != null) {
-              promise.resolve(playerView.mPlayer.getCurrentCaptions());
-            } else {
-              promise.reject("RNJW Error", "Player is null");
-            }
-          }
-        });
-      } catch (IllegalViewOperationException e) {
-        throw e;
-      }  
+        new JWPlayerUIBlock(reactTag, promise, mReactContext, playerView -> {
+            promise.resolve(playerView.mPlayer.getCurrentCaptions());
+            return null;
+        }).addToUIManager();
     }
-
 
     private int stateToInt(PlayerState playerState) {
       switch (playerState) {

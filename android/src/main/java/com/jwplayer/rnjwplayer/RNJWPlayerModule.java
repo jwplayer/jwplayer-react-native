@@ -78,7 +78,7 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void loadPlaylist(final int reactTag, final String playlistUrl) {
+    public void loadPlaylistWithUrl(final int reactTag, final String playlistUrl) {
         try {
             UIManagerModule uiManager = mReactContext.getNativeModule(UIManagerModule.class);
             uiManager.addUIBlock(new UIBlock() {

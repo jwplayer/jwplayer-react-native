@@ -1429,7 +1429,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     // MARK: - JWPlayer Ad Delegate
 
     func jwplayer(_ player:JWPlayer, adEvent event:JWAdEvent) {
-        self.onAdEvent?(["client": event.client.description, "type": event.type.description])
+        self.onAdEvent?(["client": event.client.rawValue, "type": event.type.rawValue])
     }
 
     // MARK: - JWPlayer AV Delegate

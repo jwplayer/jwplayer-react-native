@@ -486,7 +486,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
 
     override func jwplayer(_ player: JWPlayer, adEvent event: JWAdEvent) {
         super.jwplayer(player, adEvent:event)
-        parentView?.onAdEvent?(["client": event.client.description, "type": event.type.description])
+        parentView?.onAdEvent?(["client": event.client.rawValue, "type": event.type.rawValue])
     }
 
     // MARK: - JWPlayer Cast Delegate

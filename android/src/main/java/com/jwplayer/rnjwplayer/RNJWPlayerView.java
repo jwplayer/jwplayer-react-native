@@ -1352,7 +1352,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdLoaded(AdLoadedEvent adLoadedEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adLoadedEvent.getClient().toString());
+        event.putInt("client", Util.getAdEventClientValue(adLoadedEvent));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1360,7 +1360,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdLoadedXml(AdLoadedXmlEvent adLoadedXmlEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adLoadedXmlEvent.getClient().toString());
+        event.putInt("client", Util.getAdEventClientValue(adLoadedXmlEvent));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1369,7 +1369,8 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
         event.putString("reason", adPauseEvent.getAdPauseReason().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypePause));
+        event.putInt("client", Util.getAdEventClientValue(adPauseEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypePause));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1378,7 +1379,8 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
         event.putString("reason", adPlayEvent.getAdPlayReason().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypePlay));
+        event.putInt("client", Util.getAdEventClientValue(adPlayEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypePlay));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1386,8 +1388,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdBreakEnd(AdBreakEndEvent adBreakEndEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adBreakEndEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeAdBreakEnd));
+        event.putInt("client", Util.getAdEventClientValue(adBreakEndEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeAdBreakEnd));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1395,8 +1397,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdBreakStart(AdBreakStartEvent adBreakStartEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adBreakStartEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeAdBreakStart));
+        event.putInt("client", Util.getAdEventClientValue(adBreakStartEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeAdBreakStart));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1404,7 +1406,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdBreakIgnored(AdBreakIgnoredEvent adBreakIgnoredEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adBreakIgnoredEvent.getClient().toString());
+        event.putInt("client", Util.getAdEventClientValue(adBreakIgnoredEvent));
         // missing type code
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
@@ -1413,8 +1415,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdClick(AdClickEvent adClickEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adClickEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeClicked));
+        event.putInt("client", Util.getAdEventClientValue(adClickEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeClicked));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1422,7 +1424,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdCompanions(AdCompanionsEvent adCompanionsEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeCompanion));
+        event.putInt("client", Util.getAdEventClientValue(adCompanionsEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeCompanion));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1430,8 +1433,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdComplete(AdCompleteEvent adCompleteEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adCompleteEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeComplete));
+        event.putInt("client", Util.getAdEventClientValue(adCompleteEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeComplete));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1459,8 +1462,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdImpression(AdImpressionEvent adImpressionEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adImpressionEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeImpression));
+        event.putInt("client", Util.getAdEventClientValue(adImpressionEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeImpression));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1468,8 +1471,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdMeta(AdMetaEvent adMetaEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adMetaEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeMeta));
+        event.putInt("client", Util.getAdEventClientValue(adMetaEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeMeta));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1477,8 +1480,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdRequest(AdRequestEvent adRequestEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adRequestEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeRequest));
+        event.putInt("client", Util.getAdEventClientValue(adRequestEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeRequest));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1486,8 +1489,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdSchedule(AdScheduleEvent adScheduleEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adScheduleEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeSchedule));
+        event.putInt("client", Util.getAdEventClientValue(adScheduleEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeSchedule));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1495,8 +1498,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdSkipped(AdSkippedEvent adSkippedEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putString("client", adSkippedEvent.getClient().toString());
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeSkipped));
+        event.putInt("client", Util.getAdEventClientValue(adSkippedEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeSkipped));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1504,7 +1507,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAdStarted(AdStartedEvent adStartedEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
-        event.putInt("type", Util.getEventTypeValue(Util.AdEventType.JWAdEventTypeStarted));
+        event.putInt("client", Util.getAdEventClientValue(adStartedEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeStarted));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 

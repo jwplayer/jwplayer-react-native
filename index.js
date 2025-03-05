@@ -174,6 +174,7 @@ export default class JWPlayer extends Component {
 		config: PropTypes.shape({
 			license: PropTypes.string.isRequired,
 			forceLegacyConfig: PropTypes.bool,
+			playlistItemCallbackEnabled: PropTypes.bool,
 			backgroundAudioEnabled: PropTypes.bool,
 			category: PropTypes.oneOf([
 				'Ambient',

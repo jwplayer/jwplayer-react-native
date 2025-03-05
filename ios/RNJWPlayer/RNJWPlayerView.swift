@@ -285,6 +285,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
     func setNewConfig(config: [String : Any]) {
         let forceLegacyConfig = config["forceLegacyConfig"] as? Bool?
+        let playlistItemCallback = config["playlistItemCallbackEnabled"] as? Bool?
         let data:Data! = try? JSONSerialization.data(withJSONObject: config, options:.prettyPrinted)
         let jwConfig = try? JWJSONParser.config(from:data)
         
@@ -350,8 +351,11 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
                         self.setupPlayerViewController(config: config, playerConfig: jwConfig!)
                     }
                 }
+                
+                if playlistItemCallback == true {
+                    self.setupPlaylistItemCallback()
+                }
 
-                self.setupPlaylistItemCallback()
             } catch {
                 print(error)
             }

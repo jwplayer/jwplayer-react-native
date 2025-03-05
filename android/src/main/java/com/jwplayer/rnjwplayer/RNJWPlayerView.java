@@ -129,7 +129,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnFullscreenListener,
@@ -461,7 +460,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         }
     }
 
-    public void setupPlayerView(Boolean backgroundAudioEnabled) {
+    public void setupPlayerView(Boolean backgroundAudioEnabled, Boolean playlistItemCallbackEnabled) {
         if (mPlayer != null) {
 
             mPlayer.addListeners(this,
@@ -527,11 +526,14 @@ public class RNJWPlayerView extends RelativeLayout implements
                 mPlayer.setFullscreenHandler(new fullscreenHandler());
             }
             mPlayer.allowBackgroundAudio(backgroundAudioEnabled);
-            mPlayer.setPlaylistItemCallbackListener(this);
+
+            if (playlistItemCallbackEnabled) {
+                mPlayer.setPlaylistItemCallbackListener(this);
+            }
         }
     }
 
-    public void resolveNextPlaylistItem(ReadableMap playlistItem) {
+   public void resolveNextPlaylistItem(ReadableMap playlistItem) {
         if (itemUpdatePromise == null) {
             return;
         }
@@ -654,7 +656,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     }
 
     @Override
-    public void onBeforeNextPlaylistItem(PlaylistItemDecision PlaylistItemDecision, PlaylistItem nextItem, int indexOfNextItem) {
+    public void onBeforeNextPlaylistItem(PlaylistItemDecision playlistItemDecision, PlaylistItem nextItem, int indexOfNextItem) {
         WritableMap event = Arguments.createMap();
         Gson gson = new Gson();
         event.putString("message", "onBeforeNextPlaylistItem");
@@ -662,7 +664,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("playlistItem", gson.toJson(nextItem));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topBeforeNextPlaylistItem", event);
 
-        itemUpdatePromise = PlaylistItemDecision;
+        itemUpdatePromise = playlistItemDecision;
     }
 
     private class fullscreenHandler implements FullscreenHandler {
@@ -953,6 +955,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         JSONObject obj;
         PlayerConfig jwConfig = null;
         Boolean forceLegacy = prop.hasKey("forceLegacyConfig") ? prop.getBoolean("forceLegacyConfig") : false;
+        Boolean playlistItemCallbackEnabled = prop.hasKey("playlistItemCallbackEnabled") ? prop.getBoolean("playlistItemCallbackEnabled") : false;
         Boolean isJwConfig = false;
         if (!forceLegacy) {
             try {
@@ -1190,7 +1193,7 @@ public class RNJWPlayerView extends RelativeLayout implements
             backgroundAudioEnabled = prop.getBoolean("backgroundAudioEnabled");
         }
 
-        setupPlayerView(backgroundAudioEnabled);
+        setupPlayerView(backgroundAudioEnabled, playlistItemCallbackEnabled);
 
         if (backgroundAudioEnabled) {
             audioManager = (AudioManager) simpleContext.getSystemService(Context.AUDIO_SERVICE);

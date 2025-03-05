@@ -6,6 +6,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     pid?: string;
     mute?: boolean;
     forceLegacyConfig?: boolean;
+    playlistItemCallbackEnabled?: boolean;
     useTextureView?: boolean;
     autostart?: boolean;
     nextupoffset?: string | number; // String with % or number

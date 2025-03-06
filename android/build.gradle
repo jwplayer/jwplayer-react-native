@@ -15,6 +15,10 @@ def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
+def isNewArchitectureEnabled() {
+    return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
+}
+
 def useIMA = safeExtGet("RNJWPlayerUseGoogleIMA", "")?.toBoolean() ?: false
 def useCast = safeExtGet("RNJWPlayerUseGoogleCast", "")?.toBoolean() ?: false
 
@@ -27,6 +31,9 @@ android {
         targetSdkVersion safeExtGet('targetSdkVersion', 28)
         versionCode 1
         versionName "1.0"
+
+        buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }

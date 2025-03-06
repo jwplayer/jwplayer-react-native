@@ -221,7 +221,7 @@ class RNJWPlayerViewManager: RCTViewManager {
                 }
                 view.onBeforeNextPlaylistItemCompletion = nil
             } else {
-                print("Warning: resolveNextPlaylistItem called but no completion handler was set")
+                print("Warning: resolveNextPlaylistItem called but no completion handler was set OR completion handler was already called")
             }
         }
     }

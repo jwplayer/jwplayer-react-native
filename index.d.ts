@@ -6,6 +6,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     pid?: string;
     mute?: boolean;
     forceLegacyConfig?: boolean;
+    /**
+     * If true, `onBeforeNextPlaylistItem` MUST be impelemented with `player.resolveNextPlaylistItem()` called in the callback or content will hang
+     */
+    playlistItemCallbackEnabled?: boolean;
     useTextureView?: boolean;
     autostart?: boolean;
     nextupoffset?: string | number; // String with % or number
@@ -570,6 +574,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
     onAudioTracks?: () => void;
     shouldComponentUpdate?: (nextProps: any, nextState: any) => boolean;
+    onBeforeNextPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;
   }
 
   export default class JWPlayer extends React.Component<PropsType> {
@@ -601,5 +606,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     setCurrentCaptions(index: number): void;
     getCurrentCaptions(): Promise<number | null>; 
     setVisibility(visibility: boolean, controls: JWControlType[]): void;
+    /**
+     * Only called inside `onBeforeNextPlaylistItem` callback, and once per callback
+     * @param playlistItem  `PlaylistItem` or  `JwPlaylistItem`
+     */
+    resolveNextPlaylistItem(playlistItem: PlaylistItem | JwPlaylistItem): void;
   }
 }

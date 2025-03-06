@@ -1,4 +1,3 @@
-
 package com.jwplayer.rnjwplayer;
 
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -171,6 +170,10 @@ public class RNJWPlayerViewManager extends SimpleViewManager<RNJWPlayerView> {
                     MapBuilder.of(
                             "phasedRegistrationNames",
                             MapBuilder.of("bubbled", "onLoaded")))
+            .put("topBeforeNextPlaylistItem",
+                    MapBuilder.of(
+                            "phasedRegistrationNames",
+                            MapBuilder.of("bubbled", "onBeforeNextPlaylistItem")))
             .build();
   }
 

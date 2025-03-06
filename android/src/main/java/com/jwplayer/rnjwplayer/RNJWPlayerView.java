@@ -383,6 +383,9 @@ public class RNJWPlayerView extends RelativeLayout implements
             mActivity.getLifecycle().removeObserver(lifecycleObserver);
             mPlayer.deregisterActivityForPip();
 
+            // Remove playlist item callback listener
+            mPlayer.removePlaylistItemCallbackListener();
+
             mPlayer.removeListeners(this,
                     // VideoPlayerEvents
                     EventType.READY,

@@ -225,7 +225,28 @@ class RNJWPlayerViewManager: RCTViewManager {
             }
         }
     }
-    
+
+    @objc func resolveNextPlaylistItem(_ reactTag: NSNumber, _ playlistItem: NSDictionary) {
+        self.bridge.uiManager.addUIBlock { uiManager, viewRegistry in
+            guard let view = viewRegistry?[reactTag] as? RNJWPlayerView else {
+                print("Invalid view returned from registry, expecting RNJWPlayerView, got: \(String(describing: viewRegistry?[reactTag]))")
+                return
+            }
+            
+            if let completion = view.onBeforeNextPlaylistItemCompletion {
+                do {
+                    let item = try view.getPlayerItem(item: playlistItem as! [String: Any])
+                    completion(item)
+                } catch {
+                    print("Error creating JWPlayerItem: \(error)")
+                }
+                view.onBeforeNextPlaylistItemCompletion = nil
+            } else {
+                print("Warning: resolveNextPlaylistItem called but no completion handler was set OR completion handler was already called")
+            }
+        }
+    }
+
 #if USE_GOOGLE_CAST
     @objc func setUpCastController(_ reactTag: NSNumber) {
         DispatchQueue.main.async {

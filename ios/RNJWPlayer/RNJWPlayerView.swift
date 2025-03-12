@@ -41,6 +41,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     var castController: JWCastController!
     var isCasting: Bool = false
     var availableDevices: [AnyObject]!
+    var onBeforeNextPlaylistItemCompletion: ((JWPlayerItem?) -> ())?
     
     @objc var onBuffer: RCTDirectEventBlock?
     @objc var onUpdateBuffer: RCTDirectEventBlock?
@@ -87,6 +88,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     @objc var onCastingFailed: RCTDirectEventBlock?
     @objc var onCaptionsChanged: RCTDirectEventBlock?
     @objc var onCaptionsList: RCTDirectEventBlock?
+    @objc var onBeforeNextPlaylistItem: RCTDirectEventBlock?
     
     init() {
         super.init(frame: CGRect(x: 20, y: 0, width: UIScreen.main.bounds.width - 40, height: 300))
@@ -283,6 +285,7 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
     func setNewConfig(config: [String : Any]) {
         let forceLegacyConfig = config["forceLegacyConfig"] as? Bool?
+        let playlistItemCallback = config["playlistItemCallbackEnabled"] as? Bool?
         let data:Data! = try? JSONSerialization.data(withJSONObject: config, options:.prettyPrinted)
         let jwConfig = try? JWJSONParser.config(from:data)
         
@@ -348,6 +351,11 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
                         self.setupPlayerViewController(config: config, playerConfig: jwConfig!)
                     }
                 }
+                
+                if playlistItemCallback == true {
+                    self.setupPlaylistItemCallback()
+                }
+
             } catch {
                 print(error)
             }
@@ -359,6 +367,47 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
     @objc func setControls(_ controls:Bool) {
         if let playerViewControllerView = playerViewController?.view {
             self.toggleUIGroup(view: playerViewControllerView, name: "JWPlayerKit.InterfaceView", ofSubview: nil, show: controls)
+        }
+    }
+
+    func setupPlaylistItemCallback() {
+        playerViewController.player.setPlaylistItemCallback { [weak self] item, index, completion in
+            print("setPlaylistItemCallback called with index \(index)")
+            guard let self = self else {
+                print("setPlaylistItemCallback: self is nil, resuming normally")
+                completion(item)
+                return
+            }
+            
+            if let onBeforeNextPlaylistItem = self.onBeforeNextPlaylistItem {
+                print("Storing completion handler and triggering onBeforeNextPlaylistItem")
+                // Store the completion handler first, before any other operations
+                self.onBeforeNextPlaylistItemCompletion = completion
+                print("Completion handler stored: \(self.onBeforeNextPlaylistItemCompletion != nil)")
+
+                do {
+                    let data = try JSONSerialization.data(withJSONObject: item.toJSONObject(), options: [.prettyPrinted])
+                    let jsonString = String(data: data, encoding: .utf8) ?? "{}"
+
+                    print("Triggering onBeforeNextPlaylistItem with index \(index)")
+                    print("Completion handler before event: \(self.onBeforeNextPlaylistItemCompletion != nil)")
+
+                    // Pass the playlist item to the React Native side
+                    onBeforeNextPlaylistItem([
+                        "playlistItem": jsonString,
+                        "index": index
+                    ])
+                    print("Completion handler after event: \(self.onBeforeNextPlaylistItemCompletion != nil)")
+                
+                } catch {
+                    print("Error serializing playlist item: \(error)")
+                    self.onBeforeNextPlaylistItemCompletion?(item) // Call completion handler directly on error
+                    self.onBeforeNextPlaylistItemCompletion = nil
+                }
+            } else {
+                print("No onBeforeNextPlaylistItem handler set, calling completion directly")
+                completion(item)
+            }
         }
     }
 

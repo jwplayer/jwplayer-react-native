@@ -9,6 +9,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Home from './screens/Home';
 import ListExample from './screens/ListExample';
 import SingleExample from './screens/SingleExample';
+import OnBeforeNextPlaylistItemExample from './screens/OnBeforeNextPlaylistItemExample';
 import DRMExample from './screens/DRMExample';
 import LocalFileExample from './screens/LocalFileExample';
 import SourcesExample from './screens/SourcesExample';
@@ -24,6 +25,7 @@ export default class App extends Component {
         <Stack.Navigator initialRouteName="Home">
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Single" component={SingleExample} />
+          <Stack.Screen name="On Before Next Playlist Item" component={OnBeforeNextPlaylistItemExample} />
           <Stack.Screen name="Modal" component={PlayerInModal} />
           <Stack.Screen name="List" component={ListExample} />
           <Stack.Screen name="DRM" component={DRMExample} />

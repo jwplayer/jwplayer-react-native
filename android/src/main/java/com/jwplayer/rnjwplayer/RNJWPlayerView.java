@@ -157,6 +157,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnCaptionsListListener,
         VideoPlayerEvents.OnCaptionsChangedListener,
         VideoPlayerEvents.OnMetaListener,
+        VideoPlayerEvents.PlaylistItemCallbackListener,
 
         CastingEvents.OnCastListener,
 
@@ -236,6 +237,9 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     private MediaServiceController mMediaServiceController;
     private PipHandlerReceiver mReceiver = null;
+
+    // Add completion handler field
+    PlaylistItemDecision itemUpdatePromise = null;
 
     private void doBindService() {
         if (mMediaServiceController != null) {
@@ -380,6 +384,9 @@ public class RNJWPlayerView extends RelativeLayout implements
             mActivity.getLifecycle().removeObserver(lifecycleObserver);
             mPlayer.deregisterActivityForPip();
 
+            // Remove playlist item callback listener
+            mPlayer.removePlaylistItemCallbackListener();
+
             mPlayer.removeListeners(this,
                     // VideoPlayerEvents
                     EventType.READY,
@@ -457,7 +464,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         }
     }
 
-    public void setupPlayerView(Boolean backgroundAudioEnabled) {
+    public void setupPlayerView(Boolean backgroundAudioEnabled, Boolean playlistItemCallbackEnabled) {
         if (mPlayer != null) {
 
             mPlayer.addListeners(this,
@@ -522,9 +529,33 @@ public class RNJWPlayerView extends RelativeLayout implements
             } else {
                 mPlayer.setFullscreenHandler(new fullscreenHandler());
             }
-
             mPlayer.allowBackgroundAudio(backgroundAudioEnabled);
+
+            if (playlistItemCallbackEnabled) {
+                mPlayer.setPlaylistItemCallbackListener(this);
+            }
         }
+    }
+
+   public void resolveNextPlaylistItem(ReadableMap playlistItem) {
+        if (itemUpdatePromise == null) {
+            return;
+        }
+
+        if (playlistItem == null) {
+            itemUpdatePromise.continuePlayback();
+            itemUpdatePromise = null;
+            return;
+        }
+
+        try {
+            PlaylistItem updatedPlaylistItem = Util.getPlaylistItem(playlistItem);
+            itemUpdatePromise.modify(updatedPlaylistItem);
+        } catch (Exception exception) {
+            itemUpdatePromise.continuePlayback();
+        }
+
+        itemUpdatePromise = null;
     }
 
     /**
@@ -626,6 +657,18 @@ public class RNJWPlayerView extends RelativeLayout implements
         };
         delegate.onAllowRotationChanged(true);
         return delegate;
+    }
+
+    @Override
+    public void onBeforeNextPlaylistItem(PlaylistItemDecision playlistItemDecision, PlaylistItem nextItem, int indexOfNextItem) {
+        WritableMap event = Arguments.createMap();
+        Gson gson = new Gson();
+        event.putString("message", "onBeforeNextPlaylistItem");
+        event.putInt("index", indexOfNextItem);
+        event.putString("playlistItem", gson.toJson(nextItem));
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topBeforeNextPlaylistItem", event);
+
+        itemUpdatePromise = playlistItemDecision;
     }
 
     private class fullscreenHandler implements FullscreenHandler {
@@ -916,6 +959,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         JSONObject obj;
         PlayerConfig jwConfig = null;
         Boolean forceLegacy = prop.hasKey("forceLegacyConfig") ? prop.getBoolean("forceLegacyConfig") : false;
+        Boolean playlistItemCallbackEnabled = prop.hasKey("playlistItemCallbackEnabled") ? prop.getBoolean("playlistItemCallbackEnabled") : false;
         Boolean isJwConfig = false;
         if (!forceLegacy) {
             try {
@@ -1051,7 +1095,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         addView(mPlayerView);
 
         // Ensure we have a valid state before applying to the player
-        registry.setCurrentState(Lifecycle.State.STARTED);
+        registry.setCurrentState(registry.getCurrentState()); // This is a hack to ensure player and view know the lifecycle state
 
         mPlayer = mPlayerView.getPlayer(this);
 
@@ -1155,7 +1199,7 @@ public class RNJWPlayerView extends RelativeLayout implements
             backgroundAudioEnabled = prop.getBoolean("backgroundAudioEnabled");
         }
 
-        setupPlayerView(backgroundAudioEnabled);
+        setupPlayerView(backgroundAudioEnabled, playlistItemCallbackEnabled);
 
         if (backgroundAudioEnabled) {
             audioManager = (AudioManager) simpleContext.getSystemService(Context.AUDIO_SERVICE);

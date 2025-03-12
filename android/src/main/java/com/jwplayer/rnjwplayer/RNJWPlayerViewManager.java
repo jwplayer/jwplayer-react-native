@@ -40,6 +40,9 @@ public class RNJWPlayerViewManager extends SimpleViewManager<RNJWPlayerView> {
 
   @ReactProp(name = "controls")
   public void setControls(RNJWPlayerView view, Boolean controls) {
+    if (view == null || view.mPlayerView == null) {
+      return;
+    }
     view.mPlayerView.getPlayer().setControls(controls);
   }
 

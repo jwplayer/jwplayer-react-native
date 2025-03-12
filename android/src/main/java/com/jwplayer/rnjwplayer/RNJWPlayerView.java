@@ -40,6 +40,7 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.MapBuilder;
@@ -946,7 +947,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         return differences.size() == 1 && differences.containsKey(keyName);
     }
 
-    boolean playlistNotTheSame(ReadableMap prop) {
+    private boolean playlistNotTheSame(ReadableMap prop) {
         return prop.hasKey("playlist") && mPlaylistProp != prop.getArray("playlist") && !Arrays
                 .deepEquals(new ReadableArray[]{mPlaylistProp}, new ReadableArray[]{prop.getArray("playlist")});
     }
@@ -1065,9 +1066,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                 ReadableArray uiGroupsArray = prop.getArray("hideUIGroups");
                 UiConfig.Builder hideConfigBuilder = new UiConfig.Builder().displayAllControls();
                 for (int i = 0; i < uiGroupsArray.size(); i++) {
-                    UiGroup uiGroup = GROUP_TYPES.get(uiGroupsArray.getString(i));
-                    if (uiGroup != null) {
-                        hideConfigBuilder.hide(uiGroup);
+                    if (uiGroupsArray.getType(i) == ReadableType.String) {
+                        UiGroup uiGroup = GROUP_TYPES.get(uiGroupsArray.getString(i));
+                        if (uiGroup != null) {
+                            hideConfigBuilder.hide(uiGroup);
+                        }
                     }
                 }
                 UiConfig hideJwControlbarUiConfig = hideConfigBuilder.build();

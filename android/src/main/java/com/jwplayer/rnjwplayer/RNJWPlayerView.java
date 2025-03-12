@@ -1092,7 +1092,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         addView(mPlayerView);
 
         // Ensure we have a valid state before applying to the player
-        registry.setCurrentState(Lifecycle.State.STARTED);
+        registry.setCurrentState(registry.getCurrentState()); // This is a hack to ensure player and view know the lifecycle state
 
         mPlayer = mPlayerView.getPlayer(this);
 

@@ -13,14 +13,17 @@ import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.uimanager.IllegalViewOperationException;
+import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerHelper;
+import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.jwplayer.pub.api.JWPlayer;
 import com.jwplayer.pub.api.PlayerState;
 import com.jwplayer.pub.api.configuration.PlayerConfig;
 import com.jwplayer.pub.api.media.adaptive.QualityLevel;
 import com.jwplayer.pub.api.media.audio.AudioTrack;
-
 import java.util.List;
 
 public class RNJWPlayerModule extends ReactContextBaseJavaModule {

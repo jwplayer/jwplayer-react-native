@@ -228,8 +228,8 @@ class RNJWPlayerViewManager: RCTViewManager {
 
     @objc func resolveNextPlaylistItem(_ reactTag: NSNumber, _ playlistItem: NSDictionary) {
         self.bridge.uiManager.addUIBlock { uiManager, viewRegistry in
-            guard let view = viewRegistry?[reactTag] as? RNJWPlayerView else {
-                print("Invalid view returned from registry, expecting RNJWPlayerView, got: \(String(describing: viewRegistry?[reactTag]))")
+            guard let view = self.getPlayerView(reactTag: reactTag) else {
+                print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
             

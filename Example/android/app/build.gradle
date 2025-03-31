@@ -121,3 +121,5 @@ dependencies {
     implementation "androidx.core:core-splashscreen:1.0.1"
     implementation 'com.google.android.gms:play-services-cast-framework:21.3.0'
 }
+
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")

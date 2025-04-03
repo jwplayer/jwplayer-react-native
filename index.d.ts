@@ -591,7 +591,16 @@ declare module "@jwplayer/jwplayer-react-native" {
     setControls(show: boolean): void;
     setLockScreenControls(show: boolean): void;
     seekTo(time: number): void;
-    loadPlaylist(playlistItems: PlaylistItem[] | JwPlaylistItem[] | string): void;
+    /**
+     * Side load playlist items into an already setup player
+     * @param playlistItems `PlaylistItem` or `JwPlaylistItem`
+     */
+    loadPlaylist(playlistItems: PlaylistItem[] | JwPlaylistItem[]): void;
+    /**
+     * Side load playlist via URL into an already setup player
+     * @param playlistUrl URL for playlist to load (format for response: json)
+     */
+    loadPlaylistWithUrl(playlistUrl: string): void;
     setFullscreen(fullScreen: boolean): void;
     position(): Promise<number>;
     setUpCastController(): void;

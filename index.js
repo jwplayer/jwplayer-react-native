@@ -535,6 +535,11 @@ export default class JWPlayer extends Component {
 			RNJWPlayerManager.loadPlaylist(this.getRNJWPlayerBridgeHandle(), playlistItems);
 	}
 
+	loadPlaylistWithUrl(playlistUrl) {
+		if (RNJWPlayerManager)
+			RNJWPlayerManager.loadPlaylistWithUrl(this.getRNJWPlayerBridgeHandle(), playlistUrl);
+	}
+
 	setFullscreen(fullscreen) {
 		if (RNJWPlayerManager)
 			RNJWPlayerManager.setFullscreen(

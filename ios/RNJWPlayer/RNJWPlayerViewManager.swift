@@ -548,7 +548,18 @@ class RNJWPlayerViewManager: RCTViewManager {
                 } else if let playerViewController = view.playerViewController {
                     playerViewController.player.loadPlaylist(items: playlistArray)
                 }
-            } else if let playlistString = playlist as? String, let url = URL(string: playlistString) {
+            }
+        }
+    }
+    
+    @objc func loadPlaylistWithUrl(_ reactTag: NSNumber, _ playlistString: String) {
+        DispatchQueue.main.async {
+            guard let view = self.getPlayerView(reactTag: reactTag) else {
+                print("Invalid view returned from registry, expecting RNJWPlayerView")
+                return
+            }
+                        
+            if let url = URL(string: playlistString) {
                 if let playerView = view.playerView {
                     playerView.player.loadPlaylist(url: url)
                 } else if let playerViewController = view.playerViewController {

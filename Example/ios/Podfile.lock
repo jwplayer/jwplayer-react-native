@@ -5,7 +5,7 @@ PODS:
   - FBLazyVector (0.78.1)
   - fmt (11.0.2)
   - glog (0.3.5)
-  - google-cast-sdk (4.8.1):
+  - google-cast-sdk (4.8.3):
     - Protobuf (~> 3.13)
   - GoogleAds-IMA-iOS-SDK (3.22.1)
   - hermes-engine (0.78.1):
@@ -1645,7 +1645,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - RNJWPlayer (1.1.0):
-    - google-cast-sdk (= 4.8.1)
+    - google-cast-sdk (= 4.8.3)
     - GoogleAds-IMA-iOS-SDK (= 3.22.1)
     - JWPlayerKit (= 4.21.2)
     - React-Core
@@ -1965,7 +1965,7 @@ SPEC CHECKSUMS:
   FBLazyVector: bba368dacede4c9dec7a58c9be5a2d3e9ea30cc7
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: eb93e2f488219332457c3c4eafd2738ddc7e80b8
-  google-cast-sdk: beb7a3ec3def0e3beb618a849b0f1ab2b15b5ebb
+  google-cast-sdk: 1fb6724e94cc5ff23b359176e0cf6360586bb97a
   GoogleAds-IMA-iOS-SDK: 160c3616b8371b58016e30aaf441e71d6d9e8f7d
   hermes-engine: f493b0a600aed5dc06532141603688a30a5b2f61
   JWPlayerKit: 8b7b5c769811b15c27c6eecba981ad5a382a966f
@@ -2034,12 +2034,12 @@ SPEC CHECKSUMS:
   RNDeviceInfo: feea80a690d2bde1fe51461cf548039258bd03f2
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: 9b05fab9a0b48fe48c968de7dbb9ca38a2b4f7ab
-  RNJWPlayer: c0c7dea3c9509f52e96e4ca917cecc6261b76510
+  RNJWPlayer: 1803389e298c1eda86ce99bc110f52e6ba3d0790
   RNScreens: 0f01bbed9bd8045a8d58e4b46993c28c7f498f3c
   RNVectorIcons: 14a0c42f16a26bcc3e79a19bc1c5718284b1d469
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Yoga: dea3cbe52f93ef8f722493a505c1add295fe7fba
+  Yoga: b94ff2d7559cb66837c97a3f394ddb817faad4d6
 
 PODFILE CHECKSUM: 3b7605a6ca51fcda99414b7336385dae0321f852
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2

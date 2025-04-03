@@ -7,7 +7,7 @@
   </style>
 
   <!-- BootTheme should inherit from Theme.SplashScreen -->
-  <style name="BootTheme" parent="Theme.SplashScreen">
+  <style name="BootTheme" parent="Theme.BootSplash">
     <item name="windowSplashScreenBackground">@color/bootsplash_background</item>
     <item name="windowSplashScreenIconBackgroundColor">@color/bootsplash_icon_background</item>
     <item name="postSplashScreenTheme">@style/AppTheme</item>

@@ -1,5 +1,5 @@
 import React, {useRef} from 'react';
-import {StatusBar} from 'react-native';
+import {Alert, StatusBar} from 'react-native';
 import Player from '../components/Player';
 import PlayerContainer from '../components/PlayerContainer';
 
@@ -65,6 +65,10 @@ export default () => {
     <PlayerContainer
       children={renderPlayer()}
       text="Welcome to jwplayer-react-native"
+      onPress={() => {
+        // Add logic for a button press here
+        Alert.alert('Button Pressed');
+      }}
     />
   );
 };

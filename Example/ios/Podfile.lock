@@ -1646,7 +1646,7 @@ PODS:
     - Yoga
   - RNJWPlayer (1.1.0):
     - google-cast-sdk (= 4.8.3)
-    - GoogleAds-IMA-iOS-SDK (~> 3.22.1)
+    - GoogleAds-IMA-iOS-SDK (= 3.22.1)
     - JWPlayerKit (= 4.21.3)
     - React-Core
   - RNScreens (4.10.0):

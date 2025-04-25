@@ -73,9 +73,9 @@ allprojects {
     }
 }
 
-def jwPlayerVersion = "4.18.4"
+def jwPlayerVersion = "4.20.0"
 def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK > 4.16.0
-def media3ExoVersion = "1.1.1"
+def media3ExoVersion = "1.4.1"
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
@@ -89,7 +89,7 @@ dependencies {
 
     // Ad dependencies
     if (useIMA) {
-        implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.33.0'
+        implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
         implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
     }
 

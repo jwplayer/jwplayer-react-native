@@ -6,7 +6,7 @@
 
 <br />
 
-[Prerequisites](#prerequisites) | [Installation](#installation) | [Usage](#usage) | [Advanced Topics](#advanced-topics) | [Contributing](#contributing) | [Issues](#issues)
+[Prerequisites](#prerequisites) | [Installation](#installation) | [Usage](#usage) | [Advanced Topics](#advanced-topics) | [Contributions](#contributions) | [Issues](#issues)
 
 <br />
 
@@ -431,18 +431,42 @@ You can use the styling elements as defined in the [Legacy Readme](/docs/legacy_
 
 <br /><br />
 
-## Contributing
+## Contributions
 
-- All contributions should correlate to an open issue. We hope to avoid doubling the work between contributors. 
-- Changes shouldn't be a one-off solution for your use case.
-- Keep work small as required. Large PRs aren't fun for anyone and will take longer to review.
+We welcome thoughtful contributions. To avoid duplicate work, review the following before opening a pull request (PR):
+- Ensure your contribution applies directly to an open issue.
+- When appropriate, develop solutions that can be applied to multiple use cases and implementations.
+- Submit small, well-scoped pull requests.
+
+Follow these steps to contribute:
+1. Review an [issue](https://github.com/jwplayer/jwplayer-react-native/issues).
+2. Create a [pull request](https://github.com/jwplayer/jwplayer-react-native/blob/master/.github/PULL_REQUEST_TEMPLATE.md) to propose a solution.
+
 
 <br /><br />
 
 ## Issues
 
-- Follow the format for Bugs/Features/Questions.
-- If submitting a bug, always attempt to recreate the issue in our Example app
-- Provide as much relevant information as possible
-- For the quickest support, reach out to JW support via this [link](https://support.jwplayer.com/hc/en-us/requests/new) after creating an issue on this repo. Providing the `Issue` number and additional, potentially proprietary/sensitive information. 
+To ensure issues are efficiently addressed, we outline our expectations, define what we support, and explain how to submit issues below.
+
+### Expectations
+
+If you’re filing an issue, follow the **Try → Wait → Fork** model:
+- **Try first**. Investigate the bug. If you find the cause, [submit a fix](#contributions). We focus on issues backed by effort.
+- **Wait patiently**. We prioritize our core Native SDK development over this React-Native repository. Responses here may be delayed.
+- **Fork when needed**. For one-off use cases, fork the repo. We only support changes with broad value.
+
+### What We Support
+
+We focus on work that delivers the greatest long-term value to the broader community. The following categories are listed in order of priority:
+1. **Breakages** and **critical bugs** caused by updates to the Native SDKs.
+2. **Critical bugs** in the wrapper that can be reproduced in the Example app.
+3. **Structural issues** that impact long-term maintainability.
+4. **New features** that align with official SDK capabilities and benefit the broader community. _Note: These are prioritized **lower than bugs** and will be addressed only **as time allows**._
+
+### Issue Submissions
+
+Follow these steps to submit an issue:
+1. Submit a [bug report](https://github.com/jwplayer/jwplayer-react-native/blob/master/.github/ISSUE_TEMPLATE/bug_report.md), [feature request](https://github.com/jwplayer/jwplayer-react-native/blob/master/.github/ISSUE_TEMPLATE/feature_request.md), [implementation request](https://github.com/jwplayer/jwplayer-react-native/blob/master/.github/ISSUE_TEMPLATE/implement.md), or [question](https://github.com/jwplayer/jwplayer-react-native/blob/master/.github/ISSUE_TEMPLATE/question.md) in this project. _Note: All information requested in the submission template must be provided. If any item is not applicable, enter "N/A"._
+2. (Optional) Submit a [JWP support request](https://support.jwplayer.com/hc/en-us/requests/new) when you need to share sensitive information.
 

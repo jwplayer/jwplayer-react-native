@@ -16,7 +16,12 @@ import JWPlayerKit
     import GoogleCast
 #endif
 
-class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDelegate, JWAVDelegate, JWPlayerViewDelegate, JWPlayerViewControllerDelegate, JWDRMContentKeyDataSource, JWTimeEventListener, AVPictureInPictureControllerDelegate {
+class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
+    JWAdDelegate, JWAVDelegate, JWPlayerViewDelegate,
+    JWPlayerViewControllerFullScreenDelegate, JWPlayerViewControllerUIDelegate,
+    JWPlayerViewControllerRelatedDelegate, JWDRMContentKeyDataSource,
+    JWTimeEventListener, AVPictureInPictureControllerDelegate
+{ 
     
     // MARK: - RNJWPlayer allocation
 

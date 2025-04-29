@@ -16,12 +16,16 @@ import JWPlayerKit
     import GoogleCast
 #endif
 
-class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerDelegate, JWDRMContentKeyDataSource {
+class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerFullScreenDelegate,
+                                 JWPlayerViewControllerUIDelegate, JWPlayerViewControllerRelatedDelegate,
+                                    JWDRMContentKeyDataSource {
 
     var parentView:RNJWPlayerView!
 
     func setDelegates() {
-        self.delegate = self
+        self.fullScreenDelegate = self
+        self.uiDelegate = self
+        self.relatedDelegate = self
 //        self.playerView.delegate = self
 //        self.player.delegate = self
 //        self.player.playbackStateDelegate = self
@@ -31,7 +35,9 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
     }
 
     func removeDelegates() {
-        self.delegate = nil
+        self.fullScreenDelegate = nil
+        self.uiDelegate = nil
+        self.relatedDelegate = nil
 //        self.playerView.delegate = nil
 //        self.player.delegate = nil
 //        self.player.playbackStateDelegate = nil
@@ -138,10 +144,12 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
         parentView?.onScreenTapped?(["x": position.x, "y": position.y])
     }
 
+    // MARK: JWPlayerViewControllerUIDelegate
     func playerViewController(_ controller:JWPlayerViewController, controlBarVisibilityChanged isVisible:Bool, frame:CGRect) {
         parentView?.onControlBarVisible?(["visible": isVisible])
     }
 
+    // MARK: - JWPlayerViewControllerFullScreenDelegate
     func playerViewControllerWillGoFullScreen(_ controller:JWPlayerViewController) -> JWFullScreenViewController? {
         parentView?.onFullScreenRequested?([:])
         return nil
@@ -159,6 +167,8 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerD
         parentView?.onFullScreenExit?([:])
     }
 
+	// MARK: JWPlayerViewControllerRelatedDelegate
+	
     func playerViewController(_ controller:JWPlayerViewController, relatedMenuClosedWithMethod method:JWRelatedInteraction) {
 
     }

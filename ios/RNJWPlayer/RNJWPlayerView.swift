@@ -16,7 +16,12 @@ import JWPlayerKit
     import GoogleCast
 #endif
 
-class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDelegate, JWAVDelegate, JWPlayerViewDelegate, JWPlayerViewControllerDelegate, JWDRMContentKeyDataSource, JWTimeEventListener, AVPictureInPictureControllerDelegate {
+class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
+    JWAdDelegate, JWAVDelegate, JWPlayerViewDelegate,
+    JWPlayerViewControllerFullScreenDelegate, JWPlayerViewControllerUIDelegate,
+    JWPlayerViewControllerRelatedDelegate, JWDRMContentKeyDataSource,
+    JWTimeEventListener, AVPictureInPictureControllerDelegate
+{ 
     
     // MARK: - RNJWPlayer allocation
 
@@ -1279,10 +1284,6 @@ class RNJWPlayerView : UIView, JWPlayerDelegate, JWPlayerStateDelegate, JWAdDele
 
     func jwplayerContentDidComplete(_ player:JWPlayer) {
         self.onComplete?([:])
-    }
-    
-    func jwplayerContentIsBuffering(_ player: any JWPlayerKit.JWPlayer) {
-
     }
 
     func jwplayer(_ player:JWPlayer, didLoadPlaylistItem item:JWPlayerItem, at index:UInt) {

@@ -1285,10 +1285,6 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     func jwplayerContentDidComplete(_ player:JWPlayer) {
         self.onComplete?([:])
     }
-    
-    func jwplayerContentIsBuffering(_ player: any JWPlayerKit.JWPlayer) {
-
-    }
 
     func jwplayer(_ player:JWPlayer, didLoadPlaylistItem item:JWPlayerItem, at index:UInt) {
 //        var sourceDict: [String: Any] = [:]

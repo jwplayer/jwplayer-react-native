@@ -37,7 +37,8 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
     func removeDelegates() {
         self.fullScreenDelegate = nil
         self.uiDelegate = nil
-        self.relatedDelegate = nil//        self.playerView.delegate = nil
+        self.relatedDelegate = nil
+//        self.playerView.delegate = nil
 //        self.player.delegate = nil
 //        self.player.playbackStateDelegate = nil
 //        self.player.adDelegate = nil
@@ -166,11 +167,12 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
         parentView?.onFullScreenExit?([:])
     }
 
+	// MARK: JWPlayerViewControllerRelatedDelegate
+	
     func playerViewController(_ controller:JWPlayerViewController, relatedMenuClosedWithMethod method:JWRelatedInteraction) {
 
     }
 
-    // MARK: JWPlayerViewControllerRelatedDelegate
     func playerViewController(_ controller: JWPlayerKit.JWPlayerViewController, relatedMenuOpenedWithItems items: [JWPlayerKit.JWPlayerItem], withMethod method: JWPlayerKit.JWRelatedInteraction) {
 
     }

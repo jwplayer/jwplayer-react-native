@@ -17,6 +17,7 @@ import com.jwplayer.pub.api.media.captions.CaptionType;
 import com.jwplayer.pub.api.media.playlists.MediaSource;
 import com.jwplayer.pub.api.media.playlists.PlaylistItem;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -137,6 +138,15 @@ public class Util {
         if (playlistItem.hasKey("description")) {
             String desc = playlistItem.getString("description");
             itemBuilder.description(desc);
+        }
+
+        if (playlistItem.hasKey("userInfo")) {
+            try {
+                JSONObject info = MapUtil.toJSONObject(playlistItem.getMap("userInfo"));
+                itemBuilder.userInfo(info);
+            } catch (JSONException e) {
+                Log.e("userInfo", "Error parsing `userInfo` from your playlist. Message: " + e.getLocalizedMessage());
+            }
         }
 
         if (playlistItem.hasKey("image")) {

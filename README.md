@@ -279,7 +279,7 @@ Follow these steps to enable background audio sessions:
 
 ### Casting
 
-[Android](#android-casting) | [iOS](#ios-casting)
+[Android](#android-casting) | [iOS](#ios-casting) | [DRM Casting](#drm-casting)
 
 JWP enables casting by default with a casting button.
 
@@ -341,6 +341,13 @@ typedef NS_ENUM(NSUInteger, GCKCastState) {
   GCKCastStateConnected = 3,
 };
 ```
+
+#### DRM Casting
+Casting your DRM protected content requires some additional configuration and most likely a custom Chromecast Receiver.
+
+See our Android and iOS documentation about creating ([iOS](https://docs.jwplayer.com/players/docs/ios-create-a-custom-receiver) / [Android](https://docs.jwplayer.com/players/docs/android-create-a-custom-receiver)) and sending data ([iOS](https://docs.jwplayer.com/players/docs/ios-enable-casting-to-chromecast-devices#send-custom-data-to-a-custom-receiver) / [Android](https://docs.jwplayer.com/players/docs/android-enable-casting-to-chromecast-devices#send-custom-data-to-a-custom-receiver)) for more information.
+
+To send custom data to your receiver, use the `userInfo` prop and avoid using the reserved `sources` key, as the JWP SDK will append the DRM source information here for you to parse in your DRM enabled receiver. 
 
 <br /><br />
 

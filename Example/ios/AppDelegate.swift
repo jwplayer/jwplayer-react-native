@@ -11,7 +11,9 @@ class AppDelegate: RCTAppDelegate {
     self.moduleName = "RNJWPlayer"
     self.dependencyProvider = RCTAppDependencyProvider()
 
-    let discoveryCriteria = GCKDiscoveryCriteria(applicationID: "CC1AD845")
+    // kGCKDefaultMediaReceiverApplicationID is a constant from the GoogleCast SDK, representing the default Chromecast receiver.
+    // If using a custom Chromecast receiver, replace kGCKDefaultMediaReceiverApplicationID with your custom receiver's App ID string.
+    let discoveryCriteria = GCKDiscoveryCriteria(applicationID: kGCKDefaultMediaReceiverApplicationID)
     let options = GCKCastOptions(discoveryCriteria: discoveryCriteria)
     GCKCastContext.setSharedInstanceWith(options)
 

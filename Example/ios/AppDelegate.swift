@@ -10,13 +10,15 @@ class AppDelegate: RCTAppDelegate {
   override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
     self.moduleName = "RNJWPlayer"
     self.dependencyProvider = RCTAppDependencyProvider()
-
-    // kGCKDefaultMediaReceiverApplicationID is a constant from the GoogleCast SDK, representing the default Chromecast receiver.
-    // If using a custom Chromecast receiver, replace kGCKDefaultMediaReceiverApplicationID with your custom receiver's App ID string.
+/*:
+    kGCKDefaultMediaReceiverApplicationID is a constant from the GoogleCast SDK, representing the default Chromecast receiver.
+     - https://developers.google.com/android/reference/com/google/android/gms/cast/CastMediaControlIntent#public-static-final-string-default_media_receiver_application_id
+    If using a custom Chromecast receiver, replace kGCKDefaultMediaReceiverApplicationID with your custom receiver's App ID string.
+     - https://github.com/jwplayer/jwplayer-react-native?tab=readme-ov-file#casting
+*/
     let discoveryCriteria = GCKDiscoveryCriteria(applicationID: kGCKDefaultMediaReceiverApplicationID)
     let options = GCKCastOptions(discoveryCriteria: discoveryCriteria)
     GCKCastContext.setSharedInstanceWith(options)
-
     // You can add your custom initial props in the dictionary below.
     // They will be passed down to the ViewController used by React Native.
     self.initialProps = [:]

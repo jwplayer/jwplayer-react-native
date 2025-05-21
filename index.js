@@ -233,6 +233,7 @@ export default class JWPlayer extends Component {
 					desc: PropTypes.string,
 					mediaId: PropTypes.string,
 					autostart: PropTypes.bool,
+					userInfo: PropTypes.object,
 					recommendations: PropTypes.string,
 					tracks: PropTypes.arrayOf(
 						PropTypes.shape({

@@ -172,6 +172,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     schedule?: { [key: string]: JwAdBreak };
     imaDaiSettings?: JwImaDaiSettings;
     httpheaders?: { [key: string]: string };
+    /**
+     * Data to be passed to Chromecast receiver (optional and typically used for DRM implementations)
+     */
+    userInfo?: { [key: string]: any };
   }
 
   interface JwImaDaiSettings {
@@ -347,6 +351,12 @@ declare module "@jwplayer/jwplayer-react-native" {
     recommendations?: string;
     startTime?: number;
     autostart?: boolean;
+    /**
+     * Data to be passed to Chromecast receiver (optional and typically used for DRM implementations)
+     * 
+     * Only made available in legacy objects as there is no way to pass this otherwise
+     */
+    userInfo?: { [key: string]: any };
   }
   type RelatedOnClicks = "play" | "link";
   type RelatedOnCompletes = "show" | "hide" | "autoplay";

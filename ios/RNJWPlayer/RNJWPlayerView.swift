@@ -318,11 +318,13 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 self.deinitAudioSession()
             }
             
+            // Pull out top level iOS DRM values from config if present
+            // This is most often used in non-legacy configs using JWP DRM solutions
+            processSpcUrl = config["processSpcUrl"] as? String
+            fairplayCertUrl = config["certificateUrl"] as? String
+            contentUUID = config["contentUUID"] as? String
+            
             if forceLegacyConfig == true {
-                // Pull from top level of config
-                processSpcUrl = config["processSpcUrl"] as? String
-                fairplayCertUrl = config["certificateUrl"] as? String
-                contentUUID = config["contentUUID"] as? String
 
                 // Dangerous: check playlist for processSpcUrl / fairplayCertUrl in playlist
                 // Only checks first playlist item as multi-item DRM playlists are ill advised
@@ -338,7 +340,6 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                     }
                 }
             } else {
-                // TODO -- Ensure JWJSONParser pulls out cert/spc for sources (Expected in JW iOS SDK v4.19.0)
             }
 
             do {

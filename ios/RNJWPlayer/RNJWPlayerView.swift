@@ -656,6 +656,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         if let mediaId = item["mediaId"] as? String {
             itemBuilder.mediaId(mediaId)
         }
+        
+        if let userInfo = item["userInfo"] as? Dictionary<String, Any> {
+            itemBuilder.userInfo(userInfo)
+        }
 
         if let title = item["title"] as? String {
             itemBuilder.title(title)

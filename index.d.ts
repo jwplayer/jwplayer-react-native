@@ -37,6 +37,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     landscapeOnFullScreen?: boolean;
     portraitOnExitFullScreen?: boolean;
     exitFullScreenOnPortrait?: boolean;
+    enableLockScreenControls?: boolean;
+    pipEnabled?: boolean;
   }
 
   type JwThumbnailPreview = 101 | 102 | 103;
@@ -381,11 +383,15 @@ declare module "@jwplayer/jwplayer-react-native" {
       buttons?: string;
       backgroundColor?: string;
       fontColor?: string;
-      timeslider?: { progress?: string; rail?: string; thumb?: string };
+      timeslider?: { 
+        thumb?: string;
+        rail?: string;
+        slider?: string;
+      };
     };
     font?: Font;
-    displayTitle?: boolean;
-    displayDescription?: boolean;
+    showTitle?: boolean;
+    showDesc?: boolean;
     captionsStyle?: {
       font?: Font;
       fontColor?: string;
@@ -393,7 +399,7 @@ declare module "@jwplayer/jwplayer-react-native" {
       highlightColor?: string;
       edgeStyle?: EdgeStyles;
     };
-    menuStyle: {
+    menuStyle?: {
       font?: Font;
       fontColor?: string;
       backgroundColor?: string;
@@ -480,8 +486,12 @@ declare module "@jwplayer/jwplayer-react-native" {
     fairplayCertUrl?: string;
     contentUUID?: string;
     viewOnly?: boolean;
-    enableLockScreenControls: boolean;
-    pipEnabled: boolean;
+    enableLockScreenControls?: boolean;
+    pipEnabled?: boolean;
+    offlineMessage?: string;
+    offlineImage?: string;
+    forceFullScreenOnLandscape?: boolean;
+    forceLandscapeOnFullScreen?: boolean;
   }
   interface BaseEvent<T> {
     nativeEvent: T;
@@ -587,7 +597,54 @@ declare module "@jwplayer/jwplayer-react-native" {
     onBeforeNextPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;
   }
 
+  export const JWPlayerAdEvents: {
+    /// This event is reported when the ad break has come to an end.
+    JWAdEventTypeAdBreakEnd: 0;
+    /// This event is reported when the ad break has begun.
+    JWAdEventTypeAdBreakStart: 1;
+    /// This event is reported when the user taps the ad.
+    JWAdEventTypeClicked: 2;
+    /// This event is reported when the ad is done playing.
+    JWAdEventTypeComplete: 3;
+    /// This event is used to report the ad impression, supplying additional detailed information about the ad.
+    JWAdEventTypeImpression: 4;
+    /// This event reports meta data information associated with the ad.
+    JWAdEventTypeMeta: 5;
+    /// The event is reported when the ad pauses.
+    JWAdEventTypePause: 6;
+    /// This event is reported when the ad begins playing, even in the middle of the stream after it was paused.
+    JWAdEventTypePlay: 7;
+    /// The event reports data about the ad request, when the ad is about to be loaded.
+    JWAdEventTypeRequest: 8;
+    /// This event reports the schedule of ads across the currently playing content.
+    JWAdEventTypeSchedule: 9;
+    /// This event is reported when the user skips the ad.
+    JWAdEventTypeSkipped: 10;
+    /// This event is reported when the ad begins.
+    JWAdEventTypeStarted: 11;
+    /// This event relays information about ad companions.
+    JWAdEventTypeCompanion: 12;
+  };
+
+  export const JWPlayerState: {
+    JWPlayerStateUnknown?: number;
+    JWPlayerStateIdle: number;
+    JWPlayerStateBuffering: number;
+    JWPlayerStatePlaying: number;
+    JWPlayerStatePaused: number;
+    JWPlayerStateComplete: number;
+    JWPlayerStateError: number | null;
+  };
+
+  export const JWPlayerAdClients: {
+    JWAdClientJWPlayer: 0;
+    JWAdClientGoogleIMA: 1;
+    JWAdClientGoogleIMADAI: 2;
+    JWAdClientUnknown: 3;
+  };
+
   export default class JWPlayer extends React.Component<PropsType> {
+    quite(): void;
     pause(): void;
     play(): void;
     stop(): void;
@@ -601,6 +658,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     setControls(show: boolean): void;
     setLockScreenControls(show: boolean): void;
     seekTo(time: number): void;
+    changePlaylist(fileUrl: string): void;
     /**
      * Side load playlist items into an already setup player
      * @param playlistItems `PlaylistItem` or `JwPlaylistItem`
@@ -612,7 +670,9 @@ declare module "@jwplayer/jwplayer-react-native" {
      */
     loadPlaylistWithUrl(playlistUrl: string): void;
     setFullscreen(fullScreen: boolean): void;
-    position(): Promise<number>;
+    time(): Promise<number | null>;
+    position(): Promise<number | null>;
+    togglePIP(): void;
     setUpCastController(): void;
     presentCastDialog(): void;
     connectedDevice(): Promise<CastingDevice | null>;

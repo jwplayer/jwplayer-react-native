@@ -4,7 +4,7 @@
 #import "RCTViewManager.h"
 #endif
 
-#import <JWPlayerKit/JWPlayerKit-swift.h>
+#import <JWPlayerKit/JWPlayerKit-Swift.h>
 
 #import "RCTUIManager.h"
 

@@ -48,9 +48,12 @@ Follow these steps to add the library to your Android project:
                url 'https://mvn.jwplayer.com/content/repositories/releases/'
            }
    ```
-Alternative to the above, so that you don't have to re-add it to android/build.grade every time you do a prebuild --clean with EXPO,
- install expo-build-properties plugin:
-``npx expo install expo-build-properties```
+If you are using EXPO, then an alternative way to the above
+so that you don't have to re-add it to android/build.grade every time you do:
+```npx expo prebuild --clean``
+
+Install expo-build-properties plugin:
+```npx expo install expo-build-properties```
 
 and then add to app.json
 ```

@@ -11,8 +11,8 @@ PODS:
   - hermes-engine (0.78.1):
     - hermes-engine/Pre-built (= 0.78.1)
   - hermes-engine/Pre-built (0.78.1)
-  - JWPlayerKit (4.22.0)
-  - Protobuf (3.29.4)
+  - JWPlayerKit (4.23.1)
+  - Protobuf (3.29.5)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -1644,10 +1644,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNJWPlayer (1.1.1):
+  - RNJWPlayer (1.1.2):
     - google-cast-sdk (= 4.8.3)
     - GoogleAds-IMA-iOS-SDK (= 3.22.1)
-    - JWPlayerKit (= 4.22.0)
+    - JWPlayerKit (= 4.23.1)
     - React-Core
   - RNScreens (4.10.0):
     - DoubleConversion
@@ -1967,9 +1967,9 @@ SPEC CHECKSUMS:
   glog: eb93e2f488219332457c3c4eafd2738ddc7e80b8
   google-cast-sdk: 1fb6724e94cc5ff23b359176e0cf6360586bb97a
   GoogleAds-IMA-iOS-SDK: 160c3616b8371b58016e30aaf441e71d6d9e8f7d
-  hermes-engine: 6b59547bcd01365acc3cc77a8d545df77ec359ba
-  JWPlayerKit: f1076089ce34756d089b0a5178ce6965752bdbe2
-  Protobuf: 2e6de032ba12b9efb390ae550d1a243a5b19ddfc
+  hermes-engine: f493b0a600aed5dc06532141603688a30a5b2f61
+  JWPlayerKit: 510bebe3c0a7df58138401d6ae63d52284ec9541
+  Protobuf: 164aea2ae380c3951abdc3e195220c01d17400e0
   RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: 082fbc90409015eac1366795a0b90f8b5cb28efe
   RCTRequired: ca966f4da75b62ce3ea8c538d82cb5ecbb06f12a
@@ -1982,8 +1982,8 @@ SPEC CHECKSUMS:
   React-debug: d8d938ee3aecd7ab9c92198324ed33cac3d42566
   React-defaultsnativemodule: 599c11bfe99a3b88cd1fa2dc478be1b6b0e57be9
   React-domnativemodule: 4f278903cad707415026dacbb96768704a705569
-  React-Fabric: 0d0f126b7d77e4fc518be3b87917611c9d7d2bf0
-  React-FabricComponents: b8dd3555e5c33491aea2f1d7c2cce66f87bf50fb
+  React-Fabric: 9e83424b66a00da675c6684568dc026399746236
+  React-FabricComponents: 26da28dd7115005866fdf2f8d4e294e07dd6e3df
   React-FabricImage: b60fb253651746de12418e1308b4da2c54b8fde6
   React-featureflags: 04a42c3099a4a12fdf34c42b84512b96caaf9d41
   React-featureflagsnativemodule: 32a69405f053b25640cac519dbb24c5e79185e1b
@@ -2030,11 +2030,11 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 5da0393968ce2767e79f9fda7caa108592b9b63e
   ReactCodegen: 82d5bc3e3ad2c8496848554cb2d3b64b03b53420
   ReactCommon: 269d0d36423fad044eaea49900e88684ac670a16
-  RNBootSplash: c8d00b23305c8e442f170ace7bb737bc7024f0c3
+  RNBootSplash: 540e4bfcfe3a9c0a2fe5b3d28d5efe0458f8e7cb
   RNDeviceInfo: d863506092aef7e7af3a1c350c913d867d795047
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: 8b1080a6db0be82dbca18550d6212b885bfab6b2
-  RNJWPlayer: 59b35ceee79ab4b80509fb12c851f7694dfd2e9c
+  RNJWPlayer: 211d943c26b1d22fe7d8582db6647b1d385df713
   RNScreens: 790123c4a28783d80a342ce42e8c7381bed62db1
   RNVectorIcons: bd818296a51dc2bb8c3bd97a3ca399df1afe216d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748

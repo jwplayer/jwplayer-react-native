@@ -80,6 +80,7 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
                 JWPlayer player = playerView.mPlayerView.getPlayer();
 
                 PlayerConfig oldConfig = player.getConfig();
+                boolean wasFullscreen = player.getFullscreen();
                 UiConfig uiConfig = createUiConfigWithControlsContainer(player, oldConfig.getUiConfig());
                 PlayerConfig config = new PlayerConfig.Builder()
                         .autostart(oldConfig.getAutostart())
@@ -100,6 +101,11 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
                         .build();
 
                 player.setup(config);
+                // if the player was fullscreen, set it to fullscreen again as the player is recreated
+                // The fullscreen view is still active but the internals don't know it is
+                if (wasFullscreen) {
+                    player.setFullscreen(true, true);
+                }
             }
         });
     }
@@ -112,6 +118,7 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
                 JWPlayer player = playerView.mPlayerView.getPlayer();
 
                 PlayerConfig oldConfig = player.getConfig();
+                boolean wasFullscreen = player.getFullscreen();
                 UiConfig uiConfig = createUiConfigWithControlsContainer(player, oldConfig.getUiConfig());
                 PlayerConfig config = new PlayerConfig.Builder()
                         .autostart(oldConfig.getAutostart())
@@ -132,6 +139,11 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
                         .build();
 
                 player.setup(config);
+                // if the player was fullscreen, set it to fullscreen again as the player is recreated
+                // The fullscreen view is still active but the internals don't know it is
+                if (wasFullscreen) {
+                    player.setFullscreen(true, true);
+                }
             }
         });
     }

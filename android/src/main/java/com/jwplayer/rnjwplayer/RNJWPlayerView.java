@@ -899,6 +899,7 @@ public class RNJWPlayerView extends RelativeLayout implements
             if (mConfig != null && isOnlyDiff(prop, "playlist") && mPlayer != null) { // still safe check, even with JW
                 // JSON change
                 PlayerConfig oldConfig = mPlayer.getConfig();
+                boolean wasFullscreen = mPlayer.getFullscreen();
                 UiConfig uiConfig = createUiConfigWithControlsContainer(mPlayer, oldConfig.getUiConfig());
                 PlayerConfig config = new PlayerConfig.Builder()
                         .autostart(oldConfig.getAutostart())
@@ -919,6 +920,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                         .build();
 
                 mPlayer.setup(config);
+                // if the player was fullscreen, set it to fullscreen again as the player is recreated
+                // The fullscreen view is still active but the internals don't know it is
+                if (wasFullscreen) {
+                    mPlayer.setFullscreen(true, true);
+                }
             } else {
                 if (prop.hasKey("license")) {
                     new LicenseUtil().setLicenseKey(getReactContext(), prop.getString("license"));

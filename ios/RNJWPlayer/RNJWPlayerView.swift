@@ -275,9 +275,28 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                     }
                 }
 
+                // Check if player is in PiP mode before loading new playlist
+                var isPipActive = false
+                var pipController: AVPictureInPictureController?
+                
+                if let playerView = playerView {
+                    pipController = playerView.pictureInPictureController
+                    isPipActive = pipController?.isPictureInPictureActive ?? false
+                } else if let playerViewController = playerViewController {
+                    pipController = playerViewController.playerView.pictureInPictureController
+                    isPipActive = pipController?.isPictureInPictureActive ?? false
+                }
+                
                 if let playerViewController = playerViewController {
-                    playerViewController.player.loadPlaylist(items: playlistArray)
+                    // We must treat PiP mode differently and setup as a new config
+                    // or else the player will become unresponsive
+                    if isPipActive {
+                        setNewConfig(config: config)
+                    } else {
+                        playerViewController.player.loadPlaylist(items: playlistArray)
+                    }
                 } else if let playerView = playerView {
+                    // If you use player only, consider doing a simpliar check for PiP as above
                     playerView.player.loadPlaylist(items: playlistArray)
                 } else {
                     setNewConfig(config: config)

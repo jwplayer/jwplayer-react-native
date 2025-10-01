@@ -879,11 +879,28 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     }
 
+    /**
+     * Creates a UiConfig that ensures PLAYER_CONTROLS_CONTAINER is always shown.
+     * If controls are not shown, the PLAYER_CONTROLS_CONTAINER UI Group is not displayed.
+     * This logic ensures that the PLAYER_CONTROLS_CONTAINER UI Group is displayed regardless if controls are shown or not.
+     * There is no way to recover controls if you do not show this UiGroup.
+     * But you are able to hide the controls still if it is shown.
+     */
+    private UiConfig createUiConfigWithControlsContainer(JWPlayer player, UiConfig originalUiConfig) {
+        if (!player.getControls()) {
+            return new UiConfig.Builder(originalUiConfig).show(UiGroup.PLAYER_CONTROLS_CONTAINER).build();
+        } else {
+            return originalUiConfig;
+        }
+    }
+
     public void setConfig(ReadableMap prop) {
         if (mConfig == null || !mConfig.equals(prop)) {
             if (mConfig != null && isOnlyDiff(prop, "playlist") && mPlayer != null) { // still safe check, even with JW
                 // JSON change
                 PlayerConfig oldConfig = mPlayer.getConfig();
+                boolean wasFullscreen = mPlayer.getFullscreen();
+                UiConfig uiConfig = createUiConfigWithControlsContainer(mPlayer, oldConfig.getUiConfig());
                 PlayerConfig config = new PlayerConfig.Builder()
                         .autostart(oldConfig.getAutostart())
                         .nextUpOffset(oldConfig.getNextUpOffset())
@@ -893,7 +910,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                         .displayTitle(oldConfig.getDisplayTitle())
                         .advertisingConfig(oldConfig.getAdvertisingConfig())
                         .stretching(oldConfig.getStretching())
-                        .uiConfig(oldConfig.getUiConfig())
+                        .uiConfig(uiConfig)
                         .playlist(Util.createPlaylist(mPlaylistProp))
                         .allowCrossProtocolRedirects(oldConfig.getAllowCrossProtocolRedirects())
                         .preload(oldConfig.getPreload())
@@ -903,6 +920,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                         .build();
 
                 mPlayer.setup(config);
+                // if the player was fullscreen, set it to fullscreen again as the player is recreated
+                // The fullscreen view is still active but the internals don't know it is
+                if (wasFullscreen) {
+                    mPlayer.setFullscreen(true, true);
+                }
             } else {
                 if (prop.hasKey("license")) {
                     new LicenseUtil().setLicenseKey(getReactContext(), prop.getString("license"));

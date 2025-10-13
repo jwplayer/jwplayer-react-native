@@ -61,17 +61,28 @@ class VideoPlayer extends React.Component {
     const config = { ...this.initialConfig };
     config.playlist = [playlistItem];
 
-    // Use the new recreatePlayerWithConfig method
-    this.playerRef.current?.recreatePlayerWithConfig(config);
+    if (Platform.OS === 'ios') {
+      // On iOS, use the recreatePlayerWithConfig method
+      this.playerRef.current?.recreatePlayerWithConfig(config);
+    } else {
+      // On Android, update the config state to force a player recreation
+      this.setState({ 
+        config: null  // First set to null to ensure React recreates the component
+      }, () => {
+        this.setState({
+          config,     // Then set the new config
+          isReady: false
+        });
+      });
+    }
 
     // Update local state to reflect the new content
     this.setState({ 
       currentPlaylistItem: playlistItem,
-      isReady: false,
-      config // Keep config in state for other updates if needed
     });
 
-    if (this.props.autoplay) {
+    if (this.props.autoplay && Platform.OS === 'ios') {
+      // Only auto-play on iOS since Android will recreate the player
       this.playerRef.current?.play();
     }
   }

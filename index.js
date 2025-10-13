@@ -744,6 +744,40 @@ export default class JWPlayer extends Component {
 		}
 	}
 
+	/**
+	 * Recreates the player with a new configuration, handling cleanup and PiP state.
+	 * 
+	 * IMPORTANT: This method should only be called after the player has been properly
+	 * initialized and is ready (i.e., after onPlayerReady has fired). Calling this
+	 * method before the player is ready may lead to undefined behavior.
+	 * 
+	 * This method:
+	 * 1. Safely handles PiP state if active
+	 * 2. Performs complete cleanup of the current player instance
+	 * 3. Creates a new player instance with the provided config
+	 * 
+	 * Use this method when you need to:
+	 * - Switch between different DRM configurations
+	 * - Handle content changes during PiP mode
+	 * - Force a complete player recreation
+	 * 
+	 * @param {Config | JwConfig} config The new configuration to apply to the recreated player
+	 * @throws {Error} May throw if called before player is ready or with invalid config
+	 */
+	recreatePlayerWithConfig(config) {
+		if (!config) {
+			console.warn('JWPlayer: Attempting to recreate player with null/undefined config');
+			return;
+		}
+		
+		if (RNJWPlayerManager) {
+			RNJWPlayerManager.recreatePlayerWithConfig(
+				this.getRNJWPlayerBridgeHandle(),
+				config
+			);
+		}
+	}
+
 	getRNJWPlayerBridgeHandle() {
 		return findNodeHandle(this[this.ref_key]);
 	}

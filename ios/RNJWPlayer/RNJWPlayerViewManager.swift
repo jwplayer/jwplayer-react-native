@@ -552,6 +552,19 @@ class RNJWPlayerViewManager: RCTViewManager {
         }
     }
     
+    @objc func recreatePlayerWithConfig(_ reactTag: NSNumber, _ config: NSDictionary) {
+        DispatchQueue.main.async {
+            guard let view = self.bridge?.uiManager.view(
+                forReactTag: reactTag
+            ) as? RNJWPlayerView else {
+                print("Invalid view returned from registry, expecting RNJWPlayerView")
+                return
+            }
+            
+            view.recreatePlayerWithConfig(config as? [String: Any] ?? [:])
+        }
+    }
+
     @objc func loadPlaylistWithUrl(_ reactTag: NSNumber, _ playlistString: String) {
         DispatchQueue.main.async {
             guard let view = self.getPlayerView(reactTag: reactTag) else {

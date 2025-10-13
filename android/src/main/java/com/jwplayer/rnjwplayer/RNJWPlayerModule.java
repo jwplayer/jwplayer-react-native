@@ -430,6 +430,40 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
         });
     }
 
+    @ReactMethod
+    public void recreatePlayerWithConfig(final int reactTag, final ReadableMap config) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            RNJWPlayerView playerView = getPlayerView(reactTag);
+            if (playerView != null && playerView.mPlayerView != null) {
+                JWPlayer player = playerView.mPlayerView.getPlayer();
+
+                // Store current state
+                boolean wasPlaying = player.getState() == PlayerState.PLAYING;
+                boolean wasFullscreen = player.getFullscreen();
+                boolean wasPipActive = player.isInPictureInPictureMode();
+
+                // Exit PiP if active
+                if (wasPipActive) {
+                    player.exitPictureInPictureMode();
+                }
+
+                // Stop playback and cleanup
+                player.stop();
+
+                // Use the existing setupPlayer method
+                playerView.setupPlayer(config);
+
+                // Restore states
+                if (wasFullscreen) {
+                    player.setFullscreen(true, true);
+                }
+                if (wasPlaying) {
+                    player.play();
+                }
+            }
+        });
+    }
+
     private int stateToInt(PlayerState playerState) {
         switch (playerState) {
             case IDLE:

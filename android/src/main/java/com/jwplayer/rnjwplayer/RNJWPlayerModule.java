@@ -431,37 +431,13 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    /**
+     * Stub method for recreatePlayerWithConfig - this method is iOS only
+     * On Android, create a new player instance with the new configuration instead
+     */
     public void recreatePlayerWithConfig(final int reactTag, final ReadableMap config) {
-        new Handler(Looper.getMainLooper()).post(() -> {
-            RNJWPlayerView playerView = getPlayerView(reactTag);
-            if (playerView != null && playerView.mPlayerView != null) {
-                JWPlayer player = playerView.mPlayerView.getPlayer();
-
-                // Store current state
-                boolean wasPlaying = player.getState() == PlayerState.PLAYING;
-                boolean wasFullscreen = player.getFullscreen();
-                boolean wasPipActive = player.isInPictureInPictureMode();
-
-                // Exit PiP if active
-                if (wasPipActive) {
-                    player.exitPictureInPictureMode();
-                }
-
-                // Stop playback and cleanup
-                player.stop();
-
-                // Use the existing setupPlayer method
-                playerView.setupPlayer(config);
-
-                // Restore states
-                if (wasFullscreen) {
-                    player.setFullscreen(true, true);
-                }
-                if (wasPlaying) {
-                    player.play();
-                }
-            }
-        });
+        // No-op on Android - this method is iOS only
+        Log.w("RNJWPlayer", "recreatePlayerWithConfig is not supported on Android. Create a new player instance with the new configuration instead.");
     }
 
     private int stateToInt(PlayerState playerState) {

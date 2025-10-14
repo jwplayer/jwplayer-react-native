@@ -64,26 +64,31 @@ class VideoPlayer extends React.Component {
     if (Platform.OS === 'ios') {
       // On iOS, use the recreatePlayerWithConfig method
       this.playerRef.current?.recreatePlayerWithConfig(config);
+      
+      // Update local state
+      this.setState({ 
+        currentPlaylistItem: playlistItem,
+        isReady: false,
+        config
+      });
+
+      // Handle autoplay for iOS
+      if (this.props.autoplay) {
+        this.playerRef.current?.play();
+      }
     } else {
-      // On Android, update the config state to force a player recreation
+      // On Android, we need to force a full component recreation
       this.setState({ 
         config: null  // First set to null to ensure React recreates the component
       }, () => {
+        // Then set the new config in the next frame
         this.setState({
-          config,     // Then set the new config
+          config,
+          currentPlaylistItem: playlistItem,
           isReady: false
         });
+        // Note: No need to call play() here as the component will be recreated with autoplay setting
       });
-    }
-
-    // Update local state to reflect the new content
-    this.setState({ 
-      currentPlaylistItem: playlistItem,
-    });
-
-    if (this.props.autoplay && Platform.OS === 'ios') {
-      // Only auto-play on iOS since Android will recreate the player
-      this.playerRef.current?.play();
     }
   }
 

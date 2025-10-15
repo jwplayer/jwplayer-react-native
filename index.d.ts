@@ -686,6 +686,57 @@ declare module "@jwplayer/jwplayer-react-native" {
     getCurrentCaptions(): Promise<number | null>; 
     setVisibility(visibility: boolean, controls: JWControlType[]): void;
     /**
+     * Recreates the player with a new configuration, handling cleanup and PiP state.
+     * 
+     * NOTE: This method is only available on iOS. On Android, create a new player instance
+     * with the new configuration instead.
+     * 
+     * IMPORTANT: This method should only be called after the player has been properly
+     * initialized and is ready (i.e., after onPlayerReady has fired). Calling this
+     * method before the player is ready may lead to undefined behavior.
+     * 
+     * This method performs a complete player recreation by:
+     * 1. Safely handling PiP state if active (waits for PiP to close)
+     * 2. Performing complete cleanup of the current player instance
+     * 3. Creating a new player instance with the provided config
+     * 
+     * Use this method when you need to:
+     * - Switch between different DRM configurations
+     * - Handle content changes during PiP mode
+     * - Force a complete player recreation
+     * 
+     * Do NOT use this method:
+     * - Before the player is ready (wait for onPlayerReady)
+     * - For simple playlist updates (use loadPlaylist instead)
+     * - When the player is not properly initialized
+     * - On Android (create a new player instance instead)
+     * 
+     * @example
+     * ```typescript
+     * // Wait for player to be ready
+     * onPlayerReady={() => {
+     *   // Now safe to use recreatePlayerWithConfig (iOS only)
+     *   if (Platform.OS === 'ios') {
+     *     playerRef.current?.recreatePlayerWithConfig({
+     *       ...config,
+     *       playlist: newPlaylist
+     *     });
+     *   } else {
+     *     // On Android, create a new player instance
+     *     setPlayerConfig({
+     *       ...config,
+     *       playlist: newPlaylist
+     *     });
+     *   }
+     * }}
+     * ```
+     * 
+     * @platform ios
+     * @param config The new configuration to apply to the recreated player
+     * @throws May throw if called before player is ready or with invalid config
+     */
+    recreatePlayerWithConfig(config: Config | JwConfig): void;
+    /**
      * Only called inside `onBeforeNextPlaylistItem` callback, and once per callback
      * @param playlistItem  `PlaylistItem` or  `JwPlaylistItem`
      */

@@ -15,6 +15,7 @@ import LocalFileExample from './screens/LocalFileExample';
 import SourcesExample from './screens/SourcesExample';
 import YoutubeExample from './screens/YoutubeExample';
 import PlayerInModal from './screens/PlayerInModal';
+import GlobalPlayerExample from './screens/GlobalPlayerExample';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +33,7 @@ export default class App extends Component {
           <Stack.Screen name="Local" component={LocalFileExample} />
           <Stack.Screen name="Sources" component={SourcesExample} />
           <Stack.Screen name="Youtube" component={YoutubeExample} />
+          <Stack.Screen name="Global Player" component={GlobalPlayerExample} />
         </Stack.Navigator>
       </NavigationContainer>
     );

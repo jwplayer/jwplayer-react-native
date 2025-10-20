@@ -73,7 +73,7 @@ allprojects {
     }
 }
 
-def jwPlayerVersion = "4.21.0"
+def jwPlayerVersion = "4.21.1"
 def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK > 4.16.0
 def media3ExoVersion = "1.4.1"
 

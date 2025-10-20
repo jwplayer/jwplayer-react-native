@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B87E387146FFA0474353888 /* libPods-RNJWPlayer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 57668EEFF2D96C91613D3EAF /* libPods-RNJWPlayer.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1D73C7B4B74BF091AFC5A097 /* libPods-RNJWPlayer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15FFD79455EDF7053B301C57 /* libPods-RNJWPlayer.a */; };
 		2A34EFE9284DFD390003191C /* local_file.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 2A34EFE8284DFD390003191C /* local_file.mp4 */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		81C0F2AE98022663632011C5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CCC2371FC7815EE77A00301D /* PrivacyInfo.xcprivacy */; };
@@ -19,12 +19,12 @@
 		13B07F961A680F5B00A75B9A /* RNJWPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RNJWPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = RNJWPlayer/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = RNJWPlayer/Info.plist; sourceTree = "<group>"; };
-		15FFD79455EDF7053B301C57 /* libPods-RNJWPlayer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-RNJWPlayer.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		15696E37F62210FA5130A8C0 /* Pods-RNJWPlayer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RNJWPlayer.release.xcconfig"; path = "Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer.release.xcconfig"; sourceTree = "<group>"; };
+		1E74CD3461C85600A7C84BCC /* Pods-RNJWPlayer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RNJWPlayer.debug.xcconfig"; path = "Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer.debug.xcconfig"; sourceTree = "<group>"; };
 		2A34EFE8284DFD390003191C /* local_file.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = local_file.mp4; sourceTree = "<group>"; };
+		57668EEFF2D96C91613D3EAF /* libPods-RNJWPlayer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-RNJWPlayer.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = RNJWPlayer/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		957D3E71A07DF7C9936AE0C9 /* Pods-RNJWPlayer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RNJWPlayer.debug.xcconfig"; path = "Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer.debug.xcconfig"; sourceTree = "<group>"; };
 		CCC2371FC7815EE77A00301D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = RNJWPlayer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		CE63D00760C4B135E919E419 /* Pods-RNJWPlayer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RNJWPlayer.release.xcconfig"; path = "Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer.release.xcconfig"; sourceTree = "<group>"; };
 		DEC563112D9864E2004D7FFC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -34,7 +34,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D73C7B4B74BF091AFC5A097 /* libPods-RNJWPlayer.a in Frameworks */,
+				0B87E387146FFA0474353888 /* libPods-RNJWPlayer.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -66,7 +66,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				15FFD79455EDF7053B301C57 /* libPods-RNJWPlayer.a */,
+				57668EEFF2D96C91613D3EAF /* libPods-RNJWPlayer.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -103,8 +103,8 @@
 		CDB74D25A358615E36B2D15B /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				957D3E71A07DF7C9936AE0C9 /* Pods-RNJWPlayer.debug.xcconfig */,
-				CE63D00760C4B135E919E419 /* Pods-RNJWPlayer.release.xcconfig */,
+				1E74CD3461C85600A7C84BCC /* Pods-RNJWPlayer.debug.xcconfig */,
+				15696E37F62210FA5130A8C0 /* Pods-RNJWPlayer.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -116,13 +116,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "RNJWPlayer" */;
 			buildPhases = (
-				4A7A89139BC6AAA855964453 /* [CP] Check Pods Manifest.lock */,
+				4C576EF4CEAB05E635976E32 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				84A1E318DD84D77B64FFEC34 /* [CP] Embed Pods Frameworks */,
-				75A6A1A1DBF6A52BDDF2469C /* [CP] Copy Pods Resources */,
+				B9B2DC4763505D4F1202AF1F /* [CP] Embed Pods Frameworks */,
+				B17DA6FE075599E4AD4F211B /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -195,7 +195,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		4A7A89139BC6AAA855964453 /* [CP] Check Pods Manifest.lock */ = {
+		4C576EF4CEAB05E635976E32 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -217,7 +217,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		75A6A1A1DBF6A52BDDF2469C /* [CP] Copy Pods Resources */ = {
+		B17DA6FE075599E4AD4F211B /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -225,16 +225,20 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		84A1E318DD84D77B64FFEC34 /* [CP] Embed Pods Frameworks */ = {
+		B9B2DC4763505D4F1202AF1F /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -242,9 +246,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-RNJWPlayer/Pods-RNJWPlayer-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -267,13 +275,13 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 957D3E71A07DF7C9936AE0C9 /* Pods-RNJWPlayer.debug.xcconfig */;
+			baseConfigurationReference = 1E74CD3461C85600A7C84BCC /* Pods-RNJWPlayer.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = WX87M56X5N;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -343,13 +351,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = CE63D00760C4B135E919E419 /* Pods-RNJWPlayer.release.xcconfig */;
+			baseConfigurationReference = 15696E37F62210FA5130A8C0 /* Pods-RNJWPlayer.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = WX87M56X5N;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"${PODS_ROOT}/OpenSSL-Universal/Frameworks\"",

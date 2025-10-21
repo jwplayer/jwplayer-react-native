@@ -368,12 +368,12 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     private func completePlayerReconfiguration(config: [String: Any]) {
         // Clear any pending timeout
         playerConfigTimeout?.invalidate()
-            playerConfigTimeout = nil
+        playerConfigTimeout = nil
         
         // Ensure we're on the main thread
         if !Thread.isMainThread {
             DispatchQueue.main.async { [weak self] in
-                    self?.completePlayerReconfiguration(config: config)
+                self?.completePlayerReconfiguration(config: config)
             }
             return
         }

@@ -307,6 +307,98 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         }
     }
 
+    private var pendingPlayerConfig: [String: Any]?
+    private var playerConfigTimeout: Timer?
+    private let maxPendingTime: TimeInterval = 5.0 // Maximum time to wait for PiP to close
+    
+    @objc func recreatePlayerWithConfig(_ config: [String: Any]) {
+        // Cancel any existing pending configuration
+        if pendingPlayerConfig != nil {
+            print("Warning: Overriding pending content switch")
+            playerConfigTimeout?.invalidate()
+            pendingPlayerConfig = nil
+        }
+        
+        // Validate config
+        guard !config.isEmpty else {
+            print("Error: Empty config provided to recreatePlayerWithConfig")
+            return
+        }
+        
+        // 1. Handle PiP state
+        var isPipActive = false
+        var pipController: AVPictureInPictureController?
+        
+        if let playerView = playerView {
+            pipController = playerView.pictureInPictureController
+            isPipActive = pipController?.isPictureInPictureActive ?? false
+        } else if let playerViewController = playerViewController {
+            pipController = playerViewController.playerView.pictureInPictureController
+            isPipActive = pipController?.isPictureInPictureActive ?? false
+        }
+
+        // 2. If in PiP, store the config and exit PiP
+        if isPipActive {
+            guard let pipController = pipController else {
+                print("Warning: PiP appears active but controller is nil, proceeding with direct switch")
+                completePlayerReconfiguration(config: config)
+                return
+            }
+            
+            pendingPlayerConfig = config
+            
+            // Set a timeout to prevent infinite waiting
+            playerConfigTimeout = Timer.scheduledTimer(withTimeInterval: maxPendingTime, repeats: false) { [weak self] _ in
+                guard let self = self else { return }
+                print("Warning: PiP close timeout reached, forcing content switch")
+                if let pendingConfig = self.pendingPlayerConfig {
+                    self.pendingPlayerConfig = nil
+                    self.completePlayerReconfiguration(config: pendingConfig)
+                }
+            }
+            
+            // Attempt to stop PiP
+            pipController.stopPictureInPicture()
+            
+        } else {
+            completePlayerReconfiguration(config: config)
+        }
+    }
+    
+    private func completePlayerReconfiguration(config: [String: Any]) {
+        // Clear any pending timeout
+        playerConfigTimeout?.invalidate()
+        playerConfigTimeout = nil
+        
+        // Ensure we're on the main thread
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.completePlayerReconfiguration(config: config)
+            }
+            return
+        }
+        
+        // 1. Stop current playback safely
+        if let playerView = playerView {
+            let state = playerView.player.getState()
+            if state == .playing || state == .buffering {
+                playerView.player.stop()
+            }
+        } else if let playerViewController = playerViewController {
+            let state = playerViewController.player.getState()
+            if state == .playing || state == .buffering {
+                playerViewController.player.stop()
+            }
+        }
+
+        // 2. Reset player state
+        dismissPlayerViewController()
+        removePlayerView()
+
+        // 3. Set new config
+        setNewConfig(config: config)
+    }
+
     func setNewConfig(config: [String : Any]) {
         let forceLegacyConfig = config["forceLegacyConfig"] as? Bool?
         let playlistItemCallback = config["playlistItemCallbackEnabled"] as? Bool?
@@ -1230,7 +1322,13 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController:AVPictureInPictureController) {
-
+        // Handle any pending content switch
+        if let config = pendingPlayerConfig {
+            pendingPlayerConfig = nil
+            DispatchQueue.main.async { [weak self] in
+                self?.completePlayerReconfiguration(config: config)
+            }
+        }
     }
 
     func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController:AVPictureInPictureController) {

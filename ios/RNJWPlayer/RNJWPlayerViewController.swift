@@ -249,26 +249,38 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 
     override func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController:AVPictureInPictureController) {
         super.pictureInPictureControllerDidStopPictureInPicture(pictureInPictureController)
+        // Forward to parent view to handle pending config changes
+        parentView?.pictureInPictureControllerDidStopPictureInPicture(pictureInPictureController)
     }
 
     override func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController:AVPictureInPictureController) {
         super.pictureInPictureControllerDidStartPictureInPicture(pictureInPictureController)
+        // Forward to parent view for logging/tracking
+        parentView?.pictureInPictureControllerDidStartPictureInPicture(pictureInPictureController)
     }
 
     override func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController:AVPictureInPictureController) {
         super.pictureInPictureControllerWillStopPictureInPicture(pictureInPictureController)
+        // Forward to parent view for logging/tracking
+        parentView?.pictureInPictureControllerWillStopPictureInPicture(pictureInPictureController)
     }
 
     override func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
         super.pictureInPictureController(pictureInPictureController, failedToStartPictureInPictureWithError: error)
+        // Forward to parent view for error handling
+        parentView?.pictureInPictureController(pictureInPictureController, failedToStartPictureInPictureWithError: error)
     }
 
     override func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController:AVPictureInPictureController) {
         super.pictureInPictureControllerWillStartPictureInPicture(pictureInPictureController)
+        // Forward to parent view for logging/tracking
+        parentView?.pictureInPictureControllerWillStartPictureInPicture(pictureInPictureController)
     }
 
     override func pictureInPictureController(_ pictureInPictureController:AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler:@escaping (Bool) -> Void) {
         super.pictureInPictureController(pictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler: completionHandler)
+        // Forward to parent view
+        parentView?.pictureInPictureController(pictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler: completionHandler)
     }
 
     // MARK: - JWPlayer State Delegate

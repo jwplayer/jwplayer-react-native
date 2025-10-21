@@ -1,5 +1,7 @@
 package com.jwplayer.rnjwplayer;
 
+import android.util.Log;
+
 import android.os.Handler;
 import android.os.Looper;
 
@@ -428,6 +430,16 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
                 playerView.resolveNextPlaylistItem(playlistItem);
             }
         });
+    }
+
+    @ReactMethod
+    /**
+     * Stub method for recreatePlayerWithConfig - this method is iOS only
+     * On Android, create a new player instance with the new configuration instead
+     */
+    public void recreatePlayerWithConfig(final int reactTag, final ReadableMap config) {
+        // No-op on Android - this method is iOS only
+        Log.w("RNJWPlayer", "recreatePlayerWithConfig is not supported on Android. Create a new player instance with the new configuration instead.");
     }
 
     private int stateToInt(PlayerState playerState) {

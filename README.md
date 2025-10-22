@@ -274,6 +274,24 @@ export default () => (
 );
 ```
 
+### Configuration Modes
+
+The library supports two configuration modes:
+
+1. **Modern Configuration (Recommended)**
+   - Uses the unified type system (`JWPlayerConfig`)
+   - Provides full type safety and IDE support
+   - Matches JW Player Delivery API format
+   - Clearly documents platform-specific features
+   - Example: See [TypeScript Example](./Example/app/jsx/screens/TypeScriptExample.tsx)
+
+2. **Legacy Configuration**
+   - Set `forceLegacyConfig={true}` in props
+   - Uses older builder patterns from previous versions
+   - Limited type safety and platform support
+   - Not recommended for new implementations
+   - Documentation: See [Legacy Readme](./docs/legacy_readme.md)
+
 ### Key Features
 
 - ✅ **Type Safety**: Full TypeScript support with autocomplete
@@ -502,7 +520,7 @@ If you use a different provider for DRM or this does not work for your use case,
 [Android](#android-styling) | [iOS](#ios-styling)
 
 #### Android Styling
-The `styling` prop will not work when using the modern prop convention that matches the JWP Delivery API. Even when using the `forceLegacyConfig` prop, Android may not respect your choices.
+The `styling` prop will not work with Android when using the modern configuration system. Android styling should be handled through XML resource overrides (see below).
 
 Android styling is best handled through overring JWP IDs in your apps resources files. See the documentation [here](https://docs.jwplayer.com/players/docs/android-styling-guide). 
 

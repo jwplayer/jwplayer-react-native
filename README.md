@@ -240,6 +240,50 @@ Follow these steps to run the example project:
 
 <br /><br />
 
+## Configuration
+
+The library now features a **unified configuration system** that provides consistent, type-safe configuration across both iOS and Android platforms.
+
+### 📚 Documentation
+
+- **[Configuration Reference](./docs/CONFIG-REFERENCE.md)** - Complete guide to all configuration options with examples
+- **[Platform Differences](./docs/PLATFORM-DIFFERENCES.md)** - Detailed comparison of iOS vs Android features
+- **[Migration Guide](./docs/MIGRATION-GUIDE.md)** - Guide for upgrading to the unified type system
+- **[Props Documentation](./docs/props.md)** - Component props reference
+
+### Quick Example
+
+```typescript
+import JWPlayer, { JWPlayerConfig } from '@jwplayer/jwplayer-react-native';
+
+const config: JWPlayerConfig = {
+  license: 'YOUR_LICENSE_KEY',
+  file: 'https://example.com/video.m3u8',
+  autostart: true,
+  advertising: {
+    client: 'dai',
+    imaDaiSettings: {
+      videoId: 'tears-of-steel',
+      cmsId: '2528370'
+    }
+  }
+};
+
+export default () => (
+  <JWPlayer config={config} style={{ flex: 1 }} />
+);
+```
+
+### Key Features
+
+- ✅ **Type Safety**: Full TypeScript support with autocomplete
+- ✅ **Cross-Platform**: Single configuration works on both iOS and Android
+- ✅ **Platform Annotations**: Clear documentation of platform-specific features
+- ✅ **Backward Compatible**: Existing configurations continue to work
+- ✅ **Well Documented**: Comprehensive guides for all features
+
+<br /><br />
+
 ## Advanced Topics
 
 [Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm) | [Picture in Picture (PiP)](#picture-in-picture-pip) | [Styling](#styling)

@@ -7,6 +7,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 /* screens */
 import Home from './screens/Home';
+import TypeScriptExample from './screens/TypeScriptExample';
 import ListExample from './screens/ListExample';
 import SingleExample from './screens/SingleExample';
 import OnBeforeNextPlaylistItemExample from './screens/OnBeforeNextPlaylistItemExample';
@@ -25,6 +26,7 @@ export default class App extends Component {
       <NavigationContainer onReady={() => RNBootSplash.hide({fade: true})}>
         <Stack.Navigator initialRouteName="Home">
           <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="TypeScript Example" component={TypeScriptExample} />
           <Stack.Screen name="Single" component={SingleExample} />
           <Stack.Screen name="On Before Next Playlist Item" component={OnBeforeNextPlaylistItemExample} />
           <Stack.Screen name="Modal" component={PlayerInModal} />

@@ -240,6 +240,68 @@ Follow these steps to run the example project:
 
 <br /><br />
 
+## Configuration
+
+The library now features a **unified configuration system** that provides consistent, type-safe configuration across both iOS and Android platforms.
+
+### 📚 Documentation
+
+- **[Configuration Reference](./docs/CONFIG-REFERENCE.md)** - Complete guide to all configuration options with examples
+- **[Platform Differences](./docs/PLATFORM-DIFFERENCES.md)** - Detailed comparison of iOS vs Android features
+- **[Migration Guide](./docs/MIGRATION-GUIDE.md)** - Guide for upgrading to the unified type system
+- **[Props Documentation](./docs/props.md)** - Component props reference
+
+### Quick Example
+
+```typescript
+import JWPlayer, { JWPlayerConfig } from '@jwplayer/jwplayer-react-native';
+
+const config: JWPlayerConfig = {
+  license: 'YOUR_LICENSE_KEY',
+  file: 'https://example.com/video.m3u8',
+  autostart: true,
+  advertising: {
+    client: 'dai',
+    imaDaiSettings: {
+      videoId: 'tears-of-steel',
+      cmsId: '2528370'
+    }
+  }
+};
+
+export default () => (
+  <JWPlayer config={config} style={{ flex: 1 }} />
+);
+```
+
+### Configuration Modes
+
+The library supports two configuration modes:
+
+1. **Modern Configuration (Recommended)**
+   - Uses the unified type system (`JWPlayerConfig`)
+   - Provides full type safety and IDE support
+   - Matches JW Player Delivery API format
+   - Clearly documents platform-specific features
+   - Example: See [TypeScript Example](./Example/app/jsx/screens/TypeScriptExample.tsx)
+
+2. **Legacy Configuration**
+   - Set `forceLegacyConfig={true}` in props
+   - Uses older builder patterns from previous versions
+   - Limited type safety and platform support
+   - Not recommended for new implementations
+   - Documentation: See [Legacy Readme](./docs/legacy_readme.md)
+
+### Key Features
+
+- ✅ **Type Safety**: Full TypeScript support with autocomplete
+- ✅ **Cross-Platform**: Single configuration works on both iOS and Android
+- ✅ **Platform Annotations**: Clear documentation of platform-specific features
+- ✅ **Backward Compatible**: Existing configurations continue to work
+- ✅ **Well Documented**: Comprehensive guides for all features
+
+<br /><br />
+
 ## Advanced Topics
 
 [Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm) | [Picture in Picture (PiP)](#picture-in-picture-pip) | [Styling](#styling)
@@ -458,7 +520,7 @@ If you use a different provider for DRM or this does not work for your use case,
 [Android](#android-styling) | [iOS](#ios-styling)
 
 #### Android Styling
-The `styling` prop will not work when using the modern prop convention that matches the JWP Delivery API. Even when using the `forceLegacyConfig` prop, Android may not respect your choices.
+The `styling` prop will not work with Android when using the modern configuration system. Android styling should be handled through XML resource overrides (see below).
 
 Android styling is best handled through overring JWP IDs in your apps resources files. See the documentation [here](https://docs.jwplayer.com/players/docs/android-styling-guide). 
 

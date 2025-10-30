@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import JWPlayer from '@jwplayer/jwplayer-react-native';
 import {IOS_API_KEY, ANDROID_API_KEY} from '@env';
 
@@ -117,7 +118,7 @@ class VideoPlayer extends React.Component {
 }
 
 // Main Screen Component
-export default class GlobalPlayerExample extends React.Component {
+class GlobalPlayerExample extends React.Component {
   playerRef = React.createRef();
   
   state = {
@@ -178,9 +179,13 @@ export default class GlobalPlayerExample extends React.Component {
 
   render() {
     const { video, isOpen, isPaused, position } = this.state;
+    const { insets } = this.props;
 
     return (
-      <View style={styles.mainContainer}>
+      <View style={[
+        styles.mainContainer,
+        Platform.OS === 'android' && {paddingBottom: insets.bottom},
+      ]}>
         <Text style={styles.header}>Global Player Example</Text>
         <Text style={styles.description}>
           This example demonstrates a global video player that can be minimized and controlled from anywhere in the app.
@@ -227,6 +232,12 @@ export default class GlobalPlayerExample extends React.Component {
       </View>
     );
   }
+}
+
+// Wrap with hook to use safe area insets
+export default function GlobalPlayerExampleWrapper() {
+  const insets = useSafeAreaInsets();
+  return <GlobalPlayerExample insets={insets} />;
 }
 
 const styles = StyleSheet.create({

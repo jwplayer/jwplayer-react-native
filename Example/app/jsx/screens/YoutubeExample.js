@@ -6,12 +6,15 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  Platform,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Player from '../components/AnimatedPlayer';
 
 export default () => {
   const [isVisible, setIsVisible] = useState(false);
   const [playerItem, setPlayerItem] = useState({});
+  const insets = useSafeAreaInsets();
   const data = [
     {
       title: 'JWPlayer-1',
@@ -46,7 +49,10 @@ export default () => {
   return (
     <View style={{flex: 1, backgroundColor: 'white'}}>
       <FlatList
-        contentContainerStyle={styles.flatList}
+        contentContainerStyle={[
+          styles.flatList,
+          Platform.OS === 'android' && {paddingBottom: insets.bottom},
+        ]}
         keyExtractor={({title}, index) => `${title}-${index}`}
         data={data}
         renderItem={({item, index}) => (
@@ -66,7 +72,7 @@ export default () => {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
       {isVisible && playerItem && (
-        <Player {...playerItem} setIsVisible={setIsVisible} />
+        <Player {...playerItem} setIsVisible={setIsVisible} bottomInset={insets.bottom} />
       )}
     </View>
   );

@@ -1,12 +1,14 @@
 import React, { useRef, useState } from 'react';
 import Player from '../components/Player';
 import PlayerContainer from '../components/PlayerContainer';
-import { Alert, Modal, StyleSheet, Text, Pressable, View, StatusBar, Dimensions } from 'react-native';
+import { Alert, Modal, StyleSheet, Text, Pressable, View, StatusBar, Dimensions, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export const { height } = Dimensions.get('window');
 
 
 export default () => {
     const playerRef = useRef([]);
+    const insets = useSafeAreaInsets();
 
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -23,7 +25,10 @@ export default () => {
     }
 
     return (
-        <View style={styles.centeredView}>
+        <View style={[
+            styles.centeredView,
+            Platform.OS === 'android' && {paddingBottom: insets.bottom},
+        ]}>
             <Modal
                 animationType="fade"
                 transparent={true}

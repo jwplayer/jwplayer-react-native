@@ -1,5 +1,6 @@
 import React, {useRef} from 'react';
-import {StyleSheet, View, Text, FlatList} from 'react-native';
+import {StyleSheet, View, Text, FlatList, Platform} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Player from '../components/Player';
 
 /* styles */
@@ -8,6 +9,7 @@ import {globalStyles} from '../../ui/styles/global.style';
 export default () => {
   const tags = ['JWPlayer-1', 'JWPlayer-2', 'JWPlayer-3'];
   const playerRef = useRef({});
+  const insets = useSafeAreaInsets();
 
   const onBeforePlay = tag => {
     tags.map(player => {
@@ -44,7 +46,10 @@ export default () => {
 
   return (
     <FlatList
-      contentContainerStyle={styles.flatList}
+      contentContainerStyle={[
+        styles.flatList,
+        Platform.OS === 'android' && {paddingBottom: insets.bottom},
+      ]}
       keyExtractor={(item, index) => `${item}-${index}`}
       data={tags}
       renderItem={({item, index}) => (

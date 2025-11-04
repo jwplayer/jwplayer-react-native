@@ -1,17 +1,23 @@
 import React from 'react';
-import {StyleSheet, View, Text, TouchableOpacity, FlatList} from 'react-native';
+import {StyleSheet, View, Text, TouchableOpacity, FlatList, Platform} from 'react-native';
 import Icons from 'react-native-vector-icons/FontAwesome5';
 import {useNavigation} from '@react-navigation/native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const SCREENS = ['TypeScript Example', 'Single', 'On Before Next Playlist Item', 'Modal', 'List', 'DRM', 'Local', 'Sources', 'Youtube', 'Global Player'];
 
 export default () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.container}>
       <FlatList
         style={{flex: 1}}
-        contentContainerStyle={styles.flatList}
+        contentContainerStyle={[
+          styles.flatList,
+          Platform.OS === 'android' && {paddingBottom: insets.bottom},
+        ]}
         keyExtractor={(item, index) => `${index}`}
         data={SCREENS}
         renderItem={({item}) => (

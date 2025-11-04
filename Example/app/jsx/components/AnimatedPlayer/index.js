@@ -146,11 +146,13 @@ class AnimatedPlayer extends Component {
       },
     });
 
-    Orientation.addOrientationListener(orientation => {
+    // Store the orientation listener so we can remove it later
+    this.orientationListener = orientation => {
       if (orientation === 'PORTRAIT') {
         this.unlockOrientationsForJwPlayer();
       }
-    });
+    };
+    Orientation.addOrientationListener(this.orientationListener);
   }
 
   rangePercentage(input, min, max, opposite) {
@@ -241,7 +243,9 @@ class AnimatedPlayer extends Component {
   }
 
   getBottomAnim() {
-    return 0;
+    // Add bottom inset for Android navigation bar
+    const androidBottomInset = Platform.OS === 'android' && this.props.bottomInset ? this.props.bottomInset : 0;
+    return androidBottomInset;
   }
 
   animateDown(callback) {
@@ -309,6 +313,11 @@ class AnimatedPlayer extends Component {
 
   async componentWillUnmount() {
     if (this.JWPlayer) this.JWPlayer.stop();
+
+    // Remove the orientation listener to prevent memory leaks
+    if (this.orientationListener) {
+      Orientation.removeOrientationListener(this.orientationListener);
+    }
 
     Orientation.lockToPortrait();
   }

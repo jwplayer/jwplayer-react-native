@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, Pressable, View, Dimensions } from 'react-native';
+import { StyleSheet, Text, Pressable, View, Dimensions, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export const { height } = Dimensions.get('window');
 
 /* styles */
@@ -32,8 +33,13 @@ const styles = StyleSheet.create({
 });
 
 export default ({ children, text, onPress = null }) => {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={globalStyles.container}>
+    <View style={[
+      globalStyles.container,
+      Platform.OS === 'android' && {paddingBottom: insets.bottom},
+    ]}>
       <View style={globalStyles.subContainer}>
         <View style={globalStyles.playerContainer}>{children}</View>
       </View>

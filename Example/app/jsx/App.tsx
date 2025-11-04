@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import RNBootSplash from 'react-native-bootsplash';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
 /* navigation */
 import {NavigationContainer} from '@react-navigation/native';
@@ -23,21 +24,29 @@ const Stack = createNativeStackNavigator();
 export default class App extends Component {
   render() {
     return (
-      <NavigationContainer onReady={() => RNBootSplash.hide({fade: true})}>
-        <Stack.Navigator initialRouteName="Home">
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="TypeScript Example" component={TypeScriptExample} />
-          <Stack.Screen name="Single" component={SingleExample} />
-          <Stack.Screen name="On Before Next Playlist Item" component={OnBeforeNextPlaylistItemExample} />
-          <Stack.Screen name="Modal" component={PlayerInModal} />
-          <Stack.Screen name="List" component={ListExample} />
-          <Stack.Screen name="DRM" component={DRMExample} />
-          <Stack.Screen name="Local" component={LocalFileExample} />
-          <Stack.Screen name="Sources" component={SourcesExample} />
-          <Stack.Screen name="Youtube" component={YoutubeExample} />
-          <Stack.Screen name="Global Player" component={GlobalPlayerExample} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <SafeAreaProvider>
+        <NavigationContainer onReady={() => RNBootSplash.hide({fade: true})}>
+          <Stack.Navigator
+            initialRouteName="Home"
+            screenOptions={{
+              contentStyle: {
+                // React Navigation will automatically handle safe areas
+              },
+            }}
+          >
+            <Stack.Screen name="Home" component={Home} />
+            <Stack.Screen name="Single" component={SingleExample} />
+            <Stack.Screen name="On Before Next Playlist Item" component={OnBeforeNextPlaylistItemExample} />
+            <Stack.Screen name="Modal" component={PlayerInModal} />
+            <Stack.Screen name="List" component={ListExample} />
+            <Stack.Screen name="DRM" component={DRMExample} />
+            <Stack.Screen name="Local" component={LocalFileExample} />
+            <Stack.Screen name="Sources" component={SourcesExample} />
+            <Stack.Screen name="Youtube" component={YoutubeExample} />
+            <Stack.Screen name="Global Player" component={GlobalPlayerExample} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaProvider>
     );
   }
 }

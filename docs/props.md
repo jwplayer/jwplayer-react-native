@@ -2,17 +2,29 @@
 
 This wrapper implements the native methods exposed by the [Android](https://sdk.jwplayer.com/android/v4/reference/com/jwplayer/pub/api/JsonHelper.html) and [iOS](https://sdk.jwplayer.com/ios/v4/reference/Classes/JWJSONParser.html) SDK for parsing JSON objects into player configs.
 
+## Component Props
+
 | Prop | Type | Platform | Description | Default |
 | --- | --- | --- | --- | --- |
-| `config` | object | A, I | **(REQUIRED)** `JWConfig` object<br />See: [Config](#config) | `undefined` |
+| `config` | object | A, I | **(REQUIRED)** `JWPlayerConfig` or `Config` object<br />See: [Configuration Reference](./CONFIG-REFERENCE.md) | `undefined` |
 | `controls` | boolean | A, I | Determines if player controls are displayed | `true` |
 
 <br /><br />
 
-## Config
-With the exception of `license` and `playlist`, all other fields are optional.
+## Configuration Documentation
 
-See [`types`](./types.md) for a definition of config types defined below
+📚 **Complete documentation is now available in separate guides:**
+
+- **[Configuration Reference](./CONFIG-REFERENCE.md)** - Complete field reference with examples
+- **[Platform Differences](./PLATFORM-DIFFERENCES.md)** - iOS vs Android feature comparison
+- **[Migration Guide](./MIGRATION-GUIDE.md)** - Upgrading to unified types
+
+<br />
+
+## Config
+With the exception of `license` and one of (`file`, `sources`, or `playlist`), all other fields are optional.
+
+See the [Configuration Reference](./CONFIG-REFERENCE.md) for complete documentation of all configuration options.
 
 | Field | Type | Platform |  Additional Notes |
 | --- | --- | --- | --- |

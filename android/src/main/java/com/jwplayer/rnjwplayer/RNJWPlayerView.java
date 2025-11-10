@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
@@ -318,6 +319,21 @@ public class RNJWPlayerView extends RelativeLayout implements
         getReactContext().addLifecycleEventListener(this);
     }
 
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        
+        // Ensure the player view is laid out when parent is laid out (GitHub issue #188)
+        // This fixes the issue where swapping player views doesn't trigger proper layout
+        if (mPlayerView != null && (r - l) > 0 && (b - t) > 0) {
+            mPlayerView.measure(
+                MeasureSpec.makeMeasureSpec(r - l, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(b - t, MeasureSpec.EXACTLY)
+            );
+            mPlayerView.layout(0, 0, r - l, b - t);
+        }
+    }
+
     private LifecycleObserver lifecycleObserver = new LifecycleEventObserver() {
         @Override
         public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
@@ -445,7 +461,13 @@ public class RNJWPlayerView extends RelativeLayout implements
             );
 
             mPlayer = null;
-            mPlayerView = null;
+            
+            // Remove the old player view from the view hierarchy to prevent
+            // the old UI controls from receiving touch events (fixes GitHub issue #188 crash)
+            if (mPlayerView != null) {
+                removeView(mPlayerView);
+                mPlayerView = null;
+            }
 
             getReactContext().removeLifecycleEventListener(this);
 
@@ -898,10 +920,23 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     public void setConfig(ReadableMap prop) {
         if (mConfig == null || !mConfig.equals(prop)) {
-            if (mConfig != null && isOnlyDiff(prop, "playlist") && mPlayer != null) { // still safe check, even with JW
-                // JSON change
+            if (prop.hasKey("license")) {
+                new LicenseUtil().setLicenseKey(getReactContext(), prop.getString("license"));
+            } else {
+                Log.e(TAG, "JW SDK license not set");
+            }
+
+            // Check if only playlist changed (GitHub issue #188 - optimized approach)
+            if (mPlayer != null && mConfig != null && isOnlyDiff(prop, "playlist")) {
+                // Playlist-only change: update existing player without full recreation
+                // This preserves the video surface and avoids recreation overhead
                 PlayerConfig oldConfig = mPlayer.getConfig();
                 boolean wasFullscreen = mPlayer.getFullscreen();
+                
+                // Stop the player first to avoid issues
+                mPlayer.stop();
+                
+                // Build new config with new playlist but old settings
                 UiConfig uiConfig = createUiConfigWithControlsContainer(mPlayer, oldConfig.getUiConfig());
                 PlayerConfig config = new PlayerConfig.Builder()
                         .autostart(oldConfig.getAutostart())
@@ -913,7 +948,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                         .advertisingConfig(oldConfig.getAdvertisingConfig())
                         .stretching(oldConfig.getStretching())
                         .uiConfig(uiConfig)
-                        .playlist(Util.createPlaylist(mPlaylistProp))
+                        .playlist(Util.createPlaylist(prop.getArray("playlist")))
                         .allowCrossProtocolRedirects(oldConfig.getAllowCrossProtocolRedirects())
                         .preload(oldConfig.getPreload())
                         .useTextureView(oldConfig.useTextureView())
@@ -922,19 +957,13 @@ public class RNJWPlayerView extends RelativeLayout implements
                         .build();
 
                 mPlayer.setup(config);
-                // if the player was fullscreen, set it to fullscreen again as the player is recreated
-                // The fullscreen view is still active but the internals don't know it is
+                
+                // Restore fullscreen if needed
                 if (wasFullscreen) {
                     mPlayer.setFullscreen(true, true);
                 }
             } else {
-                if (prop.hasKey("license")) {
-                    new LicenseUtil().setLicenseKey(getReactContext(), prop.getString("license"));
-                } else {
-                    Log.e(TAG, "JW SDK license not set");
-                }
-
-                // The entire config is different (other than the "playlist" key)
+                // Full config change or first config: do full player recreation
                 this.setupPlayer(prop);
             }
         } else {
@@ -944,6 +973,11 @@ public class RNJWPlayerView extends RelativeLayout implements
         mConfig = prop;
     }
 
+    /**
+     * Check if only a specific key differs between current and new config.
+     * Used for playlist-only optimization to avoid unnecessary player recreation.
+     * GitHub issue #188 fix: Now properly stops player before setup() when only playlist changes.
+     */
     public boolean isOnlyDiff(ReadableMap prop, String keyName) {
         // Convert ReadableMap to HashMap
         Map<String, Object> mConfigMap = mConfig.toHashMap();
@@ -1119,7 +1153,17 @@ public class RNJWPlayerView extends RelativeLayout implements
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT));
         addView(mPlayerView);
-
+        
+        // Force immediate layout before getting player (GitHub issue #188)
+        // The player's video surface needs proper dimensions when setup() is called
+        if (getWidth() > 0 && getHeight() > 0) {
+            mPlayerView.measure(
+                MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY)
+            );
+            mPlayerView.layout(0, 0, getWidth(), getHeight());
+        }
+        
         // Ensure we have a valid state before applying to the player
         registry.setCurrentState(registry.getCurrentState()); // This is a hack to ensure player and view know the lifecycle state
 
@@ -1232,6 +1276,12 @@ public class RNJWPlayerView extends RelativeLayout implements
             mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
                     .build();
         }
+        
+        // Force final layout pass after player is fully configured (GitHub issue #188)
+        // Ensure controls and UI are properly rendered
+        mPlayerView.requestLayout();
+        requestLayout();
+        invalidate();
     }
 
     // Audio Focus

@@ -54,13 +54,20 @@ class VideoPlayer extends React.Component {
   setPlaylist() {
     if (!this.props.video) return;
 
-    const playlistItem = {
-      file: this.props.video,
-      mediaId: this.props.id,
-    };
-
     const config = { ...this.initialConfig };
-    config.playlist = [playlistItem];
+    
+    // Check if video is an array (multi-episode playlist) or single video
+    if (Array.isArray(this.props.video)) {
+      // Multi-episode playlist
+      config.playlist = this.props.video;
+    } else {
+      // Single video
+      const playlistItem = {
+        file: this.props.video,
+        mediaId: this.props.id,
+      };
+      config.playlist = [playlistItem];
+    }
 
     if (Platform.OS === 'ios') {
       // On iOS, use the recreatePlayerWithConfig method
@@ -68,7 +75,7 @@ class VideoPlayer extends React.Component {
       
       // Update local state
       this.setState({ 
-        currentPlaylistItem: playlistItem,
+        currentPlaylistItem: config.playlist[0],
         isReady: false,
         config
       });
@@ -78,17 +85,12 @@ class VideoPlayer extends React.Component {
         this.playerRef.current?.play();
       }
     } else {
-      // On Android, we need to force a full component recreation
-      this.setState({ 
-        config: null  // First set to null to ensure React recreates the component
-      }, () => {
-        // Then set the new config in the next frame
-        this.setState({
-          config,
-          currentPlaylistItem: playlistItem,
-          isReady: false
-        });
-        // Note: No need to call play() here as the component will be recreated with autoplay setting
+      // On Android, update config directly
+      // The native layer will handle full player recreation (fixes issue #188)
+      this.setState({
+        config,
+        currentPlaylistItem: config.playlist[0],
+        isReady: false
       });
     }
   }
@@ -158,6 +160,29 @@ class GlobalPlayerExample extends React.Component {
     });
   };
 
+  // Test multi-episode playlist (Issue #188 - auto-progression test)
+  playMultiEpisodePlaylist = () => {
+    this.setState({
+      video: {
+        id: 'playlist',
+        title: 'Episode Series',
+        video: [
+          {
+            file: 'http://content.bitsontherun.com/videos/bkaovAYt-52qL9xLP.mp4',
+            title: 'Episode 1: Big Buck Bunny',
+          },
+          {
+            file: 'http://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4',
+            title: 'Episode 2: Elephant Dream',
+          }
+        ],
+        autoplay: true,
+      },
+      isPaused: false,
+      isOpen: true
+    });
+  };
+
   handlePause = () => {
     if (this.state.isPaused) {
       this.playerRef.current?.play();
@@ -200,6 +225,12 @@ class GlobalPlayerExample extends React.Component {
               <Text style={styles.buttonText}>Play {videoData.title}</Text>
             </TouchableOpacity>
           ))}
+          
+          <TouchableOpacity
+            style={[styles.button, styles.playlistButton]}
+            onPress={this.playMultiEpisodePlaylist}>
+            <Text style={styles.buttonText}>🎬 Play Episode Series (Auto-Progress Test)</Text>
+          </TouchableOpacity>
         </View>
 
         {video && isOpen && (
@@ -264,6 +295,10 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     marginVertical: 5,
+  },
+  playlistButton: {
+    backgroundColor: '#E67E22',
+    marginTop: 15,
   },
   buttonText: {
     color: 'white',

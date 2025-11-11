@@ -190,12 +190,10 @@ class GlobalPlayerExample extends React.Component {
     }, () => {
       // Wait a moment for player to be ready, then go fullscreen
       setTimeout(() => {
-        console.log('Entering fullscreen...');
         this.playerRef.current?.setFullscreen(true);
         
         // After 5 seconds in fullscreen, switch to a new video
         setTimeout(() => {
-          console.log('Switching video in fullscreen using recreatePlayerWithConfig...');
           const newConfig = {
             license: Platform.select({
               ios: IOS_API_KEY,
@@ -234,6 +232,96 @@ class GlobalPlayerExample extends React.Component {
           });
         }, 5000);
       }, 1000);
+    });
+  };
+
+  // DRM Configuration Example
+  // NOTE: Replace these placeholder values with your own DRM-protected content
+  // For JWPlayer DRM setup, visit: https://docs.jwplayer.com/platform/docs/protection-studio-drm-integrations
+  drmConfig = {
+    android: {
+      // Android uses Widevine DRM with DASH manifest
+      file: "https://your-content-url.com/media/MEDIA_ID/manifest.mpd",
+      title: "Your DRM Protected Video",
+      mediaid: "YOUR_MEDIA_ID",
+      sources: [{
+        file: "https://your-content-url.com/media/MEDIA_ID/manifest.mpd",
+        type: "application/dash+xml",
+        drm: {
+          widevine: {
+            url: "https://your-license-server.com/license?drm=widevine"
+          }
+        }
+      }]
+    },
+    ios: {
+      // iOS uses FairPlay DRM with HLS manifest
+      // IMPORTANT: processSpcUrl and certificateUrl will be extracted to the TOP LEVEL
+      // of the player config (see loadDRMContent method below)
+      file: "https://your-content-url.com/media/MEDIA_ID/playlist.m3u8",
+      drm: {
+        fairplay: {
+          processSpcUrl: "https://your-license-server.com/license?drm=fairplay",
+          certificateUrl: "https://your-certificate-server.com/certificate"
+        }
+      },
+      type: "application/vnd.apple.mpegurl",
+      title: "Your DRM Protected Video",
+      mediaId: "YOUR_MEDIA_ID"
+    }
+  };
+
+  // Load DRM content example
+  // NOTE: This is a stub - replace drmConfig values above with your own DRM credentials
+  loadDRMContent = () => {
+    const playlistItem = Platform.select({
+      android: this.drmConfig.android,
+      ios: this.drmConfig.ios
+    });
+    
+    // Build DRM config
+    // iOS IMPORTANT: processSpcUrl and certificateUrl must be at the TOP LEVEL of config
+    // This is how the native iOS player expects FairPlay credentials
+    const config = {
+      license: Platform.select({
+        ios: IOS_API_KEY,
+        android: ANDROID_API_KEY,
+      }),
+      playlist: [playlistItem],
+      controls: true,
+      autostart: true,
+      // iOS DRM: Extract FairPlay URLs to top level
+      ...(Platform.OS === 'ios' && playlistItem.drm?.fairplay ? {
+        processSpcUrl: playlistItem.drm.fairplay.processSpcUrl,
+        certificateUrl: playlistItem.drm.fairplay.certificateUrl,
+      } : {}),
+    };
+    
+    // If player is already mounted, use it directly
+    if (this.state.isOpen && this.playerRef.current) {
+      this.playerRef.current.recreatePlayerWithConfig(config);
+      return;
+    }
+    
+    // Otherwise, mount the player first with a simple config
+    this.setState({
+      video: {
+        id: 'drm-content',
+        video: 'https://content.jwplatform.com/videos/bkaovAYt-52qL9xLP.mp4',
+        title: 'Loading DRM Content...',
+        autoplay: false
+      },
+      isPaused: false,
+      isOpen: true
+    }, () => {
+      // Wait for player to fully mount
+      setTimeout(() => {
+        if (this.playerRef.current) {
+          this.playerRef.current.recreatePlayerWithConfig(config);
+        } else {
+          console.error('ERROR: playerRef.current is still null after mounting!');
+        }
+      }, 500);
     });
   };
 
@@ -290,6 +378,12 @@ class GlobalPlayerExample extends React.Component {
             style={[styles.button, styles.fullscreenTestButton]}
             onPress={this.testFullscreenSwitch}>
             <Text style={styles.buttonText}>⛶ Fullscreen Switch Test (Issue #192)</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.button, styles.drmTestButton]}
+            onPress={this.loadDRMContent}>
+            <Text style={styles.buttonText}>🔐 Test DRM Content (Requires Setup)</Text>
           </TouchableOpacity>
         </View>
 
@@ -362,6 +456,10 @@ const styles = StyleSheet.create({
   },
   fullscreenTestButton: {
     backgroundColor: '#E74C3C',
+    marginTop: 10,
+  },
+  drmTestButton: {
+    backgroundColor: '#16A085',
     marginTop: 10,
   },
   buttonText: {

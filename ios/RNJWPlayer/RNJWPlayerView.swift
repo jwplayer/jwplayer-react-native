@@ -682,7 +682,6 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             contentUUID = config["contentUUID"] as? String
             
             if forceLegacyConfig == true {
-
                 // Dangerous: check playlist for processSpcUrl / fairplayCertUrl in playlist
                 // Only checks first playlist item as multi-item DRM playlists are ill advised
                 if let playlist = config["playlist"] as? [AnyObject] {
@@ -696,7 +695,6 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                         }
                     }
                 }
-            } else {
             }
 
             do {
@@ -1509,26 +1507,30 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     func appIdentifierForURL(_ url: URL, completionHandler handler: @escaping (Data?) -> Void) {
         guard let fairplayCertUrlString = fairplayCertUrl, let finalUrl = URL(string: fairplayCertUrlString) else {
+            handler(nil)
             return
         }
         
         let request = URLRequest(url: finalUrl)
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                print("DRM cert request error - \(error.localizedDescription)")
+                print("Error fetching FairPlay certificate: \(error.localizedDescription)")
+                handler(nil)
+                return
             }
+            
             handler(data)
         }
         task.resume()
     }
 
     func contentKeyWithSPCData(_ spcData: Data, completionHandler handler: @escaping (Data?, Date?, String?) -> Void) {
-        if processSpcUrl == nil {
+        guard let processSpcUrlString = processSpcUrl else {
+            handler(nil, nil, nil)
             return
         }
 
-        guard let processSpcUrl = URL(string: processSpcUrl) else {
-            print("Invalid processSpcUrl")
+        guard let processSpcUrl = URL(string: processSpcUrlString) else {
             handler(nil, nil, nil)
             return
         }
@@ -1539,13 +1541,22 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         ckcRequest.addValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
 
         URLSession.shared.dataTask(with: ckcRequest) { (data, response, error) in
-            if let httpResponse = response as? HTTPURLResponse, (error != nil || httpResponse.statusCode != 200) {
-                print("DRM ckc request error - %@", error?.localizedDescription ?? "Unknown error")
+            if let error = error {
+                print("Error fetching FairPlay license: \(error.localizedDescription)")
                 handler(nil, nil, nil)
                 return
             }
 
-            handler(data, nil, "application/octet-stream")
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                handler(nil, nil, nil)
+                return
+            }
+
+            if let data = data {
+                handler(data, nil, "application/octet-stream")
+            } else {
+                handler(nil, nil, nil)
+            }
         }.resume()
     }
 

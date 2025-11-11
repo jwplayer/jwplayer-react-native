@@ -24,7 +24,7 @@ class VideoPlayer extends React.Component {
     backgroundAudioEnabled: true,
     playlist: [{
       title: "placeholder",
-      file: "http://content.bitsontherun.com/videos/bkaovAYt-52qL9xLP.mp4" // Adding a default file
+      file: "https://content.jwplatform.com/videos/bkaovAYt-52qL9xLP.mp4" // Adding a default file
     }],
     styling: {
       colors: {
@@ -127,12 +127,12 @@ class GlobalPlayerExample extends React.Component {
     {
       id: '1',
       title: 'Big Buck Bunny',
-      url: 'http://content.bitsontherun.com/videos/bkaovAYt-52qL9xLP.mp4'
+      url: 'https://content.bitsontherun.com/videos/bkaovAYt-52qL9xLP.mp4'
     },
     {
       id: '2',
       title: 'Elephant Dream',
-      url: 'http://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4'
+      url: 'https://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4'
     }
   ];
 
@@ -160,11 +160,11 @@ class GlobalPlayerExample extends React.Component {
         title: 'Episode Series',
         video: [
           {
-            file: 'http://content.bitsontherun.com/videos/bkaovAYt-52qL9xLP.mp4',
+            file: 'https://content.jwplatform.com/videos/bkaovAYt-52qL9xLP.mp4',
             title: 'Episode 1: Big Buck Bunny',
           },
           {
-            file: 'http://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4',
+            file: 'https://content.jwplatform.com/videos/3XnJSIm4-52qL9xLP.mp4',
             title: 'Episode 2: Elephant Dream',
           }
         ],
@@ -182,7 +182,7 @@ class GlobalPlayerExample extends React.Component {
       video: {
         id: 'fullscreen-test-1',
         title: 'Fullscreen Test Video 1',
-        video: 'http://content.bitsontherun.com/videos/bkaovAYt-52qL9xLP.mp4',
+        video: 'https://content.jwplatform.com/videos/bkaovAYt-52qL9xLP.mp4',
         autoplay: true,
       },
       isPaused: false,
@@ -197,11 +197,27 @@ class GlobalPlayerExample extends React.Component {
         setTimeout(() => {
           console.log('Switching video in fullscreen using recreatePlayerWithConfig...');
           const newConfig = {
-            ...this.initialConfig,
+            license: Platform.select({
+              ios: IOS_API_KEY,
+              android: ANDROID_API_KEY,
+            }),
+            controls: true,
+            pipEnabled: true,
+            fullScreenOnLandscape: false,
+            backgroundAudioEnabled: true,
             playlist: [{
-              file: 'http://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4',
+              file: 'https://content.jwplatform.com/videos/3XnJSIm4-52qL9xLP.mp4',
               title: 'Fullscreen Test Video 2 - Elephant Dream',
             }],
+            styling: {
+              colors: {
+                timeslider: {
+                  progress: '925EC4',
+                  thumb: '73499D',
+                  rail: '7E50AB',
+                },
+              },
+            },
             autostart: true
           };
           
@@ -212,7 +228,7 @@ class GlobalPlayerExample extends React.Component {
             video: {
               id: 'fullscreen-test-2',
               title: 'Fullscreen Test Video 2',
-              video: 'http://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4',
+              video: 'https://content.jwplatform.com/videos/3XnJSIm4-52qL9xLP.mp4',
               autoplay: true,
             }
           });

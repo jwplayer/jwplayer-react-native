@@ -1004,6 +1004,11 @@ public class RNJWPlayerView extends RelativeLayout implements
         // Apply new configuration to existing player
         mPlayer.setup(newConfig);
         
+        // Apply controls setting explicitly (matches createPlayerView behavior)
+        if (prop.hasKey("controls")) {
+            mPlayer.setControls(prop.getBoolean("controls"));
+        }
+        
         // Restore fullscreen state if needed
         // The fullscreen view is still active but internals need to be notified
         if (wasFullscreen) {
@@ -1041,10 +1046,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         configureBasicSettings(configBuilder, prop);
         configureStyling(configBuilder, prop);
         configureAdvertising(configBuilder, prop);
-        
-        // Ensure controls container is always shown
-        UiConfig uiConfig = createUiConfigWithControlsContainer(mPlayer, oldConfig.getUiConfig());
-        configBuilder.uiConfig(uiConfig);
+        configureUI(configBuilder, prop);
         
         return configBuilder.build();
     }
@@ -1169,12 +1171,23 @@ public class RNJWPlayerView extends RelativeLayout implements
     }
 
     private void configureUI(PlayerConfig.Builder configBuilder, ReadableMap prop) {
+        // Handle controls property - default to true if not specified
+        boolean controls = true; // Default to showing controls
         if (prop.hasKey("controls")) {
-            boolean controls = prop.getBoolean("controls");
-            if (!controls) {
-                UiConfig uiConfig = new UiConfig.Builder().hideAllControls().build();
-                configBuilder.uiConfig(uiConfig);
-            }
+            controls = prop.getBoolean("controls");
+        }
+        
+        if (!controls) {
+            UiConfig uiConfig = new UiConfig.Builder().hideAllControls().build();
+            configBuilder.uiConfig(uiConfig);
+        } else {
+            // Explicitly show controls and ensure controls container is visible
+            // This ensures controls work even if setControls() is called later
+            UiConfig uiConfig = new UiConfig.Builder()
+                .displayAllControls()
+                .show(UiGroup.PLAYER_CONTROLS_CONTAINER)
+                .build();
+            configBuilder.uiConfig(uiConfig);
         }
 
         if (prop.hasKey("hideUIGroups")) {

@@ -994,6 +994,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
         PlayerConfig oldConfig = mPlayer.getConfig();
         boolean wasFullscreen = mPlayer.getFullscreen();
+        boolean currentControlsState = mPlayer.getControls();
         
         // Stop playback before reconfiguration to avoid issues (Issue #188 fix)
         mPlayer.stop();
@@ -1001,13 +1002,30 @@ public class RNJWPlayerView extends RelativeLayout implements
         // Build new configuration
         PlayerConfig newConfig = buildPlayerConfig(prop, oldConfig);
         
+        // ALWAYS ensure PLAYER_CONTROLS_CONTAINER is shown in UiConfig after setup.
+        // This prevents issues where controls are off and JWPlayer SDK hides UI groups,
+        // leaving them in a state where setControls(true) won't work.
+        // We'll manage controls state via setControls() API after setup for clean state management.
+        UiConfig fixedUiConfig = new UiConfig.Builder(newConfig.getUiConfig())
+            .show(UiGroup.PLAYER_CONTROLS_CONTAINER)
+            .build();
+        newConfig = new PlayerConfig.Builder(newConfig)
+            .uiConfig(fixedUiConfig)
+            .build();
+        
         // Apply new configuration to existing player
         mPlayer.setup(newConfig);
         
-        // Apply controls setting explicitly (matches createPlayerView behavior)
+        // Now manage controls state via API (after setup, when UI groups are in clean state)
         if (prop.hasKey("controls")) {
+            // Developer explicitly set controls in props - use that value
             mPlayer.setControls(prop.getBoolean("controls"));
+        } else if (!currentControlsState) {
+            // Controls were off before reconfigure and no explicit prop provided
+            // Restore the off state (after ensuring UI groups are visible)
+            mPlayer.setControls(false);
         }
+        // Note: If controls were on and no prop provided, they'll stay on (default from configureUI)
         
         // Restore fullscreen state if needed
         // The fullscreen view is still active but internals need to be notified

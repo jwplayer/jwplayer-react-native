@@ -4,7 +4,7 @@ import Icons from 'react-native-vector-icons/FontAwesome5';
 import {useNavigation} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-const SCREENS = ['Single', 'On Before Next Playlist Item', 'Modal', 'List', 'DRM', 'Local', 'Sources', 'Youtube', 'Global Player'];
+const SCREENS = ['TypeScript Example', 'Single', 'On Before Next Playlist Item', 'Modal', 'List', 'DRM', 'Local', 'Sources', 'Youtube', 'Global Player'];
 
 export default () => {
   const navigation = useNavigation();

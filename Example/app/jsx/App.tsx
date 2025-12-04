@@ -8,6 +8,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 /* screens */
 import Home from './screens/Home';
+import TypeScriptExample from './screens/TypeScriptExample';
 import ListExample from './screens/ListExample';
 import SingleExample from './screens/SingleExample';
 import OnBeforeNextPlaylistItemExample from './screens/OnBeforeNextPlaylistItemExample';

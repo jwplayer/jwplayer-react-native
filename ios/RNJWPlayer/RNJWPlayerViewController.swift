@@ -202,40 +202,57 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 
     func appIdentifierForURL(_ url: URL, completionHandler handler: @escaping (Data?) -> Void) {
         guard let fairplayCertUrlString = parentView?.fairplayCertUrl, let fairplayCertUrl = URL(string: fairplayCertUrlString) else {
+            handler(nil)
             return
         }
 
         let request = URLRequest(url: fairplayCertUrl)
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                print("DRM cert request error - \(error.localizedDescription)")
+                print("Error fetching FairPlay certificate: \(error.localizedDescription)")
+                handler(nil)
+                return
             }
+            
             handler(data)
         }
         task.resume()
     }
 
     func contentKeyWithSPCData(_ spcData: Data, completionHandler handler: @escaping (Data?, Date?, String?) -> Void) {
-        if parentView?.processSpcUrl == nil {
+        guard let processSpcUrlString = parentView?.processSpcUrl else {
+            handler(nil, nil, nil)
             return
         }
 
-        if let processSpcUrl = parentView?.processSpcUrl {
-            let ckcRequest = NSMutableURLRequest(url: NSURL(string: processSpcUrl)! as URL)
-            ckcRequest.httpMethod = "POST"
-            ckcRequest.httpBody = spcData
-            ckcRequest.addValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-
-            URLSession.shared.dataTask(with: ckcRequest as URLRequest) { (data, response, error) in
-                if let httpResponse = response as? HTTPURLResponse, (error != nil || httpResponse.statusCode != 200) {
-                    NSLog("DRM ckc request error - %@", error.debugDescription)
-                    handler(nil, nil, nil)
-                    return
-                }
-
-                handler(data, nil, "application/octet-stream")
-            }.resume()
+        guard let processSpcUrl = URL(string: processSpcUrlString) else {
+            handler(nil, nil, nil)
+            return
         }
+
+        let ckcRequest = NSMutableURLRequest(url: processSpcUrl)
+        ckcRequest.httpMethod = "POST"
+        ckcRequest.httpBody = spcData
+        ckcRequest.addValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+
+        URLSession.shared.dataTask(with: ckcRequest as URLRequest) { (data, response, error) in
+            if let error = error {
+                print("Error fetching FairPlay license: \(error.localizedDescription)")
+                handler(nil, nil, nil)
+                return
+            }
+
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                handler(nil, nil, nil)
+                return
+            }
+
+            if let data = data {
+                handler(data, nil, "application/octet-stream")
+            } else {
+                handler(nil, nil, nil)
+            }
+        }.resume()
     }
 
     // MARK: - AV Picture In Picture Delegate

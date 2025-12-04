@@ -310,8 +310,17 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     private var pendingPlayerConfig: [String: Any]?
     private var playerConfigTimeout: Timer?
     private let maxPendingTime: TimeInterval = 5.0 // Maximum time to wait for PiP to close
+    private var isRecreatingPlayer: Bool = false // Prevents re-entrant calls during recreation
     
     @objc func recreatePlayerWithConfig(_ config: [String: Any]) {
+        // Prevent re-entrant calls while player is being recreated
+        if isRecreatingPlayer {
+            print("Warning: Player recreation already in progress, queueing this config change")
+            // Override any pending config with the latest one
+            pendingPlayerConfig = config
+            return
+        }
+        
         // Cancel any existing pending configuration
         if pendingPlayerConfig != nil {
             print("Warning: Overriding pending content switch")
@@ -325,7 +334,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             return
         }
         
-        // 1. Handle PiP state
+        // 1. Handle PiP state (must exit PiP before any changes)
         var isPipActive = false
         var pipController: AVPictureInPictureController?
         
@@ -337,11 +346,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             isPipActive = pipController?.isPictureInPictureActive ?? false
         }
 
-        // 2. If in PiP, store the config and exit PiP
         if isPipActive {
             guard let pipController = pipController else {
                 print("Warning: PiP appears active but controller is nil, proceeding with direct switch")
-                completePlayerReconfiguration(config: config)
+                proceedWithConfigChange(config: config)
                 return
             }
             
@@ -353,30 +361,254 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 print("Warning: PiP close timeout reached, forcing content switch")
                 if let pendingConfig = self.pendingPlayerConfig {
                     self.pendingPlayerConfig = nil
-                    self.completePlayerReconfiguration(config: pendingConfig)
+                    self.proceedWithConfigChange(config: pendingConfig)
                 }
             }
             
             // Attempt to stop PiP
             pipController.stopPictureInPicture()
-            
-        } else {
-            completePlayerReconfiguration(config: config)
+            return
         }
+        
+        // 2. Handle fullscreen state (only exit if we need to recreate)
+        let isFullscreen = playerViewController?.isFullScreen ?? false
+        
+        if isFullscreen && requiresPlayerRecreation(config) {
+            // Only exit fullscreen if we need to recreate the player
+            // For reconfiguration, fullscreen state will be preserved automatically
+            print("Fullscreen active and recreation needed - exiting fullscreen first")
+            pendingPlayerConfig = config
+            
+            // Set a timeout to prevent infinite waiting
+            playerConfigTimeout = Timer.scheduledTimer(withTimeInterval: maxPendingTime, repeats: false) { [weak self] _ in
+                guard let self = self else { return }
+                print("Warning: Fullscreen exit timeout reached, forcing content switch")
+                if let pendingConfig = self.pendingPlayerConfig {
+                    self.pendingPlayerConfig = nil
+                    self.proceedWithConfigChange(config: pendingConfig)
+                }
+            }
+            
+            // Exit fullscreen
+            playerViewController?.dismiss(animated: true) { [weak self] in
+                guard let self = self else { return }
+                self.playerConfigTimeout?.invalidate()
+                self.playerConfigTimeout = nil
+                if let pendingConfig = self.pendingPlayerConfig {
+                    self.pendingPlayerConfig = nil
+                    self.proceedWithConfigChange(config: pendingConfig)
+                }
+            }
+            return
+        }
+        
+        // 3. No special state handling needed - proceed with config change
+        // If in fullscreen and just reconfiguring, state will be preserved
+        proceedWithConfigChange(config: config)
     }
     
-    private func completePlayerReconfiguration(config: [String: Any]) {
+    /// Determines the appropriate way to apply the config change
+    private func proceedWithConfigChange(config: [String: Any]) {
         // Clear any pending timeout
         playerConfigTimeout?.invalidate()
         playerConfigTimeout = nil
         
         // Ensure we're on the main thread
-        if !Thread.isMainThread {
+        guard Thread.isMainThread else {
             DispatchQueue.main.async { [weak self] in
-                self?.completePlayerReconfiguration(config: config)
+                self?.proceedWithConfigChange(config: config)
             }
             return
         }
+        
+        // Decide: recreate or reconfigure?
+        if requiresPlayerRecreation(config) {
+            print("Player recreation required - performing full recreation")
+            completePlayerRecreation(config: config)
+        } else {
+            print("Reconfiguring existing player without recreation (optimized)")
+            reconfigurePlayer(config: config)
+        }
+    }
+    
+    /// Determines if a config change requires full player recreation.
+    /// Only returns true for changes that genuinely cannot be handled by reconfiguration.
+    private func requiresPlayerRecreation(_ config: [String: Any]) -> Bool {
+        // If no player exists, we need to create one
+        guard playerViewController != nil || playerView != nil else {
+            return true
+        }
+        
+        // If no previous config, this is first-time setup
+        guard let currentConfig = currentConfig else {
+            return true
+        }
+        
+        // Check for license changes (requires recreation)
+        let newLicense = config["license"] as? String
+        let oldLicense = currentConfig["license"] as? String
+        
+        if newLicense != oldLicense {
+            if newLicense != nil && oldLicense != nil {
+                print("License changed from '\(oldLicense!)' to '\(newLicense!)' - recreation required")
+                return true
+            } else if newLicense == nil || oldLicense == nil {
+                print("License presence changed - recreation required")
+                return true
+            }
+        }
+        
+        // Check for viewOnly mode changes (playerView vs playerViewController)
+        let newViewOnly = config["viewOnly"] as? Bool ?? false
+        let oldViewOnly = currentConfig["viewOnly"] as? Bool ?? false
+        if newViewOnly != oldViewOnly {
+            print("viewOnly mode changed - recreation required")
+            return true
+        }
+        
+        // All other changes can be handled by reconfiguration (optimized path!)
+        print("iOS: Using reconfiguration path (optimized)")
+        return false
+    }
+    
+    /// Reconfigures the existing player with new settings without recreation.
+    /// This is the preferred path for config updates as it preserves the player instance
+    /// and maintains state (fullscreen, etc.), following JWPlayer SDK's design intent.
+    private func reconfigurePlayer(config: [String: Any]) {
+        guard let playerViewController = playerViewController else {
+            // No player exists, need to create
+            print("No player exists - falling back to recreation")
+            completePlayerRecreation(config: config)
+            return
+        }
+        
+        // Prevent re-entrant calls during reconfiguration (Issue #192 - Error 180001)
+        if isRecreatingPlayer {
+            print("Warning: Reconfiguration already in progress, queueing this config change")
+            pendingPlayerConfig = config
+            return
+        }
+        
+        isRecreatingPlayer = true
+        
+        // Preserve state
+        let wasFullscreen = playerViewController.isFullScreen
+        let currentState = playerViewController.player.getState()
+        let wasPlaying = currentState == .playing
+        
+        // Stop playback before reconfiguration (prevents issues)
+        playerViewController.player.stop()
+        
+        // Parse config early (before setting license) to check if it's valid
+        let forceLegacyConfig = config["forceLegacyConfig"] as? Bool ?? false
+        let playlistItemCallback = config["playlistItemCallbackEnabled"] as? Bool ?? false
+        
+        // Set license FIRST (before parsing config fully)
+        let license = config["license"] as? String
+        self.setLicense(license: license)
+        
+        // Handle audio session for background/PiP
+        if let bae = config["backgroundAudioEnabled"] as? Bool, let pe = config["pipEnabled"] as? Bool {
+            backgroundAudioEnabled = bae
+            pipEnabled = pe
+        }
+        
+        if backgroundAudioEnabled || pipEnabled {
+            let category = config["category"] != nil ? config["category"] as? String : "playback"
+            let categoryOptions = config["categoryOptions"] as? [String]
+            let mode = config["mode"] as? String
+            self.initAudioSession(category: category, categoryOptions: categoryOptions, mode: mode)
+        } else {
+            self.deinitAudioSession()
+        }
+        
+        // Handle DRM parameters
+        processSpcUrl = config["processSpcUrl"] as? String
+        fairplayCertUrl = config["certificateUrl"] as? String
+        contentUUID = config["contentUUID"] as? String
+        
+        // Handle legacy DRM in playlist
+        if forceLegacyConfig {
+            if let playlist = config["playlist"] as? [AnyObject] {
+                let item = playlist.first
+                if let itemMap = item as? [String: Any] {
+                    if itemMap["processSpcUrl"] != nil {
+                        processSpcUrl = itemMap["processSpcUrl"] as? String
+                    }
+                    if itemMap["certificateUrl"] != nil {
+                        fairplayCertUrl = itemMap["certificateUrl"] as? String
+                    }
+                }
+            }
+        }
+        
+        // Build new configuration
+        do {
+            let playerConfig: JWPlayerConfiguration
+            
+            if forceLegacyConfig {
+                playerConfig = try getPlayerConfiguration(config: config)
+            } else {
+                guard let data = try? JSONSerialization.data(withJSONObject: config, options: .prettyPrinted),
+                      let jwConfig = try? JWJSONParser.config(from: data) else {
+                    print("Failed to parse config - falling back to recreation")
+                    completePlayerRecreation(config: config)
+                    return
+                }
+                playerConfig = jwConfig
+            }
+            
+            // Update stored config
+            currentConfig = config
+            
+            // Reconfigure existing player (this is the key optimization!)
+            playerViewController.player.configurePlayer(with: playerConfig)
+            
+            // Setup playlist item callback if needed
+            if playlistItemCallback {
+                setupPlaylistItemCallback()
+            }
+            
+            // Fullscreen state is automatically preserved by the view controller
+            // No need to manually restore it
+            print("Player reconfigured successfully (fullscreen: \(wasFullscreen))")
+            
+            // Clear the reconfiguration flag after a delay to ensure SDK completes initialization
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let self = self else { return }
+                self.isRecreatingPlayer = false
+                
+                // If there's a queued config change, process it now
+                if let queuedConfig = self.pendingPlayerConfig {
+                    print("Processing queued config change after reconfiguration")
+                    self.pendingPlayerConfig = nil
+                    self.recreatePlayerWithConfig(queuedConfig)
+                }
+            }
+            
+            // Optionally restart playback if it was playing
+            // (Usually handled by autostart in config)
+            
+        } catch {
+            print("Error during reconfiguration: \(error) - falling back to recreation")
+            isRecreatingPlayer = false  // Clear flag before fallback
+            completePlayerRecreation(config: config)
+        }
+    }
+    
+    /// Performs full player recreation (destroy + create).
+    /// This is the expensive path and should only be used when truly necessary.
+    private func completePlayerRecreation(config: [String: Any]) {
+        // Ensure we're on the main thread
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.completePlayerRecreation(config: config)
+            }
+            return
+        }
+        
+        // Set flag to prevent re-entrant calls
+        isRecreatingPlayer = true
         
         // 1. Stop current playback safely
         if let playerView = playerView {
@@ -391,12 +623,26 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             }
         }
 
-        // 2. Reset player state
+        // 2. Destroy current player
         dismissPlayerViewController()
         removePlayerView()
 
-        // 3. Set new config
+        // 3. Create new player with new config
         setNewConfig(config: config)
+        
+        // 4. Clear the recreation flag after a delay to ensure setup completes
+        // The iOS SDK needs time to finish initialization
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            self.isRecreatingPlayer = false
+            
+            // If there's a queued config change, process it now
+            if let queuedConfig = self.pendingPlayerConfig {
+                print("Processing queued config change")
+                self.pendingPlayerConfig = nil
+                self.recreatePlayerWithConfig(queuedConfig)
+            }
+        }
     }
 
     func setNewConfig(config: [String : Any]) {
@@ -436,7 +682,6 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             contentUUID = config["contentUUID"] as? String
             
             if forceLegacyConfig == true {
-
                 // Dangerous: check playlist for processSpcUrl / fairplayCertUrl in playlist
                 // Only checks first playlist item as multi-item DRM playlists are ill advised
                 if let playlist = config["playlist"] as? [AnyObject] {
@@ -450,7 +695,6 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                         }
                     }
                 }
-            } else {
             }
 
             do {
@@ -1263,26 +1507,30 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     func appIdentifierForURL(_ url: URL, completionHandler handler: @escaping (Data?) -> Void) {
         guard let fairplayCertUrlString = fairplayCertUrl, let finalUrl = URL(string: fairplayCertUrlString) else {
+            handler(nil)
             return
         }
         
         let request = URLRequest(url: finalUrl)
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                print("DRM cert request error - \(error.localizedDescription)")
+                print("Error fetching FairPlay certificate: \(error.localizedDescription)")
+                handler(nil)
+                return
             }
+            
             handler(data)
         }
         task.resume()
     }
 
     func contentKeyWithSPCData(_ spcData: Data, completionHandler handler: @escaping (Data?, Date?, String?) -> Void) {
-        if processSpcUrl == nil {
+        guard let processSpcUrlString = processSpcUrl else {
+            handler(nil, nil, nil)
             return
         }
 
-        guard let processSpcUrl = URL(string: processSpcUrl) else {
-            print("Invalid processSpcUrl")
+        guard let processSpcUrl = URL(string: processSpcUrlString) else {
             handler(nil, nil, nil)
             return
         }
@@ -1293,13 +1541,22 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         ckcRequest.addValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
 
         URLSession.shared.dataTask(with: ckcRequest) { (data, response, error) in
-            if let httpResponse = response as? HTTPURLResponse, (error != nil || httpResponse.statusCode != 200) {
-                print("DRM ckc request error - %@", error?.localizedDescription ?? "Unknown error")
+            if let error = error {
+                print("Error fetching FairPlay license: \(error.localizedDescription)")
                 handler(nil, nil, nil)
                 return
             }
 
-            handler(data, nil, "application/octet-stream")
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                handler(nil, nil, nil)
+                return
+            }
+
+            if let data = data {
+                handler(data, nil, "application/octet-stream")
+            } else {
+                handler(nil, nil, nil)
+            }
         }.resume()
     }
 
@@ -1326,7 +1583,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         if let config = pendingPlayerConfig {
             pendingPlayerConfig = nil
             DispatchQueue.main.async { [weak self] in
-                self?.completePlayerReconfiguration(config: config)
+                self?.proceedWithConfigChange(config: config)
             }
         }
     }

@@ -2,7 +2,7 @@
 
 [![Version](/badges/version.svg)](https://github.com/jwplayer/jwplayer-react-native) [![NPM version](https://img.shields.io/npm/v/%40jwplayer%2Fjwplayer-react-native)](https://www.npmjs.com/package/@jwplayer/jwplayer-react-native) [![License](/badges/license.svg)](/LICENSE)
 
-⚠️ This **README** is for `jwplayer-react-native` version `1.0.0` and higher, for previous versions from the original author, [Chaim Paneth](https://github.com/chaimPaneth) via [Orthodox Union](https://www.ou.org/), see [react-native-jw-media-player](https://github.com/chaimPaneth/react-native-jw-media-player). Beginning with version `0.2.0`, this library uses [JWP's `JWPlayerKit ` (iOS)]((https://developer.jwplayer.com/jwplayer/docs/ios-get-started)) and [SDK 4 (Android)]((https://developer.jwplayer.com/jwplayer/docs/android-get-started)).
+⚠️ This **README** is for `jwplayer-react-native` version `1.0.0` and higher, for previous versions from the original author, [Chaim Paneth](https://github.com/chaimPaneth) via [Orthodox Union](https://www.ou.org/), see [react-native-jw-media-player](https://github.com/chaimPaneth/react-native-jw-media-player). Beginning with version `0.2.0`, this library uses [JWX's `JWPlayerKit ` (iOS)]((https://developer.jwplayer.com/jwplayer/docs/ios-get-started)) and [SDK 4 (Android)]((https://developer.jwplayer.com/jwplayer/docs/android-get-started)).
 
 <br />
 
@@ -10,7 +10,7 @@
 
 <br />
 
-The `jwplayer-react-native` library is a bridge that enables using the native JWP Android and iOS SDKs in React Native applications.
+The `jwplayer-react-native` library is a bridge that enables using the native JWX Android and iOS SDKs in React Native applications.
 
 <img width="200" alt="sample" src="./images/1.png"> <img width="200" alt="sample" src="./images/2.png"> <img width="200" alt="sample" src="./images/3.png">
 
@@ -19,8 +19,8 @@ The `jwplayer-react-native` library is a bridge that enables using the native JW
 ## Prerequisites
 
 Before installing and using the library, you need the following items:
-- JWP [Account](https://jwplayer.com/pricing/)
-- JWP License Key ([Android](https://docs.jwplayer.com/players/docs/android-overview#requirements) | [iOS](https://docs.jwplayer.com/players/docs/ios-overview#requirements))
+- JWX [Account](https://jwplayer.com/pricing/)
+- JWX License Key ([Android](https://docs.jwplayer.com/players/docs/android-overview#requirements) | [iOS](https://docs.jwplayer.com/players/docs/ios-overview#requirements))
 - [React Native App](https://reactnative.dev/docs/getting-started)
 - Package Manager ([npm](https://nodejs.org/en/download) | [yarn](https://yarnpkg.com/getting-started/install) )
 
@@ -38,7 +38,7 @@ Follow these steps to add the library to your Android project:
 
    yarn: `yarn add @jwplayer/jwplayer-react-native`
 
-2. In **android/build.gradle**, add the JWP Maven repository inside the `allprojects` block.
+2. In **android/build.gradle**, add the JWX Maven repository inside the `allprojects` block.
 
    ```groovy
    allprojects {
@@ -49,7 +49,7 @@ Follow these steps to add the library to your Android project:
            }
    ```
 
-For more details and guidance regarding configuration and requirements, see the [JWP Android SDK documentation](https://docs.jwplayer.com/players/docs/android-overview#requirements).
+For more details and guidance regarding configuration and requirements, see the [JWX Android SDK documentation](https://docs.jwplayer.com/players/docs/android-overview#requirements).
 
 <br />
 
@@ -72,13 +72,13 @@ Follow these steps to add the library to your iOS project:
    pod install
    ```
 
-For more details and guidance regarding configuration and requirements, see the [JWP iOS SDK documentation](https://docs.jwplayer.com/players/docs/ios-overview#requirements).
+For more details and guidance regarding configuration and requirements, see the [JWX iOS SDK documentation](https://docs.jwplayer.com/players/docs/ios-overview#requirements).
 
 <br /><br />
 
 ## Usage
 
-The following example shows how you can enhance your React Native application by seamlessly integrating the multimedia playback functionalities of the JWP mobile SDKs.
+The following example shows how you can enhance your React Native application by seamlessly integrating the multimedia playback functionalities of the JWX mobile SDKs.
 
 Follow these steps to configure the media playback experience in your app:
 
@@ -190,7 +190,7 @@ Follow these steps to configure the media playback experience in your app:
   ```
 
 
-2. Define `config.license` with your Android or iOS JWP license key.
+2. Define `config.license` with your Android or iOS JWX license key.
 3. Define `config.playlist` with the media to play in the player.
 4. (Optional) Define the other values of the `config` prop.
 
@@ -222,7 +222,7 @@ Follow these steps to run the example project:
    pod install
    ```
 4. In Xcode,open **RNJWPlayer.xcworkspace**.
-5. In **App.js**, within the `config` prop, add your JWP SDK license key.
+5. In **App.js**, within the `config` prop, add your JWX SDK license key.
 6. Build and run the app for your preferred platform.
    ```
    yarn android
@@ -376,7 +376,7 @@ Suppose you are **not** using the background audio service on Android. In that c
 
 [Android](#android-casting) | [iOS](#ios-casting) | [DRM Casting](#drm-casting)
 
-JWP enables casting by default with a casting button.
+JWX enables casting by default with a casting button.
 
 <br />
 
@@ -442,7 +442,7 @@ Casting your DRM protected content requires some additional configuration and mo
 
 See our Android and iOS documentation about creating ([iOS](https://docs.jwplayer.com/players/docs/ios-create-a-custom-receiver) / [Android](https://docs.jwplayer.com/players/docs/android-create-a-custom-receiver)) and sending data ([iOS](https://docs.jwplayer.com/players/docs/ios-enable-casting-to-chromecast-devices#send-custom-data-to-a-custom-receiver) / [Android](https://docs.jwplayer.com/players/docs/android-enable-casting-to-chromecast-devices#send-custom-data-to-a-custom-receiver)) for more information.
 
-To send custom data to your receiver, use the `userInfo` prop and avoid using the reserved `sources` key, as the JWP SDK will append the DRM source information here for you to parse in your DRM enabled receiver. 
+To send custom data to your receiver, use the `userInfo` prop and avoid using the reserved `sources` key, as the JWX SDK will append the DRM source information here for you to parse in your DRM enabled receiver. 
 
 <br /><br />
 
@@ -460,11 +460,11 @@ Only Widevine is supported.
 
 Follow these steps to enable DRM:
 1. Set up your Android app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/android-play-drm-protected-content).
-2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
+2. Define `config.playlist` with the [JWX signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
 
 *❗️DO NOT sign and store your API secerets from your application.❗️*
 
-If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWP signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
+If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWX signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
 
 <br />
 
@@ -476,11 +476,11 @@ The below is currently not fully supported by the iOS SDK, so please refer to `E
 
 > Follow these steps to enable DRM:
 > 1. Set up your iOS app for [DRM playback](https://developer.jwplayer.com/jwplayer/docs/ios-play-drm-protected-content).
-> 2. Define `config.playlist` with the [JWP signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
+> 2. Define `config.playlist` with the [JWX signed URL](https://docs.jwplayer.com/platform/docs/protection-studio-drm-generate-a-signed-content-url-for-drm-playback) of the media to play in the player.
 >
 > *❗️DO NOT sign and store your API secerets from your application.❗️*
 > 
-If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWP signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
+If you use a different provider for DRM or this does not work for your use case, conforming to a similiar format as a JWX signed URL response is optimal, such as adding the `drm` field to the `sources` for a playlist item).
 
 <br /><br />
 
@@ -508,7 +508,7 @@ If you use a different provider for DRM or this does not work for your use case,
 
 #### iOS PiP
 
-1. Read and understand the requirements for PiP in the [iOS SDK](https://docs.jwplayer.com/players/docs/ios-invoke-picture-in-picture-playback). PiP mode is enabled by JWP for the `PlayerViewController`.
+1. Read and understand the requirements for PiP in the [iOS SDK](https://docs.jwplayer.com/players/docs/ios-invoke-picture-in-picture-playback). PiP mode is enabled by JWX for the `PlayerViewController`.
 2. (viewOnly:true only) Set the `pipEnabled` prop to `true`.
 3. (viewOnly:true only) Call `togglePIP()` to enable or disable PiP.
 4. Ensure [category](/docs//legacy_readme.md#audiosessioncategory) and/or [categoryOptions](/docs//legacy_readme.md#audiosessioncategoryoptions) prop(s) are set to define and configure your media. This is required to setup the audio session. If `category` is not defined but `pipEnabled` is set true, we default to the standard `playback` category to avoid crashing.  
@@ -522,7 +522,7 @@ If you use a different provider for DRM or this does not work for your use case,
 #### Android Styling
 The `styling` prop will not work with Android when using the modern configuration system. Android styling should be handled through XML resource overrides (see below).
 
-Android styling is best handled through overring JWP IDs in your apps resources files. See the documentation [here](https://docs.jwplayer.com/players/docs/android-styling-guide). 
+Android styling is best handled through overring JWX IDs in your apps resources files. See the documentation [here](https://docs.jwplayer.com/players/docs/android-styling-guide). 
 
 A sample of overring a color via XML can be seen in this [colors file](Example/android/app/src/main/res/values/colors.xml). The color specified here is the default, but if you wish to change it, the color will be updated on the player.
 

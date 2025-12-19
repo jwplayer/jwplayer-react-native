@@ -48,6 +48,31 @@ Follow these steps to add the library to your Android project:
                url 'https://mvn.jwplayer.com/content/repositories/releases/'
            }
    ```
+If you are using EXPO, then an alternative way to the above
+so that you don't have to re-add it to android/build.grade every time you do:
+```npx expo prebuild --clean``
+
+Install expo-build-properties plugin:
+```npx expo install expo-build-properties```
+
+and then add to app.json
+```
+    "plugins": [
+      ... (your other plugins go here)
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraMavenRepos": [
+              {
+                "url": "https://mvn.jwplayer.com/content/repositories/releases/"
+              }
+            ]
+          }
+        }
+      ]
+    ],
+```
 
 For more details and guidance regarding configuration and requirements, see the [JWX Android SDK documentation](https://docs.jwplayer.com/players/docs/android-overview#requirements).
 

@@ -11,7 +11,7 @@ PODS:
   - hermes-engine (0.78.1):
     - hermes-engine/Pre-built (= 0.78.1)
   - hermes-engine/Pre-built (0.78.1)
-  - JWPlayerKit (4.23.2)
+  - JWPlayerKit (4.25.0)
   - Protobuf (3.29.5)
   - RCT-Folly (2024.11.18.00):
     - boost
@@ -1647,7 +1647,7 @@ PODS:
   - RNJWPlayer (1.2.0):
     - google-cast-sdk (= 4.8.3)
     - GoogleAds-IMA-iOS-SDK (= 3.22.1)
-    - JWPlayerKit (= 4.23.2)
+    - JWPlayerKit (= 4.25.0)
     - React-Core
   - RNScreens (4.10.0):
     - DoubleConversion
@@ -1968,7 +1968,7 @@ SPEC CHECKSUMS:
   google-cast-sdk: 1fb6724e94cc5ff23b359176e0cf6360586bb97a
   GoogleAds-IMA-iOS-SDK: 160c3616b8371b58016e30aaf441e71d6d9e8f7d
   hermes-engine: f493b0a600aed5dc06532141603688a30a5b2f61
-  JWPlayerKit: 717a9c905731a8a6d2da3d6618fd6ea61f39b3c6
+  JWPlayerKit: b79b4ed03a7a0a1d6be36abcbb33d7baab2bda59
   Protobuf: 164aea2ae380c3951abdc3e195220c01d17400e0
   RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: 082fbc90409015eac1366795a0b90f8b5cb28efe
@@ -2034,7 +2034,7 @@ SPEC CHECKSUMS:
   RNDeviceInfo: d863506092aef7e7af3a1c350c913d867d795047
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: 8b1080a6db0be82dbca18550d6212b885bfab6b2
-  RNJWPlayer: 01dfbcc0030d15f48e56d6a4ecc9db9bfe4143f0
+  RNJWPlayer: 605f766ab138ab17ffa014bab3efd1f437924807
   RNScreens: 790123c4a28783d80a342ce42e8c7381bed62db1
   RNVectorIcons: bd818296a51dc2bb8c3bd97a3ca399df1afe216d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748

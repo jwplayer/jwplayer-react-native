@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import JWPlayer, {JWPlayerConfig} from '@jwplayer/jwplayer-react-native';
 import PlayerContainer from '../components/PlayerContainer';
+import {IOS_API_KEY, ANDROID_API_KEY} from '@env';
 
 /**
  * TypeScript Example Screen
@@ -23,8 +24,8 @@ import PlayerContainer from '../components/PlayerContainer';
 
 const licenseKey =
   Platform.OS === 'android'
-    ? 'YOUR_ANDROID_LICENSE_KEY'
-    : 'YOUR_IOS_LICENSE_KEY';
+    ? ANDROID_API_KEY || ''
+    : IOS_API_KEY || '';
 // Example 1: Basic video with IMA DAI (VOD)
 const basicDAIConfig: JWPlayerConfig = {
   license: licenseKey,

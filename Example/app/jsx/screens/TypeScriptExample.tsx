@@ -9,8 +9,10 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import JWPlayer, {JWPlayerConfig} from '@jwplayer/jwplayer-react-native';
 import PlayerContainer from '../components/PlayerContainer';
+import {IOS_API_KEY, ANDROID_API_KEY} from '@env';
 
 /**
  * TypeScript Example Screen
@@ -23,8 +25,8 @@ import PlayerContainer from '../components/PlayerContainer';
 
 const licenseKey =
   Platform.OS === 'android'
-    ? 'YOUR_ANDROID_LICENSE_KEY'
-    : 'YOUR_IOS_LICENSE_KEY';
+    ? ANDROID_API_KEY || ''
+    : IOS_API_KEY || '';
 // Example 1: Basic video with IMA DAI (VOD)
 const basicDAIConfig: JWPlayerConfig = {
   license: licenseKey,
@@ -172,6 +174,7 @@ const TypeScriptExample: React.FC = () => {
     null,
   );
   const [configName, setConfigName] = useState<string>('');
+  const insets = useSafeAreaInsets();
 
   const onTime = (_e: any) => {
     // const { position, duration } = _e.nativeEvent;
@@ -208,7 +211,12 @@ const TypeScriptExample: React.FC = () => {
   // Show config selection screen if no config is selected
   if (!selectedConfig) {
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        }}>
         <View style={styles.selectionContainer}>
           <Text style={styles.title}>Select a Configuration to Test</Text>
           <Text style={styles.subtitle}>
@@ -311,7 +319,7 @@ const TypeScriptExample: React.FC = () => {
         text={`TypeScript Example - ${configName}`}
       />
 
-      <View style={styles.infoBar}>
+      <View style={[styles.infoBar, {paddingBottom: insets.bottom + 15}]}>
         <View style={styles.infoContent}>
           <Text style={styles.infoText}>Configuration: {configName}</Text>
           <Text style={styles.infoSubtext}>

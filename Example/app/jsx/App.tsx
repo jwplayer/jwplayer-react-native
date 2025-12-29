@@ -44,6 +44,7 @@ export default class App extends Component {
             <Stack.Screen name="Sources" component={SourcesExample} />
             <Stack.Screen name="Youtube" component={YoutubeExample} />
             <Stack.Screen name="Global Player" component={GlobalPlayerExample} />
+            <Stack.Screen name="TypeScript Example" component={TypeScriptExample} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>

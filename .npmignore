@@ -1,6 +1,7 @@
 Example
 images
 android/build
+android/.gradle
 android/.settings
 android/.classpath
 android/.project

@@ -86,6 +86,16 @@ android {
         versionName "1.0"
         multiDexEnabled true
     }
+
+    // Enable desugaring when IMA is enabled (required by library dependencies)
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        if (rootProject.ext.has("RNJWPlayerUseGoogleIMA") && rootProject.ext.RNJWPlayerUseGoogleIMA) {
+            coreLibraryDesugaringEnabled true
+        }
+    }
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -120,6 +130,11 @@ dependencies {
 
     implementation "androidx.core:core-splashscreen:1.0.1"
     implementation 'com.google.android.gms:play-services-cast-framework:21.3.0'
+
+    // Core library desugaring (required when IMA is enabled)
+    if (rootProject.ext.has("RNJWPlayerUseGoogleIMA") && rootProject.ext.RNJWPlayerUseGoogleIMA) {
+        coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+    }
 }
 
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")

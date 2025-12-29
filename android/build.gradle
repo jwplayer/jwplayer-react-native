@@ -39,6 +39,15 @@ android {
         }
     }
 
+    // Enable desugaring conditionally when IMA is used (required for IMA SDK 3.37.0+)
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        if (useIMA) {
+            coreLibraryDesugaringEnabled true
+        }
+    }
+
     buildTypes {
         debug {
             // Set the build config fields for the debug build type
@@ -73,7 +82,7 @@ allprojects {
     }
 }
 
-def jwPlayerVersion = "4.21.1"
+def jwPlayerVersion = "4.24.0"
 def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK > 4.16.0
 def media3ExoVersion = "1.4.1"
 
@@ -91,6 +100,10 @@ dependencies {
     if (useIMA) {
         implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
         implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+        // Core library desugaring (required for IMA SDK 3.37.0+)
+        // Using version 2.1.5 as recommended by IMA SDK documentation:
+        // https://developers.google.com/interactive-media-ads/docs/sdks/android/client-side/get-started
+        coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
     }
 
     // Cast dependencies

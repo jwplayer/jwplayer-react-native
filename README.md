@@ -314,9 +314,40 @@ The library supports two configuration modes:
 
 #### Android Advertising
 
-Follow this step to set up advertising with IMA or DAI:
+Follow these steps to set up advertising with IMA or DAI:
 
-1. In the **app/build.gradle** `ext{}`, add `RNJWPlayerUseGoogleIMA = true`. This setting will add the following dependencies: `com.google.ads.interactivemedia.v3:interactivemedia:3.31.0` and `com.google.android.gms:play-services-ads-identifier:18.0.1`.
+1. In the **android/build.gradle** `ext{}` block, add `RNJWPlayerUseGoogleIMA = true`. 
+   
+   ```groovy
+   buildscript {
+       ext {
+           RNJWPlayerUseGoogleIMA = true
+       }
+   }
+   ```
+   
+   This setting will add the following dependencies: `com.google.ads.interactivemedia.v3:interactivemedia:3.36.0` and `com.google.android.gms:play-services-ads-identifier:18.0.1`.
+
+2. **⚠️ REQUIRED: Enable desugaring in your app** (required for IMA SDK 3.37.0+):
+
+   In your **android/app/build.gradle**, add the following configuration:
+
+   ```groovy
+   android {
+       compileOptions {
+           sourceCompatibility JavaVersion.VERSION_1_8
+           targetCompatibility JavaVersion.VERSION_1_8
+           coreLibraryDesugaringEnabled true
+       }
+   }
+
+   dependencies {
+       // ... your other dependencies
+       coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+   }
+   ```
+
+> **Important**: The IMA SDK 3.37.0+ requires desugaring due to its transitive dependencies. While the `jwplayer-react-native` library configures desugaring internally, **Android requires that your consuming app also explicitly enable desugaring**. If you skip step 2, you will get build errors like "Dependency requires core library desugaring to be enabled". This is an Android Gradle requirement where both the library and the consuming app must opt-in to desugaring.
 
 <br />
 

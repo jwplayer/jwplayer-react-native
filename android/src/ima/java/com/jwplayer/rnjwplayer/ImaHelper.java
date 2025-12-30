@@ -21,13 +21,19 @@ import java.util.Objects;
 public class ImaHelper {
     
     public static AdvertisingConfig configureImaOrDai(ReadableMap ads, List<AdBreak> adSchedule) {
-        // adClient type was already validated and normalized by caller
-        String adClientType = ads.getString("adClient");
+        cd /Users/jmilham/source/sdk/react/jwplayer-react-native/Example && yarn remove @jwplayer/jwplayer-react-native && yarn add file:../ 2>&1 | tail -20        // Check both "client" (JWPlayer JSON format) and "adClient" (RN wrapper format)
+        String adClientType = null;
+        if (ads.hasKey("adClient")) {
+            adClientType = ads.getString("adClient");
+        } else if (ads.hasKey("client")) {
+            adClientType = ads.getString("client");
+        }
+        
         if (adClientType != null) {
             adClientType = adClientType.toLowerCase();
         }
         
-        if ("ima".equals(adClientType)) {
+        if ("ima".equals(adClientType) || "googima".equals(adClientType)) {
             return configureImaAdvertising(ads, adSchedule);
         } else if ("ima_dai".equals(adClientType)) {
             return configureImaDaiAdvertising(ads);

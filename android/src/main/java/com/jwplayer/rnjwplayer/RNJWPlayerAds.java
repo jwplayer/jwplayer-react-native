@@ -19,14 +19,17 @@ public class RNJWPlayerAds {
             return null;
         }
 
-        // Validate adClient exists and is not null
-        if (!ads.hasKey("adClient")) {
-            throw new IllegalArgumentException("Missing required 'adClient' field in advertising config");
+        // Check both "client" (JWPlayer JSON format) and "adClient" (RN wrapper format)
+        String adClientType = null;
+        if (ads.hasKey("adClient")) {
+            adClientType = ads.getString("adClient");
+        } else if (ads.hasKey("client")) {
+            adClientType = ads.getString("client");
         }
         
-        String adClientType = ads.getString("adClient");
+        // Validate client type exists and is not null
         if (adClientType == null) {
-            throw new IllegalArgumentException("'adClient' field cannot be null");
+            throw new IllegalArgumentException("Missing required 'adClient' or 'client' field in advertising config");
         }
         
         // Normalize to lowercase for case-insensitive matching
@@ -34,11 +37,20 @@ public class RNJWPlayerAds {
 
         switch (adClientType) {
             case "ima":
+            case "googima":  // Support legacy "googima" format
             case "ima_dai":
                 // Delegate to ImaHelper (implementation selected by Gradle)
                 // Note: Only parse adSchedule for regular IMA, not for DAI (ads are embedded in stream)
-                List<AdBreak> adSchedule = "ima".equals(adClientType) ? getAdSchedule(ads) : new ArrayList<>();
-                return ImaHelper.configureImaOrDai(ads, adSchedule);
+                List<AdBreak> adSchedule = ("ima".equals(adClientType) || "googima".equals(adClientType)) 
+                    ? getAdSchedule(ads) 
+                    : new ArrayList<>();
+                try {
+                    return ImaHelper.configureImaOrDai(ads, adSchedule);
+                } catch (RuntimeException e) {
+                    // IMA not enabled - log error and return null (graceful degradation)
+                    android.util.Log.e("RNJWPlayerAds", "Failed to configure IMA ads: " + e.getMessage());
+                    return null;
+                }
             default: // Defaulting to VAST
                 return configureVastAdvertising(ads);
         }

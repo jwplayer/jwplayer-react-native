@@ -1035,27 +1035,96 @@ public class RNJWPlayerView extends RelativeLayout implements
     }
 
     /**
-     * Validates that IMA configuration is not used when IMA is disabled.
-     * Called before JsonHelper.parseConfigJson to prevent crashes.
+     * Checks for IMA configuration when IMA is disabled and logs a warning.
+     * 
+     * @param obj The JSONObject to check (for JSON parser path)
+     * @param prop The ReadableMap to check (for legacy builder path)
      */
-    private void validateImaConfig(ReadableMap prop) throws Exception {
-        if (!BuildConfig.USE_IMA && prop.hasKey("advertising")) {
+    private void checkAndWarnImaConfig(JSONObject obj, ReadableMap prop) {
+        if (BuildConfig.USE_IMA) {
+            return; // IMA is enabled, no warning needed
+        }
+        
+        String clientValue = getClientValue(obj, prop);
+        
+        if (clientValue != null && isImaClient(clientValue)) {
+            String warningMessage = "⚠️ Google IMA advertising is not enabled. " +
+                "To use IMA ads, add 'RNJWPlayerUseGoogleIMA = true' to your app/build.gradle ext {} block. " +
+                "Current client: " + clientValue + ". Player will load without ads.";
+            Log.w(TAG, warningMessage);
+        }
+    }
+    
+    /**
+     * Extracts the client value from either JSONObject or ReadableMap
+     */
+    private String getClientValue(JSONObject obj, ReadableMap prop) {
+        // Check JSON object (for JSON parser path)
+        if (obj != null && obj.has("advertising")) {
+            try {
+                JSONObject advertising = obj.getJSONObject("advertising");
+                if (advertising.has("client")) {
+                    return advertising.getString("client");
+                } else if (advertising.has("adClient")) {
+                    return advertising.getString("adClient");
+                }
+            } catch (Exception e) {
+                // Silently continue if we can't parse
+            }
+        }
+        
+        // Check ReadableMap (for legacy builder path)
+        if (prop != null && prop.hasKey("advertising")) {
             ReadableMap advertising = prop.getMap("advertising");
-            if (advertising != null && advertising.hasKey("adClient")) {
-                String adClient = advertising.getString("adClient");
-                // Check adClient is not null before calling equalsIgnoreCase
-                if (adClient != null && 
-                    ("ima".equalsIgnoreCase(adClient) || "ima_dai".equalsIgnoreCase(adClient) ||
-                     "GoogleIMA".equalsIgnoreCase(adClient) || "GoogleIMADAI".equalsIgnoreCase(adClient) ||
-                     "IMA_DAI".equalsIgnoreCase(adClient))) {
-                    throw new Exception(
-                        "Google IMA advertising is not enabled. " +
-                        "To use IMA ads, add 'RNJWPlayerUseGoogleIMA = true' to your app/build.gradle ext {} block. " +
-                        "Current adClient: " + adClient
-                    );
+            if (advertising != null) {
+                if (advertising.hasKey("client")) {
+                    return advertising.getString("client");
+                } else if (advertising.hasKey("adClient")) {
+                    return advertising.getString("adClient");
                 }
             }
         }
+        
+        return null;
+    }
+    
+    /**
+     * Checks if a client value indicates IMA usage
+     */
+    private boolean isImaClient(String clientValue) {
+        if (clientValue == null) {
+            return false;
+        }
+        return "ima".equalsIgnoreCase(clientValue) || 
+               "ima_dai".equalsIgnoreCase(clientValue) ||
+               "GoogleIMA".equalsIgnoreCase(clientValue) || 
+               "GoogleIMADAI".equalsIgnoreCase(clientValue) ||
+               "IMA_DAI".equalsIgnoreCase(clientValue) || 
+               "googima".equalsIgnoreCase(clientValue);
+    }
+    
+    /**
+     * Checks if advertising config contains IMA when IMA is disabled.
+     * Used to determine if we should skip configureAdvertising() in legacy builder.
+     */
+    private boolean shouldSkipAdvertising(ReadableMap prop) {
+        if (BuildConfig.USE_IMA || !prop.hasKey("advertising")) {
+            return false;
+        }
+        
+        ReadableMap advertising = prop.getMap("advertising");
+        if (advertising == null) {
+            return false;
+        }
+        
+        String clientValue = null;
+        if (advertising.hasKey("client")) {
+            clientValue = advertising.getString("client");
+        } else if (advertising.hasKey("adClient")) {
+            clientValue = advertising.getString("adClient");
+        }
+        
+        return isImaClient(clientValue);
     }
 
     /**
@@ -1075,18 +1144,15 @@ public class RNJWPlayerView extends RelativeLayout implements
             try {
                 obj = MapUtil.toJSONObject(prop);
                 
-                // CRITICAL: Validate IMA config before calling JsonHelper
-                validateImaConfig(prop);
+                // Check for IMA config and log warning if IMA is disabled
+                // Don't modify JSON - let parser handle it internally
+                checkAndWarnImaConfig(obj, null);
                 
                 jwConfig = JsonHelper.parseConfigJson(obj);
                 isJwConfig = true;
                 return jwConfig;  // Return directly if valid JW config
             } catch (Exception ex) {
-                // If it's an IMA config error, rethrow it
-                if (ex.getMessage() != null && ex.getMessage().contains("IMA advertising is not enabled")) {
-                    throw new RuntimeException(ex);
-                }
-                Log.d(TAG, "Not a JW config format, using legacy builder");
+                Log.d(TAG, "Not a JW config format, using legacy builder: " + ex.getMessage());
                 isJwConfig = false;
             }
         }
@@ -1095,7 +1161,13 @@ public class RNJWPlayerView extends RelativeLayout implements
         configurePlaylist(configBuilder, prop);
         configureBasicSettings(configBuilder, prop);
         configureStyling(configBuilder, prop);
-        configureAdvertising(configBuilder, prop);
+        
+        // Check and warn about IMA config, then conditionally configure advertising
+        checkAndWarnImaConfig(null, prop);
+        if (!shouldSkipAdvertising(prop)) {
+            configureAdvertising(configBuilder, prop);
+        }
+        
         configureUI(configBuilder, prop);
         
         return configBuilder.build();
@@ -1274,6 +1346,11 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (!forceLegacy) {
             try {
                 obj = MapUtil.toJSONObject(prop);
+                
+                // Check for IMA config and log warning if IMA is disabled
+                // Don't modify JSON - let parser handle it internally
+                checkAndWarnImaConfig(obj, null);
+                
                 jwConfig = JsonHelper.parseConfigJson(obj);
                 isJwConfig = true;
             } catch (Exception ex) {
@@ -1286,7 +1363,13 @@ public class RNJWPlayerView extends RelativeLayout implements
             configurePlaylist(configBuilder, prop);
             configureBasicSettings(configBuilder, prop);
             configureStyling(configBuilder, prop);
-            configureAdvertising(configBuilder, prop);
+            
+            // Check and warn about IMA config, then conditionally configure advertising
+            checkAndWarnImaConfig(null, prop);
+            if (!shouldSkipAdvertising(prop)) {
+                configureAdvertising(configBuilder, prop);
+            }
+            
             configureUI(configBuilder, prop);
         }
 

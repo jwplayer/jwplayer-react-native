@@ -1035,6 +1035,28 @@ public class RNJWPlayerView extends RelativeLayout implements
     }
 
     /**
+     * Validates that IMA configuration is not used when IMA is disabled.
+     * Called before JsonHelper.parseConfigJson to prevent crashes.
+     */
+    private void validateImaConfig(ReadableMap prop) throws Exception {
+        if (!BuildConfig.USE_IMA && prop.hasKey("advertising")) {
+            ReadableMap advertising = prop.getMap("advertising");
+            if (advertising != null && advertising.hasKey("adClient")) {
+                String adClient = advertising.getString("adClient");
+                if ("ima".equalsIgnoreCase(adClient) || "ima_dai".equalsIgnoreCase(adClient) ||
+                    "GoogleIMA".equalsIgnoreCase(adClient) || "GoogleIMADAI".equalsIgnoreCase(adClient) ||
+                    "IMA_DAI".equalsIgnoreCase(adClient)) {
+                    throw new Exception(
+                        "Google IMA advertising is not enabled. " +
+                        "To use IMA ads, add 'RNJWPlayerUseGoogleIMA = true' to your app/build.gradle ext {} block. " +
+                        "Current adClient: " + adClient
+                    );
+                }
+            }
+        }
+    }
+
+    /**
      * Builds a PlayerConfig from React Native props, preserving relevant old config values.
      * This ensures smooth transitions when reconfiguring the player.
      */
@@ -1050,10 +1072,18 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (!forceLegacy) {
             try {
                 obj = MapUtil.toJSONObject(prop);
+                
+                // CRITICAL: Validate IMA config before calling JsonHelper
+                validateImaConfig(prop);
+                
                 jwConfig = JsonHelper.parseConfigJson(obj);
                 isJwConfig = true;
                 return jwConfig;  // Return directly if valid JW config
             } catch (Exception ex) {
+                // If it's an IMA config error, rethrow it
+                if (ex.getMessage() != null && ex.getMessage().contains("IMA advertising is not enabled")) {
+                    throw new RuntimeException(ex);
+                }
                 Log.d(TAG, "Not a JW config format, using legacy builder");
                 isJwConfig = false;
             }

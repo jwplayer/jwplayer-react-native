@@ -65,6 +65,19 @@ android {
     lintOptions {
         warning 'InvalidPackage'
     }
+    
+    sourceSets {
+        main {
+            java {
+                srcDirs = ['src/main/java']
+                if (useIMA) {
+                    srcDirs += ['src/ima/java']
+                } else {
+                    srcDirs += ['src/noima/java']
+                }
+            }
+        }
+    }
 }
 
 allprojects {
@@ -90,14 +103,14 @@ dependencies {
     implementation 'com.facebook.react:react-native:+'
     implementation 'com.google.code.gson:gson:2.9.0'
 
-    // JWPlayer SDK
+    // JWPlayer SDK Core (always required)
     implementation "com.jwplayer:jwplayer-core:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
     implementation "com.jwplayer:jwplayer-common:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
-    implementation "com.jwplayer:jwplayer-ima:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
     implementation "com.jwplayer:jwplayer-chromecast:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
-
-    // Ad dependencies
+    
+    // Optional: IMA Ads support  
     if (useIMA) {
+        implementation "com.jwplayer:jwplayer-ima:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
         implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
         implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
         // Core library desugaring (required for IMA SDK 3.37.0+)

@@ -21,18 +21,19 @@ import java.util.Objects;
 public class ImaHelper {
     
     public static AdvertisingConfig configureImaOrDai(ReadableMap ads, List<AdBreak> adSchedule) {
+        // adClient type was already validated and normalized by caller
         String adClientType = ads.getString("adClient");
-        
-        try {
-            if ("ima".equals(adClientType)) {
-                return configureImaAdvertising(ads, adSchedule);
-            } else if ("ima_dai".equals(adClientType)) {
-                return configureImaDaiAdvertising(ads);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (adClientType != null) {
+            adClientType = adClientType.toLowerCase();
         }
         
+        if ("ima".equals(adClientType)) {
+            return configureImaAdvertising(ads, adSchedule);
+        } else if ("ima_dai".equals(adClientType)) {
+            return configureImaDaiAdvertising(ads);
+        }
+        
+        // Should never reach here due to validation in RNJWPlayerAds
         throw new RuntimeException("Unknown IMA ad client type: " + adClientType);
     }
     
@@ -66,6 +67,14 @@ public class ImaHelper {
         String cmsId = imaDaiSettingsMap.hasKey("cmsId") ? imaDaiSettingsMap.getString("cmsId") : null;
         String assetKey = imaDaiSettingsMap.hasKey("assetKey") ? imaDaiSettingsMap.getString("assetKey") : null;
         String apiKey = imaDaiSettingsMap.hasKey("apiKey") ? imaDaiSettingsMap.getString("apiKey") : null;
+
+        // Validate we have either assetKey OR (videoId + cmsId)
+        if (assetKey == null && (videoId == null || cmsId == null)) {
+            throw new IllegalArgumentException(
+                "ImaDaiSettings requires either 'assetKey' OR both 'videoId' and 'cmsId'. " +
+                "Provided: assetKey=" + assetKey + ", videoId=" + videoId + ", cmsId=" + cmsId
+            );
+        }
 
         Map<String, String> adTagParameters = null;
         if (imaDaiSettingsMap.hasKey("adTagParameters") && imaDaiSettingsMap.getMap("adTagParameters") != null) {

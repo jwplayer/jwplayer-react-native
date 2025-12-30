@@ -19,12 +19,25 @@ public class RNJWPlayerAds {
             return null;
         }
 
+        // Validate adClient exists and is not null
+        if (!ads.hasKey("adClient")) {
+            throw new IllegalArgumentException("Missing required 'adClient' field in advertising config");
+        }
+        
         String adClientType = ads.getString("adClient");
+        if (adClientType == null) {
+            throw new IllegalArgumentException("'adClient' field cannot be null");
+        }
+        
+        // Normalize to lowercase for case-insensitive matching
+        adClientType = adClientType.toLowerCase();
+
         switch (adClientType) {
             case "ima":
             case "ima_dai":
                 // Delegate to ImaHelper (implementation selected by Gradle)
-                List<AdBreak> adSchedule = getAdSchedule(ads);
+                // Note: Only parse adSchedule for regular IMA, not for DAI (ads are embedded in stream)
+                List<AdBreak> adSchedule = "ima".equals(adClientType) ? getAdSchedule(ads) : new ArrayList<>();
                 return ImaHelper.configureImaOrDai(ads, adSchedule);
             default: // Defaulting to VAST
                 return configureVastAdvertising(ads);
@@ -61,9 +74,23 @@ public class RNJWPlayerAds {
 
     private static List<AdBreak> getAdSchedule(ReadableMap ads) {
         List<AdBreak> adScheduleList = new ArrayList<>();
+        
+        // Check if adSchedule exists
+        if (!ads.hasKey("adSchedule")) {
+            return adScheduleList; // Return empty list
+        }
+        
         ReadableArray adSchedule = ads.getArray("adSchedule");
+        if (adSchedule == null) {
+            return adScheduleList; // Return empty list if null
+        }
+        
         for (int i = 0; i < adSchedule.size(); i++) {
             ReadableMap adBreakProp = adSchedule.getMap(i);
+            // Skip null entries in the adSchedule array
+            if (adBreakProp == null) {
+                continue;
+            }
             String offset = adBreakProp.hasKey("offset") ? adBreakProp.getString("offset") : "pre";
             if (adBreakProp.hasKey("tag")) {
                 AdBreak adBreak = new AdBreak.Builder()

@@ -1043,9 +1043,11 @@ public class RNJWPlayerView extends RelativeLayout implements
             ReadableMap advertising = prop.getMap("advertising");
             if (advertising != null && advertising.hasKey("adClient")) {
                 String adClient = advertising.getString("adClient");
-                if ("ima".equalsIgnoreCase(adClient) || "ima_dai".equalsIgnoreCase(adClient) ||
-                    "GoogleIMA".equalsIgnoreCase(adClient) || "GoogleIMADAI".equalsIgnoreCase(adClient) ||
-                    "IMA_DAI".equalsIgnoreCase(adClient)) {
+                // Check adClient is not null before calling equalsIgnoreCase
+                if (adClient != null && 
+                    ("ima".equalsIgnoreCase(adClient) || "ima_dai".equalsIgnoreCase(adClient) ||
+                     "GoogleIMA".equalsIgnoreCase(adClient) || "GoogleIMADAI".equalsIgnoreCase(adClient) ||
+                     "IMA_DAI".equalsIgnoreCase(adClient))) {
                     throw new Exception(
                         "Google IMA advertising is not enabled. " +
                         "To use IMA ads, add 'RNJWPlayerUseGoogleIMA = true' to your app/build.gradle ext {} block. " +

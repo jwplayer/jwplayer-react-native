@@ -1644,7 +1644,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNJWPlayer (1.3.0):
+  - RNJWPlayer (1.3.1):
     - google-cast-sdk (= 4.8.3)
     - GoogleAds-IMA-iOS-SDK (= 3.22.1)
     - JWPlayerKit (= 4.25.0)
@@ -2034,7 +2034,7 @@ SPEC CHECKSUMS:
   RNDeviceInfo: d863506092aef7e7af3a1c350c913d867d795047
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: 8b1080a6db0be82dbca18550d6212b885bfab6b2
-  RNJWPlayer: c963c9614b38baff35e1cddf0144189391015aa0
+  RNJWPlayer: 0ebffd500dfe32b3cf90b5b05873e5fcfd4f1d53
   RNScreens: 790123c4a28783d80a342ce42e8c7381bed62db1
   RNVectorIcons: bd818296a51dc2bb8c3bd97a3ca399df1afe216d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748

@@ -21,7 +21,6 @@ import java.util.Objects;
 public class ImaHelper {
     
     public static AdvertisingConfig configureImaOrDai(ReadableMap ads, List<AdBreak> adSchedule) {
-        cd /Users/jmilham/source/sdk/react/jwplayer-react-native/Example && yarn remove @jwplayer/jwplayer-react-native && yarn add file:../ 2>&1 | tail -20        // Check both "client" (JWPlayer JSON format) and "adClient" (RN wrapper format)
         String adClientType = null;
         if (ads.hasKey("adClient")) {
             adClientType = ads.getString("adClient");

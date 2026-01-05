@@ -243,6 +243,9 @@ public class RNJWPlayerView extends RelativeLayout implements
     // Add completion handler field
     PlaylistItemDecision itemUpdatePromise = null;
 
+    // Flag to prevent race conditions during player destruction
+    private volatile boolean isDestroying = false;
+
     private void doBindService() {
         if (mMediaServiceController != null) {
             if (!isBackgroundAudioServiceRunning()) {
@@ -380,7 +383,22 @@ public class RNJWPlayerView extends RelativeLayout implements
     // }
 
     public void destroyPlayer() {
-        if (mPlayer != null) {
+        if (mPlayer != null && !isDestroying) {
+            isDestroying = true;
+            
+            // Disable touch events immediately to prevent race conditions
+            if (mPlayerView != null) {
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(() -> {
+                    if (mPlayerView != null) {
+                        mPlayerView.setClickable(false);
+                        mPlayerView.setFocusable(false);
+                        mPlayerView.setEnabled(false);
+                        mPlayerView.setOnTouchListener(null);
+                    }
+                });
+            }
+            
             unRegisterReceiver();
 
             // If we are casting we need to break the cast session as there is no simple
@@ -480,6 +498,8 @@ public class RNJWPlayerView extends RelativeLayout implements
             audioManager = null;
 
             doUnbindService();
+            
+            isDestroying = false; // Reset flag for potential reuse
         }
     }
 

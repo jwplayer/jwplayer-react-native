@@ -1255,10 +1255,16 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func dismissPlayerViewController() {
-        if (playerViewController != nil) {
-            playerViewController.player.pause() // hack for stop not always stopping on unmount
-            playerViewController.player.stop()
-            playerViewController.enableLockScreenControls = false
+        guard playerViewController != nil else { return }
+        
+        // Ensure UI operations happen on main thread to prevent crashes
+        // when deinit is called from a background thread during unmount
+        let cleanup = { [self] in
+            guard let pvc = self.playerViewController else { return }
+            
+            pvc.player.pause() // hack for stop not always stopping on unmount
+            pvc.player.stop()
+            pvc.enableLockScreenControls = false
 
             // hack for stop not always stopping on unmount
             let configBuilder:JWPlayerConfigurationBuilder! = JWPlayerConfigurationBuilder()
@@ -1266,19 +1272,24 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             
             do {
                 let configuration: JWPlayerConfiguration = try configBuilder.build()
-                playerViewController.player.configurePlayer(with: configuration)
+                pvc.player.configurePlayer(with: configuration)
             } catch {
                 print(error)
             }
             
-
-            playerViewController.parentView = nil
-            playerViewController.setVisibility(.hidden, for:[.pictureInPictureButton])
-            playerViewController.view.removeFromSuperview()
-            playerViewController.removeFromParent()
-            playerViewController.willMove(toParent: nil)
-            playerViewController.removeDelegates()
-            playerViewController = nil
+            pvc.parentView = nil
+            pvc.setVisibility(.hidden, for:[.pictureInPictureButton])
+            pvc.view.removeFromSuperview()
+            pvc.removeFromParent()
+            pvc.willMove(toParent: nil)
+            pvc.removeDelegates()
+            self.playerViewController = nil
+        }
+        
+        if Thread.isMainThread {
+            cleanup()
+        } else {
+            DispatchQueue.main.sync(execute: cleanup)
         }
     }
 
@@ -1330,10 +1341,21 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func removePlayerView() {
-        if (playerView != nil) {
-            playerView.player.stop()
-            playerView.removeFromSuperview()
-            playerView = nil
+        guard playerView != nil else { return }
+        
+        // Ensure UI operations happen on main thread to prevent crashes
+        // when deinit is called from a background thread during unmount
+        let cleanup = { [self] in
+            guard let pv = self.playerView else { return }
+            pv.player.stop()
+            pv.removeFromSuperview()
+            self.playerView = nil
+        }
+        
+        if Thread.isMainThread {
+            cleanup()
+        } else {
+            DispatchQueue.main.sync(execute: cleanup)
         }
     }
 

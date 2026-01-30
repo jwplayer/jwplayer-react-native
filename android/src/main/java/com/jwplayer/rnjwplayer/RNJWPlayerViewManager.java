@@ -1,5 +1,7 @@
 package com.jwplayer.rnjwplayer;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.common.MapBuilder;
@@ -43,7 +45,14 @@ public class RNJWPlayerViewManager extends SimpleViewManager<RNJWPlayerView> {
     if (view == null || view.mPlayerView == null) {
       return;
     }
-    view.mPlayerView.getPlayer().setControls(controls);
+    // Add null check for getPlayer() to prevent crashes
+    try {
+      if (view.mPlayerView.getPlayer() != null) {
+        view.mPlayerView.getPlayer().setControls(controls);
+      }
+    } catch (Exception e) {
+      Log.w(TAG, "Error setting controls: " + e.getMessage());
+    }
   }
 
   /**
@@ -58,8 +67,15 @@ public class RNJWPlayerViewManager extends SimpleViewManager<RNJWPlayerView> {
     if (view == null || view.mPlayerView == null) {
       return;
     }
-    view.mPlayerView.getPlayer().stop();
-    view.setConfig(config);
+    // Add null check for getPlayer() to prevent crashes
+    try {
+      if (view.mPlayerView.getPlayer() != null) {
+        view.mPlayerView.getPlayer().stop();
+      }
+      view.setConfig(config);
+    } catch (Exception e) {
+      Log.w(TAG, "Error recreating player: " + e.getMessage());
+    }
   }
 
   public Map getExportedCustomBubblingEventTypeConstants() {

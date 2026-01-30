@@ -1,5 +1,11 @@
 Example
 images
+.claude
+CLAUDE.md
+.cursorrules
+.cursor
+.aider*
+.copilot
 android/build
 android/.gradle
 android/.settings

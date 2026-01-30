@@ -3,6 +3,19 @@
 .DS_Store
 .history
 
+# Local dev config
+CLAUDE.md
+.cursorrules
+.cursor/
+.github/copilot-instructions.md
+.aider*
+.continue/
+.codeium/
+.tabnine/
+.sourcery.yaml
+.cody/
+.amazonq/
+
 # Xcode
 #
 build/

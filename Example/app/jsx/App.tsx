@@ -18,6 +18,7 @@ import SourcesExample from './screens/SourcesExample';
 import YoutubeExample from './screens/YoutubeExample';
 import PlayerInModal from './screens/PlayerInModal';
 import GlobalPlayerExample from './screens/GlobalPlayerExample';
+import OfflineDownloadExample from './screens/OfflineDownloadExample';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +41,7 @@ export default class App extends Component {
             <Stack.Screen name="Modal" component={PlayerInModal} />
             <Stack.Screen name="List" component={ListExample} />
             <Stack.Screen name="DRM" component={DRMExample} />
+            <Stack.Screen name="Offline Download" component={OfflineDownloadExample} />
             <Stack.Screen name="Local" component={LocalFileExample} />
             <Stack.Screen name="Sources" component={SourcesExample} />
             <Stack.Screen name="Youtube" component={YoutubeExample} />

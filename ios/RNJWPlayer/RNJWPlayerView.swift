@@ -40,6 +40,11 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     var audioMode: String!
     var audioCategoryOptions: [String]!
     var settingConfig: Bool = false
+    
+    // MARK: - Offline DRM Properties
+    var offlineContentLoader: JWDRMContentLoader?
+    var offlineKeyManager: JWDRMContentKeyManager?
+    var offlineKeyDataSource: JWDRMContentKeyDataSource?
     var pendingConfig: Bool = false
     var currentConfig: [String : Any]!
     var playerFailed = false
@@ -1096,10 +1101,59 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     }
 
+    // MARK: - Offline Playback Support
+    
+    /// Check if a file URL is offline content (.movpkg)
+    func isOfflineContent(_ fileString: String) -> Bool {
+        return fileString.hasPrefix("file://") && fileString.contains(".movpkg")
+    }
+    
+    /// Configure offline DRM playback by setting up the content loader
+    /// with DRM credentials before the player is configured.
+    func configureOfflinePlayback(for url: URL) {
+        var normalizedURL = url
+        if normalizedURL.absoluteString.hasSuffix("/") {
+            let trimmed = String(normalizedURL.absoluteString.dropLast())
+            if let trimmedURL = URL(string: trimmed) {
+                normalizedURL = trimmedURL
+            }
+        }
+        
+        let dataSource = OfflineKeyDataSource()
+        dataSource.certificateURLStr = fairplayCertUrl
+        dataSource.processSPCURLStr = processSpcUrl
+        offlineKeyDataSource = dataSource
+        
+        offlineKeyManager = OfflineKeyManager()
+        
+        offlineContentLoader = JWDRMContentLoader(
+            dataSource: offlineKeyDataSource!,
+            keyManager: offlineKeyManager!
+        )
+        
+        if let playerView = playerView {
+            playerView.player.contentKeyDataSource = nil
+            playerView.player.contentLoader = offlineContentLoader
+        } else if let playerViewController = playerViewController {
+            playerViewController.player.contentKeyDataSource = nil
+            playerViewController.player.contentLoader = offlineContentLoader
+        }
+    }
+    
     func getPlayerConfiguration(config: [String: Any]) throws -> JWPlayerConfiguration {
         let configBuilder:JWPlayerConfigurationBuilder! = JWPlayerConfigurationBuilder()
 
         var playlistArray = [JWPlayerItem]()
+        
+        if let playlist = config["playlist"] as? [[String: Any]] {
+            for item in playlist {
+                if let fileString = item["file"] as? String,
+                   isOfflineContent(fileString),
+                   let fileURL = URL(string: fileString) {
+                    configureOfflinePlayback(for: fileURL)
+                }
+            }
+        }
 
         if let playlist = config["playlist"] as? [[String: Any]] {
             for item in playlist {
@@ -1295,7 +1349,26 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     func presentPlayerViewController(configuration: JWPlayerConfiguration!) {
         if configuration != nil {
+            // Check if playlist contains offline content and configure DRM before playback
+            if let playlist = currentConfig?["playlist"] as? [[String: Any]] {
+                for item in playlist {
+                    if let fileString = item["file"] as? String,
+                       isOfflineContent(fileString),
+                       let fileURL = URL(string: fileString) {
+                        let hasDrmConfig = (processSpcUrl != nil && !processSpcUrl.isEmpty) || 
+                                          (fairplayCertUrl != nil && !fairplayCertUrl.isEmpty)
+                        
+                        if hasDrmConfig {
+                            playerViewController.player.contentKeyDataSource = nil
+                            configureOfflinePlayback(for: fileURL)
+                        }
+                        break
+                    }
+                }
+            }
+            
             playerViewController.player.configurePlayer(with: configuration)
+            
             if (interfaceBehavior != nil) {
                 playerViewController.interfaceBehavior = interfaceBehavior
             }

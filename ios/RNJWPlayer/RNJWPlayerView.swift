@@ -47,6 +47,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     var isCasting: Bool = false
     var availableDevices: [AnyObject]!
     var onBeforeNextPlaylistItemCompletion: ((JWPlayerItem?) -> ())?
+    var pendingConfigAfterPlaylistItemCallback: [String: Any]?
     
     @objc var onBuffer: RCTDirectEventBlock?
     @objc var onUpdateBuffer: RCTDirectEventBlock?
@@ -234,6 +235,16 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     @objc func setConfig(_ config: [String: Any]) {
+        // Defer config changes while a playlist item callback is pending resolution.
+        // React Native re-renders can trigger setConfig during the window between
+        // onBeforeNextPlaylistItem firing and resolveNextPlaylistItem being called.
+        // Reconfiguring the player during this window crashes the SDK.
+        if onBeforeNextPlaylistItemCompletion != nil {
+            print("Warning: setConfig deferred — playlist item callback pending resolution")
+            pendingConfigAfterPlaylistItemCallback = config
+            return
+        }
+
         if (playerFailed) {
             playerFailed = false
             setNewConfig(config: config)
@@ -764,6 +775,11 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                     print("Error serializing playlist item: \(error)")
                     self.onBeforeNextPlaylistItemCompletion?(item) // Call completion handler directly on error
                     self.onBeforeNextPlaylistItemCompletion = nil
+                    // Apply any deferred config change
+                    if let pendingConfig = self.pendingConfigAfterPlaylistItemCallback {
+                        self.pendingConfigAfterPlaylistItemCallback = nil
+                        self.setConfig(pendingConfig)
+                    }
                 }
             } else {
                 print("No onBeforeNextPlaylistItem handler set, calling completion directly")
@@ -1067,8 +1083,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             for adItem in adsItem.compactMap({ $0 as? [String: Any] }) {
                 if let offsetString = adItem["offset"] as? String,
                    let tag = adItem["tag"] as? String,
-                   let encodedString = tag.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed),
-                   let tagURL = URL(string: encodedString),
+                   let tagURL = URL(string: tag) ?? URL(string: tag.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""),
                    let offset = JWAdOffset.from(string: offsetString) {
                     let adBreakBuilder = JWAdBreakBuilder()
                     adBreakBuilder.offset(offset)
@@ -1140,7 +1155,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             var advertisingConfig: JWAdvertisingConfig?
 
             var jwAdClient = JWAdClient.unknown
-            if let adClientString = ads["adClient"] as? String {
+            if let adClientString = ads["adClient"] as? String ?? ads["client"] as? String {
                 jwAdClient = RCTConvert.JWAdClient(adClientString)
             }
 

@@ -13,8 +13,15 @@ export default () => {
 
         // Replace the 2nd item in the playlist with something new
         // This could also be a modified version of the current `playlistItem` raised in the callback
-        if (index === 1) {
-            playerRef.current.resolveNextPlaylistItem(otherItem);
+        const isUpNextItem = index > 0;
+        if (isUpNextItem) {
+            const adSchedule = [
+                {
+                    offset: 'pre',
+                    tag: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=',
+                },
+            ];
+            playerRef.current.resolveNextPlaylistItem({ ...otherItem, adSchedule});
         } else {
             playerRef.current.resolveNextPlaylistItem(playlistItem);
         }
@@ -35,7 +42,7 @@ export default () => {
 
     let otherItem = {
         "title": "Injected playlist item",
-        "file": "http://content.bitsontherun.com/videos/q1fx20VZ-52qL9xLP.mp4"
+        "file": "https://content.bitsontherun.com/videos/q1fx20VZ-52qL9xLP.mp4"
     }
 
     const renderPlayer = () => {
@@ -48,6 +55,9 @@ export default () => {
                     playlistItemCallbackEnabled: true,
                     styling: {
                         colors: {},
+                    },
+                    "advertising": {
+                        "client": "googima"
                     },
                     ...jwConfig
                 }}

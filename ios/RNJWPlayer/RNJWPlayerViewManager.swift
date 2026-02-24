@@ -251,6 +251,10 @@ class RNJWPlayerViewManager: RCTViewManager {
                 } catch {
                     print("Error creating JWPlayerItem: \(error)")
                     view.onBeforeNextPlaylistItemCompletion = nil
+                    if let pendingConfig = view.pendingConfigAfterPlaylistItemCallback {
+                        view.pendingConfigAfterPlaylistItemCallback = nil
+                        view.setConfig(pendingConfig)
+                    }
                 }
             } else {
                 print("Warning: resolveNextPlaylistItem called but no completion handler was set OR completion handler was already called")

@@ -234,8 +234,14 @@ class RNJWPlayerViewManager: RCTViewManager {
             }
             
             if let completion = view.onBeforeNextPlaylistItemCompletion {
+                guard let itemDict = playlistItem as? [String: Any] else {
+                    print("Error: resolveNextPlaylistItem received invalid playlist item data")
+                    completion(nil)
+                    view.onBeforeNextPlaylistItemCompletion = nil
+                    return
+                }
                 do {
-                    let item = try view.getPlayerItem(item: playlistItem as! [String: Any])
+                    let item = try view.getPlayerItem(item: itemDict)
                     completion(item)
                 } catch {
                     print("Error creating JWPlayerItem: \(error)")

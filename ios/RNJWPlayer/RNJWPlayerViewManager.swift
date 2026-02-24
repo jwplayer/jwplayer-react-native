@@ -242,11 +242,26 @@ class RNJWPlayerViewManager: RCTViewManager {
                 }
                 do {
                     let item = try view.getPlayerItem(item: itemDict)
-                    completion(item)
+                    // Ensure completion runs on the main thread — the SDK performs
+                    // UI updates (view hierarchy changes) when loading the next item.
+                    DispatchQueue.main.async {
+                        completion(item)
+                        view.onBeforeNextPlaylistItemCompletion = nil
+
+                        // Apply any config change that was deferred while the callback was pending
+                        if let pendingConfig = view.pendingConfigAfterPlaylistItemCallback {
+                            view.pendingConfigAfterPlaylistItemCallback = nil
+                            view.setConfig(pendingConfig)
+                        }
+                    }
                 } catch {
                     print("Error creating JWPlayerItem: \(error)")
+                    view.onBeforeNextPlaylistItemCompletion = nil
+                    if let pendingConfig = view.pendingConfigAfterPlaylistItemCallback {
+                        view.pendingConfigAfterPlaylistItemCallback = nil
+                        view.setConfig(pendingConfig)
+                    }
                 }
-                view.onBeforeNextPlaylistItemCompletion = nil
             } else {
                 print("Warning: resolveNextPlaylistItem called but no completion handler was set OR completion handler was already called")
             }

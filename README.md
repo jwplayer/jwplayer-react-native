@@ -357,6 +357,29 @@ Follow this step to set up advertising with IMA or DAI:
 
 1. In the **Podfile** `ext{}`, add `$RNJWPlayerUseGoogleIMA = true`. This setting will add `GoogleAds-IMA-iOS-SDK` to the pod.
 
+#### Using a Local iOS SDK
+
+To test with a specific version of JWPlayerKit (e.g. a pre-release build provided by JW Player support):
+
+1. Acquire the `JWPlayerKit.xcframework` asset.
+2. Copy it to `ios/frameworks/JWPlayerKit.xcframework` in this repo (this path is gitignored).
+3. Add `$RNJWPlayerUseLocalSDK = true` to your **Podfile**.
+4. Run `pod install`.
+
+To switch back to the published CocoaPod, remove or comment out the `$RNJWPlayerUseLocalSDK` line and run `pod install` again.
+
+#### Using Local Android AARs
+
+To test with a specific version of the JW Player Android SDK (e.g. a pre-release build provided by JW Player support):
+
+1. Acquire the AAR files and copy them to `android/libs/` in this repo (this path is gitignored):
+   - `jwplayer-core.aar`, `jwplayer-common.aar`, `jwplayer-chromecast.aar`
+   - `jwplayer-ima.aar` (if using IMA)
+2. Set `useLocalAARs = true` in `android/build.gradle`.
+3. Rebuild the app.
+
+To switch back to Maven, set `useLocalAARs = false` and rebuild.
+
 <br /><br />
 
 ### Background Audio

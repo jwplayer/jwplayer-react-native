@@ -96,6 +96,7 @@ allprojects {
 }
 
 def jwPlayerVersion = "4.24.0"
+def useLocalAARs = false // Set to false to revert to Maven dependencies
 def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK > 4.16.0
 def media3ExoVersion = "1.4.1"
 
@@ -103,20 +104,28 @@ dependencies {
     implementation 'com.facebook.react:react-native:+'
     implementation 'com.google.code.gson:gson:2.9.0'
 
-    // JWPlayer SDK Core (always required)
-    implementation "com.jwplayer:jwplayer-core:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
-    implementation "com.jwplayer:jwplayer-common:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
-    implementation "com.jwplayer:jwplayer-chromecast:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
-    
-    // Optional: IMA Ads support  
-    if (useIMA) {
-        implementation "com.jwplayer:jwplayer-ima:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
-        implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
-        implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
-        // Core library desugaring (required for IMA SDK 3.37.0+)
-        // Using version 2.1.5 as recommended by IMA SDK documentation:
-        // https://developers.google.com/interactive-media-ads/docs/sdks/android/client-side/get-started
-        coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+    if (useLocalAARs) {
+        // Local AARs for debugging (built from android-sdk with diagnostic logging)
+        implementation fileTree(dir: 'libs', include: ['jwplayer-core.aar', 'jwplayer-common.aar', 'jwplayer-chromecast.aar'])
+        if (useIMA) {
+            implementation fileTree(dir: 'libs', include: ['jwplayer-ima.aar'])
+            implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
+            implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+            coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+        }
+    } else {
+        // JWPlayer SDK Core from Maven (always required)
+        implementation "com.jwplayer:jwplayer-core:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
+        implementation "com.jwplayer:jwplayer-common:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
+        implementation "com.jwplayer:jwplayer-chromecast:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
+
+        // Optional: IMA Ads support
+        if (useIMA) {
+            implementation "com.jwplayer:jwplayer-ima:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
+            implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
+            implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+            coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+        }
     }
 
     // Cast dependencies

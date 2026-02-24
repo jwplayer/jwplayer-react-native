@@ -12,12 +12,12 @@ import JWPlayerKit
 extension RCTConvert {
 
     static func JWAdClient(_ value: String) -> JWAdClient {
-        switch value {
+        switch value.lowercased() {
         case "vast":
             return .JWPlayer
-        case "ima":
+        case "ima", "googima":
             return .GoogleIMA
-        case "ima_dai":
+        case "ima_dai", "googimadai":
             return .GoogleIMADAI
         default:
             return .unknown

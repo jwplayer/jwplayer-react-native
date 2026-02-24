@@ -16,8 +16,11 @@ end
 
 $RNJWPlayerUseGoogleIMA = true
 $RNJWPlayerUseGoogleCast = true
+# $RNJWPlayerUseLocalSDK = true
 
 target 'RNJWPlayer' do
+  pod 'RNJWPlayer', :path => '../../'
+
   config = use_native_modules!
 
   use_react_native!(

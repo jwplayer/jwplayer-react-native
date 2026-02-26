@@ -1,11 +1,16 @@
 Example
 images
+.github
+badges
+docs
+CODE_OF_CONDUCT.md
 .claude
 CLAUDE.md
 .cursorrules
 .cursor
 .aider*
 .copilot
+android/bin
 android/build
 android/.gradle
 android/.settings

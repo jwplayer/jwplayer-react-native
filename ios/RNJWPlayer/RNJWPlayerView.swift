@@ -48,6 +48,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     var availableDevices: [AnyObject]!
     var onBeforeNextPlaylistItemCompletion: ((JWPlayerItem?) -> ())?
     var pendingConfigAfterPlaylistItemCallback: [String: Any]?
+    var hasTriggeredFirstPlaylistItemCallback: Bool = false
     
     @objc var onBuffer: RCTDirectEventBlock?
     @objc var onUpdateBuffer: RCTDirectEventBlock?
@@ -751,6 +752,14 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 return
             }
             
+            // Skip only the very first callback after initial setup
+            if !self.hasTriggeredFirstPlaylistItemCallback {
+                print("Skipping first onBeforeNextPlaylistItem callback for initial video load")
+                self.hasTriggeredFirstPlaylistItemCallback = true
+                completion(item)
+                return
+            }
+
             if let onBeforeNextPlaylistItem = self.onBeforeNextPlaylistItem {
                 print("Storing completion handler and triggering onBeforeNextPlaylistItem")
                 // Store the completion handler first, before any other operations

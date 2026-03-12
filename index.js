@@ -736,9 +736,10 @@ export default class JWPlayer extends Component {
 	 * @param {PlaylistItem | JwPlaylistItem} playlistItem 
 	 */
 	resolveNextPlaylistItem(playlistItem) { 
-		if (RNJWPlayerManager) {
+		const bridgeHandle = this.getRNJWPlayerBridgeHandle();
+		if (RNJWPlayerManager && typeof bridgeHandle === 'number') {
 			RNJWPlayerManager.resolveNextPlaylistItem(
-				this.getRNJWPlayerBridgeHandle(),
+				bridgeHandle,
 				playlistItem
 			);
 		}

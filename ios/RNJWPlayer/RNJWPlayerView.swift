@@ -744,6 +744,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func setupPlaylistItemCallback() {
+        hasTriggeredFirstPlaylistItemCallback = false
         playerViewController.player.setPlaylistItemCallback { [weak self] item, index, completion in
             print("setPlaylistItemCallback called with index \(index)")
             guard let self = self else {

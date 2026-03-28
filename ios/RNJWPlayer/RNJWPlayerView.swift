@@ -45,6 +45,17 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     var playerFailed = false
     var castController: JWCastController!
     var isCasting: Bool = false
+
+    /// Checks actual GCK cast session state, independent of our delegate callbacks.
+    /// The SDK's built-in cast UI can start casting without going through our castController,
+    /// so we check GCKCastContext directly for the most reliable result.
+    var isActivelyCasting: Bool {
+        #if USE_GOOGLE_CAST
+        return GCKCastContext.sharedInstance().castState == .connected
+        #else
+        return false
+        #endif
+    }
     var availableDevices: [AnyObject]!
     var onBeforeNextPlaylistItemCompletion: ((JWPlayerItem?) -> ())?
     var pendingConfigAfterPlaylistItemCallback: [String: Any]?
@@ -327,6 +338,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     private var isRecreatingPlayer: Bool = false // Prevents re-entrant calls during recreation
     
     @objc func recreatePlayerWithConfig(_ config: [String: Any]) {
+
         // Prevent re-entrant calls while player is being recreated
         if isRecreatingPlayer {
             print("Warning: Player recreation already in progress, queueing this config change")
@@ -504,29 +516,26 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         }
         
         isRecreatingPlayer = true
-        
+
         // Preserve state
         let wasFullscreen = playerViewController.isFullScreen
         let currentState = playerViewController.player.getState()
         let wasPlaying = currentState == .playing
         
-        // Stop playback before reconfiguration (prevents issues)
-        playerViewController.player.stop()
-        
-        // Parse config early (before setting license) to check if it's valid
+        // Parse config early
         let forceLegacyConfig = config["forceLegacyConfig"] as? Bool ?? false
         let playlistItemCallback = config["playlistItemCallbackEnabled"] as? Bool ?? false
-        
+
         // Set license FIRST (before parsing config fully)
         let license = config["license"] as? String
         self.setLicense(license: license)
-        
+
         // Handle audio session for background/PiP
         if let bae = config["backgroundAudioEnabled"] as? Bool, let pe = config["pipEnabled"] as? Bool {
             backgroundAudioEnabled = bae
             pipEnabled = pe
         }
-        
+
         if backgroundAudioEnabled || pipEnabled {
             let category = config["category"] != nil ? config["category"] as? String : "playback"
             let categoryOptions = config["categoryOptions"] as? [String]
@@ -535,12 +544,12 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         } else {
             self.deinitAudioSession()
         }
-        
-        // Handle DRM parameters
+
+        // Handle DRM parameters (update bridge vars for local playback DRM callbacks)
         processSpcUrl = config["processSpcUrl"] as? String
         fairplayCertUrl = config["certificateUrl"] as? String
         contentUUID = config["contentUUID"] as? String
-        
+
         // Handle legacy DRM in playlist
         if forceLegacyConfig {
             if let playlist = config["playlist"] as? [AnyObject] {
@@ -555,11 +564,68 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 }
             }
         }
-        
+
+        // When actively casting, use loadPlaylist instead of configurePlayer.
+        // configurePlayer reinitializes the player which tears down the SDK's internal
+        // CastProvider, breaking the cast session. loadPlaylist preserves the cast session
+        // and the SDK automatically routes new content to the CastProvider which sends it
+        // to the receiver (including DRM sources and userInfo via customData).
+        if isActivelyCasting {
+            print("Casting active - using loadPlaylist to preserve cast session")
+
+            // Prefer JWJSONParser.playlistItems(from:) — it parses the JW Platform Delivery API
+            // playlist format including DRM sources and credentials, which getPlayerItem drops.
+            // Fall back to the per-item builder on serialization or parse failure so non-DRM
+            // playlists constructed from arbitrary JS dicts still work.
+            var playlistArray: [JWPlayerItem] = []
+            if let playlist = config["playlist"] as? [[String: Any]],
+               let jsonData = try? JSONSerialization.data(withJSONObject: playlist, options: []),
+               let parsed = try? JWJSONParser.playlistItems(from: jsonData),
+               !parsed.isEmpty {
+                playlistArray = parsed
+            } else if let playlist = config["playlist"] as? [[String: Any]] {
+                for item in playlist {
+                    if let playerItem = try? getPlayerItem(item: item) {
+                        playlistArray.append(playerItem)
+                    }
+                }
+            }
+
+            guard !playlistArray.isEmpty else {
+                print("Error: No valid playlist items found in config during cast")
+                isRecreatingPlayer = false
+                return
+            }
+
+            currentConfig = config
+            playerViewController.player.loadPlaylist(items: playlistArray)
+
+            if playlistItemCallback {
+                setupPlaylistItemCallback()
+            }
+
+            print("Playlist loaded during cast session (items: \(playlistArray.count))")
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let self = self else { return }
+                self.isRecreatingPlayer = false
+
+                if let queuedConfig = self.pendingPlayerConfig {
+                    print("Processing queued config change after cast loadPlaylist")
+                    self.pendingPlayerConfig = nil
+                    self.recreatePlayerWithConfig(queuedConfig)
+                }
+            }
+            return
+        }
+
+        // Non-casting path: stop playback and reconfigure the player
+        playerViewController.player.stop()
+
         // Build new configuration
         do {
             let playerConfig: JWPlayerConfiguration
-            
+
             if forceLegacyConfig {
                 playerConfig = try getPlayerConfiguration(config: config)
             } else {
@@ -571,27 +637,27 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 }
                 playerConfig = jwConfig
             }
-            
+
             // Update stored config
             currentConfig = config
-            
+
             // Reconfigure existing player (this is the key optimization!)
             playerViewController.player.configurePlayer(with: playerConfig)
-            
+
             // Setup playlist item callback if needed
             if playlistItemCallback {
                 setupPlaylistItemCallback()
             }
-            
+
             // Fullscreen state is automatically preserved by the view controller
             // No need to manually restore it
             print("Player reconfigured successfully (fullscreen: \(wasFullscreen))")
-            
+
             // Clear the reconfiguration flag after a delay to ensure SDK completes initialization
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 guard let self = self else { return }
                 self.isRecreatingPlayer = false
-                
+
                 // If there's a queued config change, process it now
                 if let queuedConfig = self.pendingPlayerConfig {
                     print("Processing queued config change after reconfiguration")
@@ -599,10 +665,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                     self.recreatePlayerWithConfig(queuedConfig)
                 }
             }
-            
-            // Optionally restart playback if it was playing
-            // (Usually handled by autostart in config)
-            
+
         } catch {
             print("Error during reconfiguration: \(error) - falling back to recreation")
             isRecreatingPlayer = false  // Clear flag before fallback
@@ -637,19 +700,37 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             }
         }
 
+        // Track whether we need to re-establish casting after recreation
+        let wasCasting = isActivelyCasting
+
         // 2. Destroy current player
         dismissPlayerViewController()
         removePlayerView()
 
         // 3. Create new player with new config
         setNewConfig(config: config)
-        
+
         // 4. Clear the recreation flag after a delay to ensure setup completes
         // The iOS SDK needs time to finish initialization
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self = self else { return }
             self.isRecreatingPlayer = false
-            
+
+            #if USE_GOOGLE_CAST
+            // If we were casting, the old castController's player reference is stale.
+            // Re-create the castController with the new player so casting can resume.
+            // Note: full recreation (license/viewOnly change) will interrupt the cast
+            // session. The user may need to re-initiate casting.
+            if wasCasting {
+                self.castController = nil
+                if let player = (self.playerView?.player ?? self.playerViewController?.player) as? JWPlayer {
+                    self.castController = JWCastController(player: player)
+                    self.castController.delegate = self
+                    print("Cast controller recreated after full player recreation")
+                }
+            }
+            #endif
+
             // If there's a queued config change, process it now
             if let queuedConfig = self.pendingPlayerConfig {
                 print("Processing queued config change")
@@ -2190,12 +2271,17 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 extension RNJWPlayerView: JWCastDelegate {
     // pragma Mark - Casting methods
     func setUpCastController() {
-        if (playerView != nil) && playerView.player as! Bool && (castController == nil) {
-           castController = JWCastController(player:playerView.player)
-           castController.delegate = self
-       }
+        guard castController == nil else {
+            self.scanForDevices()
+            return
+        }
 
-       self.scanForDevices()
+        if let player = (playerView?.player ?? playerViewController?.player) as? JWPlayer {
+            castController = JWCastController(player: player)
+            castController.delegate = self
+        }
+
+        self.scanForDevices()
     }
 
     func scanForDevices() {
@@ -2269,10 +2355,12 @@ extension RNJWPlayerView: JWCastDelegate {
     // MARK: - JWPlayer Cast Delegate
     
     func castController(_ controller: JWCastController, castingBeganWithDevice device: JWCastingDevice) {
+        isCasting = true
         self.onCasting?([:])
     }
-    
+
     func castController(_ controller:JWCastController, castingEndedWithError error: Error?) {
+        isCasting = false
         self.onCastingEnded?(["error": error as Any])
     }
 
@@ -2330,6 +2418,7 @@ extension RNJWPlayerView: JWCastDelegate {
     }
     
     func castController(_ controller: JWCastController, disconnectedWithError error: (Error)?) {
+        isCasting = false
         self.onDisconnectedFromCastingDevice?(["error": error as Any])
     }
 }

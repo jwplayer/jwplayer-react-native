@@ -31,19 +31,21 @@ Pod::Spec.new do |s|
     'OTHER_LDFLAGS': '-ObjC',
   }
 
+  swift_flags = ['$(inherited)']
+
   if defined?($RNJWPlayerUseGoogleCast)
     Pod::UI.puts "RNJWPlayer: enable Google Cast"
     s.dependency 'google-cast-sdk', '4.8.3'
-    s.pod_target_xcconfig = {
-      'OTHER_SWIFT_FLAGS' => '$(inherited) -D USE_GOOGLE_CAST'
-    }
+    swift_flags << '-D USE_GOOGLE_CAST'
   end
   if defined?($RNJWPlayerUseGoogleIMA)
     Pod::UI.puts "RNJWPlayer: enable IMA SDK"
     s.dependency 'GoogleAds-IMA-iOS-SDK', '3.22.1'
-    s.pod_target_xcconfig = {
-      'OTHER_SWIFT_FLAGS' => '$(inherited) -D USE_GOOGLE_IMA'
-    }
+    swift_flags << '-D USE_GOOGLE_IMA'
   end
+
+  s.pod_target_xcconfig = {
+    'OTHER_SWIFT_FLAGS' => swift_flags.join(' ')
+  }
   
 end

@@ -51,6 +51,8 @@ public class RNJWPlayerAds {
                     android.util.Log.e("RNJWPlayerAds", "Failed to configure IMA ads: " + e.getMessage());
                     return null;
                 }
+            case "cnx":
+                return CnxHelper.configureCnx(ads);
             default: // Defaulting to VAST
                 return configureVastAdvertising(ads);
         }
@@ -84,7 +86,7 @@ public class RNJWPlayerAds {
         return builder.build();
     }
 
-    private static List<AdBreak> getAdSchedule(ReadableMap ads) {
+    static List<AdBreak> getAdSchedule(ReadableMap ads) {
         List<AdBreak> adScheduleList = new ArrayList<>();
         
         // Check if adSchedule exists

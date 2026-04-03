@@ -8,6 +8,7 @@ buildscript {
         kotlinVersion = "2.0.21"
         RNJWPlayerUseGoogleCast = true
         RNJWPlayerUseGoogleIMA = true
+        RNJWPlayerUseCNX = true
     }
     repositories {
         google()

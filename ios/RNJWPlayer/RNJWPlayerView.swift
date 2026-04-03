@@ -1238,6 +1238,8 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 advertisingConfig = RNJWPlayerAds.configureIMA(with: ads)
             case .GoogleIMADAI:
                 advertisingConfig = RNJWPlayerAds.configureIMADAI(with: ads)
+            case .CNX:
+                advertisingConfig = RNJWPlayerAds.configureCNX(with: ads)
             default:
                 advertisingConfig = RNJWPlayerAds.configureVAST(with: ads)
                 break

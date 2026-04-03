@@ -21,6 +21,7 @@ def isNewArchitectureEnabled() {
 
 def useIMA = safeExtGet("RNJWPlayerUseGoogleIMA", "")?.toBoolean() ?: false
 def useCast = safeExtGet("RNJWPlayerUseGoogleCast", "")?.toBoolean() ?: false
+def useCNX = safeExtGet("RNJWPlayerUseCNX", "")?.toBoolean() ?: false
 
 android {
     compileSdkVersion safeExtGet('compileSdkVersion', 28)
@@ -43,7 +44,7 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-        if (useIMA) {
+        if (useIMA || useCNX) {
             coreLibraryDesugaringEnabled true
         }
     }
@@ -53,12 +54,14 @@ android {
             // Set the build config fields for the debug build type
             buildConfigField "boolean", "USE_IMA", useIMA.toString()
             buildConfigField "boolean", "USE_CAST", useCast.toString()
+            buildConfigField "boolean", "USE_CNX", useCNX.toString()
             // ... other debug configurations
         }
         release {
             // Set the build config fields for the release build type
             buildConfigField "boolean", "USE_IMA", useIMA.toString()
             buildConfigField "boolean", "USE_CAST", useCast.toString()
+            buildConfigField "boolean", "USE_CNX", useCNX.toString()
             // ... other release configurations
         }
     }
@@ -96,7 +99,7 @@ allprojects {
 }
 
 def jwPlayerVersion = "4.24.2"
-def useLocalAARs = false // Set to false to revert to Maven dependencies
+def useLocalAARs = false // Set to true for local AARs (e.g., CNX testing with unpublished builds)
 def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK > 4.16.0
 def media3ExoVersion = "1.4.1"
 
@@ -113,6 +116,13 @@ dependencies {
             implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
             coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
         }
+        if (useCNX) {
+            implementation fileTree(dir: 'libs', include: ['jwplayer-cnx.aar'])
+            // CNX depends on IMA SDK transitively — must declare explicitly for local AARs
+            implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
+            implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+            coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+        }
     } else {
         // JWPlayer SDK Core from Maven (always required)
         implementation "com.jwplayer:jwplayer-core:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
@@ -122,6 +132,14 @@ dependencies {
         // Optional: IMA Ads support
         if (useIMA) {
             implementation "com.jwplayer:jwplayer-ima:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
+            implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
+            implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+            coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+        }
+
+        // Optional: CNX Ads support
+        if (useCNX) {
+            implementation "com.jwplayer:jwplayer-cnx:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
             implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
             implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
             coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'

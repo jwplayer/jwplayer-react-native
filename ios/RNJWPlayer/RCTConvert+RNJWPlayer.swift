@@ -19,6 +19,8 @@ extension RCTConvert {
             return .GoogleIMA
         case "ima_dai", "googimadai":
             return .GoogleIMADAI
+        case "cnx":
+            return .CNX
         default:
             return .unknown
         }

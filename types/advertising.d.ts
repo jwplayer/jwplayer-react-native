@@ -10,7 +10,7 @@
 /**
  * Ad client types supported across platforms
  */
-export type AdClient = 
+export type AdClient =
   | 'vast'        // VAST ads (both platforms)
   | 'VAST'        // VAST ads alternative (both platforms)
   | 'googima'     // Google IMA (both platforms)
@@ -18,7 +18,9 @@ export type AdClient =
   | 'GOOGIMA'     // Google IMA alternative (Android)
   | 'dai'         // Google DAI (iOS)
   | 'GoogleIMADAI' // Google DAI (iOS)
-  | 'IMA_DAI';    // Google DAI (Android)
+  | 'IMA_DAI'     // Google DAI (Android)
+  | 'cnx'         // CNX/Connatix ads (both platforms)
+  | 'CNX';        // CNX/Connatix ads alternative (both platforms)
 
 /**
  * Ad break type
@@ -496,19 +498,273 @@ export interface ImaDaiAdvertisingConfig {
 }
 
 /**
+ * CNX Dynamic Ad Break configuration
+ * Defines an individual ad break for dynamic ad scheduling.
+ * When both tag and adXml are nil, the SAX SDK performs its own auction.
+ *
+ * @platforms iOS, Android
+ */
+export interface CnxDynamicAdBreak {
+  /** Optional VAST/IMA tag URL */
+  tag?: string;
+  /** Optional inline VAST XML */
+  adXml?: string;
+}
+
+/**
+ * CNX Dynamic Ads Rules
+ * Controls when the dynamic ad scheduler triggers ad breaks.
+ *
+ * @platforms iOS, Android
+ */
+export interface CnxDynamicAdRules {
+  /** Whether to force a pre-roll ad. @default true */
+  forcePreroll?: boolean;
+  /** Ratio of content seconds to ad seconds (e.g. 1 = equal ad and content time) */
+  contentToAdRatio?: number;
+  /** Method for calculating the ratio: "useContentDuration" or "useContentWatchTime" */
+  contentToAdRatioCalculationMethod?: string;
+  /** Minimum content duration (seconds) before mid-rolls are allowed */
+  minContentDurationForMidrollSeconds?: number;
+  /** Seconds of content before the first mid-roll ad */
+  secondsOfContentBeforeFirstAd?: number;
+  /** Minimum seconds of content between consecutive ad breaks */
+  secondsOfContentBetweenAds?: number;
+}
+
+/**
+ * CNX Dynamic Ads configuration
+ * Rules-based ad scheduling handled by the dynamic-ad-scheduler service.
+ *
+ * @platforms iOS, Android
+ */
+export interface CnxDynamicAdsConfig {
+  /** Rules controlling ad break timing */
+  rules?: CnxDynamicAdRules;
+  /** Ad break definitions keyed by position ("pre", "mid", "post") */
+  adBreaks?: Record<string, CnxDynamicAdBreak>;
+  /** Whether to forecast ad breaks for predictive loading */
+  shouldForecastAdBreaks?: boolean;
+}
+
+/**
+ * CNX Auction Break configuration
+ * Per-position auction settings.
+ *
+ * @platforms iOS, Android
+ */
+export interface CnxAuctionBreakConfig {
+  /** Auction type: "OptimizedUX", "OptimizedRevenue", "Standard", etc. */
+  auctionType?: string;
+  /** Auction timeout in milliseconds (-1 for infinite) */
+  timeoutMs?: number;
+}
+
+/**
+ * CNX Auction configuration
+ * Allows specifying different auction parameters for pre-roll, mid-roll, and post-roll ads.
+ *
+ * @platforms iOS, Android
+ */
+export interface CnxAuctionConfig {
+  pre?: CnxAuctionBreakConfig;
+  mid?: CnxAuctionBreakConfig;
+  post?: CnxAuctionBreakConfig;
+}
+
+/**
+ * CNX (Connatix) Advertising Configuration
+ * For Connatix ad service with server-side auction and dynamic ad scheduling.
+ *
+ * Requires the CNX module:
+ * - Android: Set `RNJWPlayerUseCNX = true` in app's build.gradle ext{}
+ * - iOS: Use local xcframework built from feature/SDK-11716 branch
+ *
+ * @platforms iOS, Android
+ *
+ * @example Basic
+ * ```typescript
+ * {
+ *   client: 'cnx',
+ *   adUnitId: 'your-ad-unit-id',
+ *   customerId: 'your-customer-id',  // or companyId on iOS
+ *   debug: true,
+ *   viewabilityPolicy: 'strict',
+ * }
+ * ```
+ */
+export interface CnxAdvertisingConfig extends BaseAdvertisingConfig {
+  client: 'cnx' | 'CNX';
+
+  // --- Required ---
+
+  /** CNX ad unit identifier */
+  adUnitId: string;
+
+  /**
+   * CNX customer ID (Android naming).
+   * Aliased as `companyId` on iOS. Provide either one.
+   */
+  customerId?: string;
+
+  /**
+   * CNX company ID (iOS naming).
+   * Aliased as `customerId` on Android. Provide either one.
+   */
+  companyId?: string;
+
+  // --- General settings ---
+
+  /** Enable debug logging. @default false */
+  debug?: boolean;
+
+  /** Viewability policy. @default "strict" */
+  viewabilityPolicy?: 'strict' | 'auto' | string;
+
+  /** Language locale for ad serving */
+  locale?: string;
+
+  /** Publisher-provided identifier (privacy-preserving) */
+  ppid?: string;
+
+  /** Ad request timeout in milliseconds. @default 5000 */
+  requestTimeout?: number;
+
+  /** Extra parameters to pass to the ad server */
+  extraParams?: Record<string, any>;
+
+  /** IAB placement type. @default 2 */
+  plcmt?: number;
+
+  /** Maximum allowed ad duration in seconds. @default 180 */
+  maxAdDuration?: number;
+
+  /** Enable vertical/feed ads. @default false */
+  enableVerticalAds?: boolean;
+
+  /** Autoplay behavior (1 = autoplay with sound). @default 1 */
+  playbackMethod?: number;
+
+  /** Whether skip is enabled for ads */
+  skipEnabled?: boolean;
+
+  /** Minimum duration before skip is allowed (seconds) */
+  skipMinDuration?: number;
+
+  /** Seconds before skip button appears */
+  skipOffset?: number;
+
+  /** Start ads muted. @default false */
+  autoplayAdsMuted?: boolean;
+
+  /** Outstream/feed ad placement. @default false */
+  outstream?: boolean;
+
+  /** Enable Programmatic Protected Signals. @default false */
+  enablePPS?: boolean;
+
+  /** Enable VPAID controls. @default false */
+  vpaidControls?: boolean;
+
+  /** Analytics tracking ID */
+  strategyOutcomeId?: string;
+
+  /** Environment override (e.g., "staging"). Null for production. */
+  cnxEnv?: string;
+
+  // --- Targeting ---
+
+  /** Targeting placement ID (separate from adUnitId) */
+  targetingPlacementId?: string;
+
+  /** Custom macros for ad targeting */
+  customMacros?: Record<string, any>;
+
+  /** Query JavaScript parameters */
+  queryJSParams?: Record<string, any>;
+
+  // --- App metadata ---
+
+  /** Canonical content URL for targeting */
+  appPageURL?: string;
+
+  /** Publisher domain */
+  domainURL?: string;
+
+  /** App store listing URL */
+  storeURL?: string;
+
+  /**
+   * App Store ID (numeric string).
+   * @platform ios
+   */
+  appStoreId?: string;
+
+  /** App categorization for targeting */
+  appCategories?: string[];
+
+  /** Privacy policy presence flag */
+  hasPrivacyPolicy?: boolean;
+
+  /** Paid app flag */
+  isPaid?: boolean;
+
+  /** Content on different domain than ads */
+  useContentOnlyDomain?: boolean;
+
+  // --- Dynamic ads ---
+
+  /** Rules-based dynamic ad scheduling */
+  dynamicAds?: CnxDynamicAdsConfig;
+
+  // --- Auction ---
+
+  /** Per-position auction configuration */
+  auction?: CnxAuctionConfig;
+
+  // --- Schedule ---
+
+  /** Pre-scheduled ad breaks */
+  schedule?: AdSchedule;
+
+  // --- Android-only ---
+
+  /**
+   * Delegate to native IMA/VAST for ad rendering.
+   * @default true (recommended for wrappers)
+   * @platform android
+   */
+  useExternalAdService?: boolean;
+
+  /**
+   * Skip ads exceeding maxAdDuration.
+   * @platform android
+   */
+  enableAdDurationGuards?: boolean;
+
+  /**
+   * CNX-specific skip offset (distinct from VAST skipOffset).
+   * @platform android
+   */
+  cnxSkipOffset?: number;
+}
+
+/**
  * Unified Advertising Configuration
- * 
+ *
  * Supports all ad types across iOS and Android:
  * - VAST with schedule
  * - VMAP with tag URL
  * - Google IMA with schedule
  * - Google IMA DAI (VOD and Live)
- * 
+ * - CNX (Connatix) ad service
+ *
  * @platforms iOS, Android
  */
 export type JWAdvertisingConfig =
   | VastAdvertisingConfig
   | VmapAdvertisingConfig
   | ImaAdvertisingConfig
-  | ImaDaiAdvertisingConfig;
+  | ImaDaiAdvertisingConfig
+  | CnxAdvertisingConfig;
 

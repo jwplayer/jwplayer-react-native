@@ -285,7 +285,8 @@ public class Util {
         JWAdEventClientJWPlayer(0),
         JWAdEventClientGoogleIMA(1),
         JWAdEventClientGoogleIMADAI(2),
-        JWAdEventClientUnknown(3);
+        JWAdEventClientUnknown(3),
+        JWAdEventClientCNX(4);
 
         private final int value;
 
@@ -299,6 +300,9 @@ public class Util {
     }
 
     public static int getAdEventClientValue(Event adEvent) {
+        if (adEvent.getPlayer() == null || adEvent.getPlayer().getConfig() == null) {
+            return AdEventClient.JWAdEventClientUnknown.getValue();
+        }
         AdvertisingConfig adConfig = adEvent.getPlayer().getConfig().getAdvertisingConfig();
         if (adConfig == null) {
             return AdEventClient.JWAdEventClientUnknown.getValue();
@@ -311,6 +315,8 @@ public class Util {
                 return AdEventClient.JWAdEventClientGoogleIMADAI.getValue();
             case VAST:
                 return AdEventClient.JWAdEventClientJWPlayer.getValue();
+            case CNX:
+                return AdEventClient.JWAdEventClientCNX.getValue();
             default:
                 return AdEventClient.JWAdEventClientUnknown.getValue();
         }

@@ -129,7 +129,117 @@ const imaConfig: JWPlayerConfig = {
   },
 };
 
-// Example 5: Platform-specific configuration
+// Example 5: CNX (Connatix) Ads
+// Uses the native SDK's JSON config format (adServer/targeting nested structure)
+// so JsonHelper.parseConfigJson() handles it directly — no forceLegacyConfig needed.
+// Replace adUnitId and cid with your own CNX test credentials.
+const cnxConfig: JWPlayerConfig = {
+  license: licenseKey,
+  autostart: true,
+  playlist: [
+    {
+      title: 'Video with CNX Ads',
+      file: 'https://content.bitsontherun.com/videos/q1fx20VZ-52qL9xLP.mp4',
+      image: 'https://cdn.jwplayer.com/thumbs/q1fx20VZ-480.jpg',
+    },
+  ],
+  advertising: {
+    client: 'cnx',
+    adServer: {
+      adUnitId: 'YOUR_CNX_AD_UNIT_ID',
+      cid: 'YOUR_CNX_CUSTOMER_ID',
+      useExternalAdService: true,
+    },
+    debug: true,
+    viewabilityPolicy: 'strict',
+    skipoffset: 5,
+    skiptext: 'Skip',
+    skipmessage: 'This ad will end in xx',
+    admessage: 'Ad',
+  },
+};
+
+// Example 6: CNX Scheduled Ads (Pre + Mid@10s + Post)
+const cnxScheduledConfig: JWPlayerConfig = {
+  license: licenseKey,
+  autostart: true,
+  playlist: [
+    {
+      title: 'CNX Scheduled Ads',
+      file: 'https://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4',
+    },
+  ],
+  advertising: {
+    client: 'cnx',
+    adServer: {
+      cid: 'YOUR_CNX_CUSTOMER_ID',
+      adUnitId: 'YOUR_CNX_AD_UNIT_ID',
+    },
+    schedule: [
+      {offset: 'pre'},
+      {offset: '10'},
+      {offset: 'post'},
+    ],
+  },
+};
+
+// Example 7: CNX Dynamic Ads (preroll + midrolls every 15s)
+const cnxDynamicConfig: JWPlayerConfig = {
+  license: licenseKey,
+  autostart: true,
+  playlist: [
+    {
+      title: 'CNX Dynamic Ads',
+      file: 'https://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4',
+    },
+  ],
+  advertising: {
+    client: 'cnx',
+    adServer: {
+      cid: 'YOUR_CNX_CUSTOMER_ID',
+      adUnitId: 'YOUR_CNX_AD_UNIT_ID',
+    },
+  },
+  dynamicAds: {
+    rules: {
+      forcePreroll: true,
+      secondsOfContentBetweenAds: 10,
+      secondsOfContentBeforeFirstAd: 5,
+      endOfContentMidrollExclusionSeconds: 5,
+    },
+    adBreaks: {
+      pre: {},
+      post: {},
+    },
+  },
+};
+
+// Example 8: CNX with VAST tag preroll
+const cnxVastTagConfig: JWPlayerConfig = {
+  license: licenseKey,
+  autostart: true,
+  playlist: [
+    {
+      title: 'CNX VAST Tag Preroll',
+      file: 'https://content.bitsontherun.com/videos/3XnJSIm4-52qL9xLP.mp4',
+    },
+  ],
+  advertising: {
+    client: 'cnx',
+    adServer: {
+      cid: 'YOUR_CNX_CUSTOMER_ID',
+      adUnitId: 'YOUR_CNX_AD_UNIT_ID',
+    },
+    schedule: [
+      {
+        offset: 'pre',
+        tag: 'https://assets.connatix.com/Elements/29cf9ad9-2fab-4ace-a5c8-d37d0242f38d/vast_5s.xml',
+      },
+    ],
+  },
+};
+
+// Example 9: Platform-specific configuration
 const platformSpecificConfig: JWPlayerConfig = {
   license: licenseKey,
   file: 'http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8',
@@ -274,6 +384,54 @@ const TypeScriptExample: React.FC = () => {
               <Text style={styles.configDetails}>
                 • Google IMA SDK{'\n'}• Single preroll ad{'\n'}• Ad schedule
                 configuration
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.configCard}
+              onPress={() => selectConfig(cnxConfig, 'CNX Ads')}>
+              <Text style={styles.configTitle}>CNX (Connatix) Ads</Text>
+              <Text style={styles.configDescription}>
+                Connatix ad service with server-side auction
+              </Text>
+              <Text style={styles.configDetails}>
+                {'• CNX ad client\n• Debug mode enabled\n• Skip after 5 seconds'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.configCard}
+              onPress={() => selectConfig(cnxScheduledConfig, 'CNX Scheduled')}>
+              <Text style={styles.configTitle}>CNX Scheduled Ads</Text>
+              <Text style={styles.configDescription}>
+                Pre + Mid@10s + Post ad schedule
+              </Text>
+              <Text style={styles.configDetails}>
+                {'• Preroll, midroll at 10s, postroll\n• Server-side auction per break\n• No explicit VAST tags'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.configCard}
+              onPress={() => selectConfig(cnxDynamicConfig, 'CNX Dynamic')}>
+              <Text style={styles.configTitle}>CNX Dynamic Ads</Text>
+              <Text style={styles.configDescription}>
+                Rules-based dynamic ad scheduling
+              </Text>
+              <Text style={styles.configDetails}>
+                {'• Force preroll\n• Midrolls every 10s of content\n• Dynamic ad scheduler service'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.configCard}
+              onPress={() => selectConfig(cnxVastTagConfig, 'CNX VAST Tag')}>
+              <Text style={styles.configTitle}>CNX VAST Tag Preroll</Text>
+              <Text style={styles.configDescription}>
+                Scheduled preroll with explicit VAST tag
+              </Text>
+              <Text style={styles.configDetails}>
+                {'• Explicit 5s VAST tag\n• Bypasses SAX auction\n• Direct ad rendering'}
               </Text>
             </TouchableOpacity>
 

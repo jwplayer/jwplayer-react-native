@@ -463,7 +463,7 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface PlayerErrorProps {
     error?: string;
     errorCode?: number;
-    description?: string; // Android Only
+    description?: string;
   }
   interface TimeEventProps {
     position: number;
@@ -479,7 +479,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     loadTime: number;
   }
   interface PlaylistItemEventProps {
-    playlistItem: PlaylistItem
+    playlistItem: PlaylistItem;
+    index?: number;
   }
   interface PlayerErrorEventProps {
     code: string;
@@ -499,11 +500,49 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface CaptionsChangedEventProps {
     index?: number;
   }
-  interface CaptionsListEventProps {
-    index: number;
+  interface CaptionTrack {
+    /** @platform android */
     file?: string;
     label: string;
-    default: string;
+    default: boolean;
+  }
+  interface CaptionsListEventProps {
+    index: number;
+    tracks?: CaptionTrack[];
+    /** @deprecated Use tracks array instead */
+    file?: string;
+    /** @deprecated Use tracks array instead */
+    label?: string;
+    /** @deprecated Use tracks array instead */
+    default?: string;
+  }
+  interface CastingEventProps {
+    device?: string;
+    active?: boolean;
+    available?: boolean;
+  }
+  interface CastingDeviceEventProps {
+    device?: string;
+  }
+  interface CastingErrorEventProps {
+    error?: string;
+  }
+  interface CastingDevicesAvailableEventProps {
+    devices?: string;
+  }
+  interface VisibleEventProps {
+    visible: boolean;
+  }
+  interface ScreenTappedEventProps {
+    x: number;
+    y: number;
+  }
+  interface UpdateBufferEventProps {
+    percent: number;
+    position: number;
+  }
+  interface PlayerSizeChangeEventProps {
+    sizes?: string;
   }
   type NativeError = (event: BaseEvent<PlayerErrorEventProps> | BaseEvent<PlayerSetupErrorProps> | BaseEvent<PlayerErrorProps>) => void;
   type NativeWarning = (event: BaseEvent<PlayerWarningEventProps>) => void;
@@ -542,6 +581,35 @@ declare module "@jwplayer/jwplayer-react-native" {
     onCaptionsChanged?: (event: BaseEvent<CaptionsChangedEventProps>) => void;
     onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
     onAudioTracks?: () => void;
+    /** @platform ios */
+    onIdle?: () => void;
+    /** @platform ios */
+    onVisible?: (event: BaseEvent<VisibleEventProps>) => void;
+    /** @platform ios */
+    onAttemptPlay?: () => void;
+    /** @platform ios */
+    onUpdateBuffer?: (event: BaseEvent<UpdateBufferEventProps>) => void;
+    /** @platform ios */
+    onScreenTapped?: (event: BaseEvent<ScreenTappedEventProps>) => void;
+    /** @platform ios */
+    onPlayerSizeChange?: (event: BaseEvent<PlayerSizeChangeEventProps>) => void;
+    onCasting?: (event: BaseEvent<CastingEventProps>) => void;
+    /** @platform ios */
+    onCastingDevicesAvailable?: (event: BaseEvent<CastingDevicesAvailableEventProps>) => void;
+    /** @platform ios */
+    onConnectedToCastingDevice?: (event: BaseEvent<CastingDeviceEventProps>) => void;
+    /** @platform ios */
+    onDisconnectedFromCastingDevice?: (event: BaseEvent<CastingErrorEventProps>) => void;
+    /** @platform ios */
+    onConnectionTemporarilySuspended?: () => void;
+    /** @platform ios */
+    onConnectionRecovered?: () => void;
+    /** @platform ios */
+    onConnectionFailed?: (event: BaseEvent<CastingErrorEventProps>) => void;
+    /** @platform ios */
+    onCastingEnded?: (event: BaseEvent<CastingErrorEventProps>) => void;
+    /** @platform ios */
+    onCastingFailed?: (event: BaseEvent<CastingErrorEventProps>) => void;
     shouldComponentUpdate?: (nextProps: any, nextState: any) => boolean;
     onBeforeNextPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;
   }

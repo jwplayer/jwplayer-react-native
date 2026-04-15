@@ -2120,6 +2120,9 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onRateChanged");
         event.putDouble("rate", playbackRateChangedEvent.getPlaybackRate());
+        if (mPlayer != null) {
+            event.putDouble("at", mPlayer.getPosition());
+        }
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topRateChanged", event);
     }
 

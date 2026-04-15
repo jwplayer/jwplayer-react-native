@@ -1423,7 +1423,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func jwplayer(_ player:JWPlayer, failedWithError code:UInt, message:String) {
-        self.onPlayerError?(["error": message, "errorCode": code])
+        self.onPlayerError?(["error": message, "errorCode": code, "description": message])
         playerFailed = true
     }
 
@@ -1433,11 +1433,11 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func jwplayer(_ player:JWPlayer, encounteredWarning code:UInt, message:String) {
-        self.onPlayerWarning?(["warning": message])
+        self.onPlayerWarning?(["warning": message, "code": code])
     }
 
     func jwplayer(_ player:JWPlayer, encounteredAdError code:UInt, message:String) {
-        self.onPlayerAdError?(["error": message])
+        self.onPlayerAdError?(["error": message, "code": code])
     }
 
 
@@ -2265,7 +2265,7 @@ extension RNJWPlayerView: JWCastDelegate {
     // MARK: - JWPlayer Cast Delegate
     
     func castController(_ controller: JWCastController, castingBeganWithDevice device: JWCastingDevice) {
-        self.onCasting?([:])
+        self.onCasting?(["device": device.name, "active": true, "available": true])
     }
     
     func castController(_ controller:JWCastController, castingEndedWithError error: Error?) {

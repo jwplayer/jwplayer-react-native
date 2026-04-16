@@ -1846,11 +1846,11 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func jwplayerHasSeeked(_ player:JWPlayer) {
-        self.onSeeked?([:])
+        self.onSeeked?(["position": player.time.position])
     }
     
     func jwplayer(_ player: JWPlayer, seekedFrom oldPosition: TimeInterval, to newPosition: TimeInterval) {
-        self.onSeek?(["from": oldPosition, "to": newPosition])
+        self.onSeek?(["position": oldPosition, "offset": newPosition])
     }
 
     func jwplayer(_ player:JWPlayer, updatedCues cues:[JWCue]) {

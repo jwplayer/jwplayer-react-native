@@ -504,12 +504,12 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 
     override func jwplayer(_ player:JWPlayer, seekedFrom oldPosition:TimeInterval, to newPosition:TimeInterval) {
         super.jwplayer(player, seekedFrom:oldPosition, to:newPosition)
-        parentView?.onSeek?(["from": oldPosition, "to": newPosition])
+        parentView?.onSeek?(["position": oldPosition, "offset": newPosition])
     }
 
     override func jwplayerHasSeeked(_ player:JWPlayer) {
         super.jwplayerHasSeeked(player)
-        parentView?.onSeeked?([:])
+        parentView?.onSeeked?(["position": player.time.position])
     }
 
     override func jwplayer(_ player:JWPlayer, playbackRateChangedTo rate:Double, at time:TimeInterval) {

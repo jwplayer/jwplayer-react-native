@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
     Pod::UI.puts "RNJWPlayer: using local JWPlayerKit.xcframework"
     s.vendored_frameworks = 'ios/frameworks/JWPlayerKit.xcframework'
   else
-    s.dependency   'JWPlayerKit', '4.25.2'
+    s.dependency   'JWPlayerKit', '4.26.0'
   end
   s.dependency   'React-Core'
   s.static_framework = true

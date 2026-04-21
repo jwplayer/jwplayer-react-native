@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.license      = package['license']
   s.authors      = package['author']
   s.homepage     = package['homepage']
-  s.platform     = :ios, "15.0"
+  s.platform     = :ios, "15.6"
   s.source       = { :git => "https://github.com/jwplayer/jwplayer-react-native.git", :tag => "v#{s.version}" }
   s.source_files  = "ios/RNJWPlayer/*.{h,m,swift}"
   if defined?($RNJWPlayerUseLocalSDK)

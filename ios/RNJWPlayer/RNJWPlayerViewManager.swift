@@ -621,5 +621,42 @@ class RNJWPlayerViewManager: RCTViewManager {
             }
         }
     }
-    
+
+    // The `refreshNotification` parameter is part of the JS API for parity with an
+    // Android-side workaround. On iOS JWPlayerKit already refreshes MPNowPlayingInfoCenter /
+    // the Control Center via LockScreenControlsHandler when updateItemMetadata is called,
+    // so this flag is accepted and ignored here.
+    @objc func setPlaylistItemMetadata(_ reactTag: NSNumber, _ title: String?, _ description: String?, _ image: String?, _ refreshNotification: Bool) {
+        DispatchQueue.main.async {
+            guard let view = self.getPlayerView(reactTag: reactTag) else {
+                print("Invalid view returned from registry, expecting RNJWPlayerView")
+                return
+            }
+
+            let posterURL = image.flatMap { URL(string: $0) }
+            var updatedItem: JWPlayerItem?
+
+            if let playerView = view.playerView {
+                playerView.player.updateItemMetadata(title: title, description: description, posterImage: posterURL)
+                updatedItem = playerView.player.currentItem
+            } else if let playerViewController = view.playerViewController {
+                playerViewController.player.updateItemMetadata(title: title, description: description, posterImage: posterURL)
+                updatedItem = playerViewController.player.currentItem
+            } else {
+                return
+            }
+
+            guard let item = updatedItem else { return }
+            do {
+                let data = try JSONSerialization.data(withJSONObject: item.toJSONObject(), options: .prettyPrinted)
+                view.onPlaylistItemMetadataChanged?([
+                    "playlistItem": String(data: data, encoding: .utf8) as Any,
+                    "index": view.currentPlayingIndex
+                ])
+            } catch {
+                print("Error serializing updated playlist item: \(error)")
+            }
+        }
+    }
+
 }

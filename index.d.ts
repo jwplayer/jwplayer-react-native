@@ -539,6 +539,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     onControlBarVisible?: (event: BaseEvent<ControlBarVisibleEventProps>) => void;
     onPlaylistComplete?: () => void;
     onPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;
+    onPlaylistItemMetadataChanged?: (event: BaseEvent<PlaylistItemEventProps>) => void;
     onCaptionsChanged?: (event: BaseEvent<CaptionsChangedEventProps>) => void;
     onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
     onAudioTracks?: () => void;
@@ -618,6 +619,33 @@ declare module "@jwplayer/jwplayer-react-native" {
      * @param playlistUrl URL for playlist to load (format for response: json)
      */
     loadPlaylistWithUrl(playlistUrl: string): void;
+    /**
+     * Updates the currently playing playlist item's metadata without reloading.
+     * Only non-null fields are applied; omitted fields leave existing values unchanged.
+     * Fires `onPlaylistItemMetadataChanged` with the updated item on both platforms.
+     *
+     * @param metadata.refreshNotification **Android-only, temporary workaround.**
+     *   When `true` on Android with `backgroundAudioEnabled: true`, the RN bridge cycles the
+     *   foreground MediaService after updating metadata so the lock-screen / notification shade
+     *   rebuilds with the new title and description. Without this flag the JW Android SDK
+     *   updates the MediaSession metadata but leaves the visible notification stale. Expect a
+     *   brief notification flicker and a momentary audio-focus transition while the service
+     *   rebinds.
+     *
+     *   Known limitation: the poster image is downloaded asynchronously by the SDK, so the
+     *   rebuilt notification typically still shows the previous poster. The poster refreshes
+     *   on the next playback state change (pause/play, seek).
+     *
+     *   Remove this flag from your call site once a future JW Android SDK release refreshes the
+     *   notification natively. No-op on iOS — JWPlayerKit already refreshes the lock-screen
+     *   controls via LockScreenControlsHandler.
+     */
+    setPlaylistItemMetadata(metadata: {
+        title?: string | null;
+        description?: string | null;
+        image?: string | null;
+        refreshNotification?: boolean;
+    }): void;
     setFullscreen(fullScreen: boolean): void;
     time(): Promise<number | null>;
     position(): Promise<number | null>;

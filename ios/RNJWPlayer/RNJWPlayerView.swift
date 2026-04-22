@@ -49,6 +49,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     var onBeforeNextPlaylistItemCompletion: ((JWPlayerItem?) -> ())?
     var pendingConfigAfterPlaylistItemCallback: [String: Any]?
     var hasTriggeredFirstPlaylistItemCallback: Bool = false
+    var currentPlayingIndex: Int = 0
     
     @objc var onBuffer: RCTDirectEventBlock?
     @objc var onUpdateBuffer: RCTDirectEventBlock?
@@ -58,6 +59,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     @objc var onPause: RCTDirectEventBlock?
     @objc var onIdle: RCTDirectEventBlock?
     @objc var onPlaylistItem: RCTDirectEventBlock?
+    @objc var onPlaylistItemMetadataChanged: RCTDirectEventBlock?
     @objc var onLoaded: RCTDirectEventBlock?
     @objc var onVisible: RCTDirectEventBlock?
     @objc var onTime: RCTDirectEventBlock?
@@ -1759,6 +1761,8 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 //            "adSchedule": schedDict,
 //            "tracks": trackDict
 //        ]
+
+        self.currentPlayingIndex = Int(index)
 
         do {
             let data:Data! = try JSONSerialization.data(withJSONObject: item.toJSONObject(), options:.prettyPrinted)

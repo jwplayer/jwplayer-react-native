@@ -314,7 +314,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                         return
                     }
                     fetchDeliveryAPIPlaylist(url: playlistUrl) { [weak self] items, _ in
-                        guard let self = self, let items = items, !items.isEmpty else { return }
+                        guard let self = self, let items = items, !items.isEmpty else {
+                            self?.onPlayerError?(["error": "Failed to load JW Platform playlist URL", "errorCode": -1])
+                            return
+                        }
                         if let playerViewController = self.playerViewController {
                             playerViewController.player.loadPlaylist(items: items)
                             playerViewController.player.loadPlayerItemAt(index: 0)
@@ -606,7 +609,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             print("Casting active - using loadPlaylist to preserve cast session")
 
             let loadItems: ([JWPlayerItem]) -> Void = { [weak self] items in
-                guard let self = self, let playerViewController = self.playerViewController else { return }
+                guard let self = self, let playerViewController = self.playerViewController else {
+                    self?.isRecreatingPlayer = false
+                    return
+                }
                 guard !items.isEmpty else {
                     print("Error: No valid playlist items found in config during cast")
                     self.isRecreatingPlayer = false
@@ -640,6 +646,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                let playlistUrl = URL(string: playlistUrlString) {
                 fetchDeliveryAPIPlaylist(url: playlistUrl) { [weak self] items, _ in
                     guard let items = items, !items.isEmpty else {
+                        self?.onPlayerError?(["error": "Failed to load JW Platform playlist URL", "errorCode": -1])
                         self?.isRecreatingPlayer = false
                         return
                     }
@@ -677,11 +684,20 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         // JWJSONParser.config can't re-parse that internal format, and we
         // skip recursion so the harvested DRM URLs don't get wiped by any
         // top-level key reads downstream.
+        // forceLegacyConfig expects the legacy builder's wiring (advertising,
+        // related, autostart, etc.) which this path doesn't carry. Defer to a
+        // full recreation so setNewConfig's URL path + preBuiltConfig can run
+        // through setupPlayerViewController with the correct branch.
         if let playlistUrlString = config["playlist"] as? String,
            let playlistUrl = URL(string: playlistUrlString) {
+            if forceLegacyConfig {
+                completePlayerRecreation(config: config)
+                return
+            }
             fetchDeliveryAPIPlaylist(url: playlistUrl) { [weak self] items, _ in
                 guard let self = self, let items = items, !items.isEmpty,
                       let preBuilt = try? JWPlayerConfigurationBuilder().playlist(items: items).build() else {
+                    self?.onPlayerError?(["error": "Failed to load JW Platform playlist URL", "errorCode": -1])
                     self?.isRecreatingPlayer = false
                     return
                 }
@@ -838,14 +854,14 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
            let playlistUrl = URL(string: playlistUrlString) {
             fetchDeliveryAPIPlaylist(url: playlistUrl) { [weak self] items, _ in
                 guard let self = self, let items = items, !items.isEmpty else {
-                    print("Error: Failed to fetch/parse JW Platform playlist URL")
+                    self?.onPlayerError?(["error": "Failed to load JW Platform playlist URL", "errorCode": -1])
                     return
                 }
                 let preBuilt: JWPlayerConfiguration?
                 do {
                     preBuilt = try JWPlayerConfigurationBuilder().playlist(items: items).build()
                 } catch {
-                    print("Error building JWPlayerConfiguration from fetched items: \(error)")
+                    self.onPlayerError?(["error": "Failed to build player configuration: \(error.localizedDescription)", "errorCode": -1])
                     return
                 }
                 self.setNewConfigInternal(config: config, preBuiltConfig: preBuilt)
@@ -916,18 +932,26 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             }
 
             do {
+                // If we already built a JWPlayerConfiguration from a fetched URL playlist
+                // use it directly. The legacy builder expects an array playlist and
+                // would otherwise produce an empty one from a URL-string config.
+                guard let resolvedConfig = preBuiltConfig ?? jwConfig else {
+                    print("Failed to build JWPlayerConfiguration from config")
+                    settingConfig = false
+                    return
+                }
                 let viewOnly = config["viewOnly"] as? Bool
                 if viewOnly == true {
-                    if forceLegacyConfig == true {
+                    if forceLegacyConfig == true && preBuiltConfig == nil {
                         self.setupPlayerView(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
                     } else {
-                        self.setupPlayerView(config: config, playerConfig: jwConfig!)
+                        self.setupPlayerView(config: config, playerConfig: resolvedConfig)
                     }
                 } else {
-                    if forceLegacyConfig == true {
+                    if forceLegacyConfig == true && preBuiltConfig == nil {
                         self.setupPlayerViewController(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
                     } else {
-                        self.setupPlayerViewController(config: config, playerConfig: jwConfig!)
+                        self.setupPlayerViewController(config: config, playerConfig: resolvedConfig)
                     }
                 }
                 

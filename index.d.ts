@@ -514,7 +514,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     /** @deprecated Use tracks array instead */
     label?: string;
     /** @deprecated Use tracks array instead */
-    default?: string;
+    default?: boolean;
   }
   interface CastingEventProps {
     device?: string;
@@ -527,7 +527,15 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface CastingErrorEventProps {
     error?: string;
   }
+  interface CastingDevice {
+    name: string;
+    identifier: string;
+  }
   interface CastingDevicesAvailableEventProps {
+    /**
+     * JSON-encoded `CastingDevice[]`. Parse with `JSON.parse()` before use.
+     * @platform ios
+     */
     devices?: string;
   }
   interface VisibleEventProps {
@@ -541,7 +549,16 @@ declare module "@jwplayer/jwplayer-react-native" {
     percent: number;
     position: number;
   }
+  interface PlayerSize {
+    width: number;
+    height: number;
+  }
   interface PlayerSizeChangeEventProps {
+    /**
+     * JSON-encoded `{ oldSize: PlayerSize; newSize: PlayerSize }`.
+     * Parse with `JSON.parse()` before use.
+     * @platform ios
+     */
     sizes?: string;
   }
   type NativeError = (event: BaseEvent<PlayerErrorEventProps> | BaseEvent<PlayerSetupErrorProps> | BaseEvent<PlayerErrorProps>) => void;

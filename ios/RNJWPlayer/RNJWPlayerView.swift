@@ -290,6 +290,44 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             if !dictionariesAreEqual(currentConfig, config) {
                 print("The only difference is the 'playlist' key.")
 
+                // Check if player is in PiP mode before loading new playlist
+                var isPipActive = false
+                var pipController: AVPictureInPictureController?
+
+                if let playerView = playerView {
+                    pipController = playerView.pictureInPictureController
+                    isPipActive = pipController?.isPictureInPictureActive ?? false
+                } else if let playerViewController = playerViewController {
+                    pipController = playerViewController.playerView.pictureInPictureController
+                    isPipActive = pipController?.isPictureInPictureActive ?? false
+                }
+
+                // URL-string playlist: fetch the Delivery API response, harvest
+                // drm.fairplay URLs into bridge state so the JWDRMContentKeyDataSource
+                // can answer key requests, then load the parsed items. Calling
+                // loadPlayerItemAt after loadPlaylist is what causes an active Cast
+                // session to receive the new media — loadPlaylist alone does not.
+                if let playlistUrlString = config["playlist"] as? String,
+                   let playlistUrl = URL(string: playlistUrlString) {
+                    if isPipActive {
+                        setNewConfig(config: config)
+                        return
+                    }
+                    fetchDeliveryAPIPlaylist(url: playlistUrl) { [weak self] items, _ in
+                        guard let self = self, let items = items, !items.isEmpty else { return }
+                        if let playerViewController = self.playerViewController {
+                            playerViewController.player.loadPlaylist(items: items)
+                            playerViewController.player.loadPlayerItemAt(index: 0)
+                        } else if let playerView = self.playerView {
+                            playerView.player.loadPlaylist(items: items)
+                            playerView.player.loadPlayerItemAt(index: 0)
+                        } else {
+                            self.setNewConfig(config: config)
+                        }
+                    }
+                    return
+                }
+
                 var playlistArray = [JWPlayerItem]()
 
                 if let playlist = config["playlist"] as? [AnyObject] {
@@ -300,18 +338,6 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                     }
                 }
 
-                // Check if player is in PiP mode before loading new playlist
-                var isPipActive = false
-                var pipController: AVPictureInPictureController?
-                
-                if let playerView = playerView {
-                    pipController = playerView.pictureInPictureController
-                    isPipActive = pipController?.isPictureInPictureActive ?? false
-                } else if let playerViewController = playerViewController {
-                    pipController = playerViewController.playerView.pictureInPictureController
-                    isPipActive = pipController?.isPictureInPictureActive ?? false
-                }
-                
                 if let playerViewController = playerViewController {
                     // We must treat PiP mode differently and setup as a new config
                     // or else the player will become unresponsive
@@ -470,17 +496,24 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             return true
         }
         
-        // Check for license changes (requires recreation)
-        let newLicense = config["license"] as? String
-        let oldLicense = currentConfig["license"] as? String
-        
-        if newLicense != oldLicense {
-            if newLicense != nil && oldLicense != nil {
-                print("License changed from '\(oldLicense!)' to '\(newLicense!)' - recreation required")
-                return true
-            } else if newLicense == nil || oldLicense == nil {
-                print("License presence changed - recreation required")
-                return true
+        // Check for license changes (requires recreation).
+        // Only compare when the new config explicitly carries a `license` key. A
+        // missing key means "the integrator didn't re-send it on this swap" — e.g.
+        // the native recreatePlayerWithConfig call passes only the fields that
+        // changed, while the initial render merged in a license via the React
+        // `config` prop. Treat absent-key as "same license" to avoid a spurious
+        // full recreation that tears down the active cast session.
+        if config.keys.contains("license") {
+            let newLicense = config["license"] as? String
+            let oldLicense = currentConfig["license"] as? String
+            if newLicense != oldLicense {
+                if newLicense != nil && oldLicense != nil {
+                    print("License changed from '\(oldLicense!)' to '\(newLicense!)' - recreation required")
+                    return true
+                } else if newLicense == nil || oldLicense == nil {
+                    print("License presence changed - recreation required")
+                    return true
+                }
             }
         }
         
@@ -565,13 +598,55 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             }
         }
 
-        // When actively casting, use loadPlaylist instead of configurePlayer.
-        // configurePlayer reinitializes the player which tears down the SDK's internal
-        // CastProvider, breaking the cast session. loadPlaylist preserves the cast session
-        // and the SDK automatically routes new content to the CastProvider which sends it
-        // to the receiver (including DRM sources and userInfo via customData).
+        // When actively casting, prefer loadPlaylist over configurePlayer.
+        // configurePlayer reinitializes the player and drops the active Cast session;
+        // loadPlaylist keeps the session alive and the new content — including its
+        // DRM sources and userInfo — flows through to the receiver automatically.
         if isActivelyCasting {
             print("Casting active - using loadPlaylist to preserve cast session")
+
+            let loadItems: ([JWPlayerItem]) -> Void = { [weak self] items in
+                guard let self = self, let playerViewController = self.playerViewController else { return }
+                guard !items.isEmpty else {
+                    print("Error: No valid playlist items found in config during cast")
+                    self.isRecreatingPlayer = false
+                    return
+                }
+                self.currentConfig = config
+                playerViewController.player.loadPlaylist(items: items)
+                // loadPlaylist alone queues the items but does not push the new
+                // media to an active Cast receiver. loadPlayerItemAt forces the
+                // swap to take effect so the receiver picks up the new content.
+                playerViewController.player.loadPlayerItemAt(index: 0)
+                if playlistItemCallback {
+                    self.setupPlaylistItemCallback()
+                }
+                print("Playlist loaded during cast session (items: \(items.count))")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self = self else { return }
+                    self.isRecreatingPlayer = false
+                    if let queuedConfig = self.pendingPlayerConfig {
+                        print("Processing queued config change after cast loadPlaylist")
+                        self.pendingPlayerConfig = nil
+                        self.recreatePlayerWithConfig(queuedConfig)
+                    }
+                }
+            }
+
+            // Delivery API URL string: use the shared helper so cast reconfigure
+            // also harvests FairPlay URLs into bridge state (needed if the session
+            // is later disconnected from cast and playback resumes locally).
+            if let playlistUrlString = config["playlist"] as? String,
+               let playlistUrl = URL(string: playlistUrlString) {
+                fetchDeliveryAPIPlaylist(url: playlistUrl) { [weak self] items, _ in
+                    guard let items = items, !items.isEmpty else {
+                        self?.isRecreatingPlayer = false
+                        return
+                    }
+                    loadItems(items)
+                }
+                return
+            }
 
             // Prefer JWJSONParser.playlistItems(from:) — it parses the JW Platform Delivery API
             // playlist format including DRM sources and credentials, which getPlayerItem drops.
@@ -591,29 +666,42 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 }
             }
 
-            guard !playlistArray.isEmpty else {
-                print("Error: No valid playlist items found in config during cast")
-                isRecreatingPlayer = false
-                return
-            }
+            loadItems(playlistArray)
+            return
+        }
 
-            currentConfig = config
-            playerViewController.player.loadPlaylist(items: playlistArray)
-
-            if playlistItemCallback {
-                setupPlaylistItemCallback()
-            }
-
-            print("Playlist loaded during cast session (items: \(playlistArray.count))")
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self else { return }
-                self.isRecreatingPlayer = false
-
-                if let queuedConfig = self.pendingPlayerConfig {
-                    print("Processing queued config change after cast loadPlaylist")
-                    self.pendingPlayerConfig = nil
-                    self.recreatePlayerWithConfig(queuedConfig)
+        // URL-string playlist: fetch the Delivery API response (harvests
+        // drm.fairplay URLs into bridge state), build JWPlayerConfiguration
+        // directly from the parsed items, then re-enter reconfigure with
+        // the pre-built config. We avoid toJSONObject round-tripping since
+        // JWJSONParser.config can't re-parse that internal format, and we
+        // skip recursion so the harvested DRM URLs don't get wiped by any
+        // top-level key reads downstream.
+        if let playlistUrlString = config["playlist"] as? String,
+           let playlistUrl = URL(string: playlistUrlString) {
+            fetchDeliveryAPIPlaylist(url: playlistUrl) { [weak self] items, _ in
+                guard let self = self, let items = items, !items.isEmpty,
+                      let preBuilt = try? JWPlayerConfigurationBuilder().playlist(items: items).build() else {
+                    self?.isRecreatingPlayer = false
+                    return
+                }
+                guard let playerViewController = self.playerViewController else {
+                    self.isRecreatingPlayer = false
+                    return
+                }
+                playerViewController.player.stop()
+                self.currentConfig = config
+                playerViewController.player.configurePlayer(with: preBuilt)
+                if playlistItemCallback {
+                    self.setupPlaylistItemCallback()
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self = self else { return }
+                    self.isRecreatingPlayer = false
+                    if let queuedConfig = self.pendingPlayerConfig {
+                        self.pendingPlayerConfig = nil
+                        self.recreatePlayerWithConfig(queuedConfig)
+                    }
                 }
             }
             return
@@ -741,11 +829,41 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func setNewConfig(config: [String : Any]) {
+        // URL-string playlist: fetch the JW Platform Delivery API response, harvest
+        // drm.fairplay URLs into bridge state, build JWPlayerConfiguration directly
+        // from the parsed items (skipping a JSON round-trip that JWJSONParser.config
+        // can't digest), and hand it to the synchronous setup path. preBuiltConfig
+        // also signals "don't overwrite the harvested DRM URLs from top-level keys".
+        if let playlistUrlString = config["playlist"] as? String,
+           let playlistUrl = URL(string: playlistUrlString) {
+            fetchDeliveryAPIPlaylist(url: playlistUrl) { [weak self] items, _ in
+                guard let self = self, let items = items, !items.isEmpty else {
+                    print("Error: Failed to fetch/parse JW Platform playlist URL")
+                    return
+                }
+                let preBuilt: JWPlayerConfiguration?
+                do {
+                    preBuilt = try JWPlayerConfigurationBuilder().playlist(items: items).build()
+                } catch {
+                    print("Error building JWPlayerConfiguration from fetched items: \(error)")
+                    return
+                }
+                self.setNewConfigInternal(config: config, preBuiltConfig: preBuilt)
+            }
+            return
+        }
+        setNewConfigInternal(config: config, preBuiltConfig: nil)
+    }
+
+    private func setNewConfigInternal(config: [String : Any], preBuiltConfig: JWPlayerConfiguration?) {
         let forceLegacyConfig = config["forceLegacyConfig"] as? Bool?
         let playlistItemCallback = config["playlistItemCallbackEnabled"] as? Bool?
-        let data:Data! = try? JSONSerialization.data(withJSONObject: config, options:.prettyPrinted)
-        let jwConfig = try? JWJSONParser.config(from:data)
-        
+        let jwConfig: JWPlayerConfiguration? = {
+            if let preBuiltConfig = preBuiltConfig { return preBuiltConfig }
+            let data:Data! = try? JSONSerialization.data(withJSONObject: config, options:.prettyPrinted)
+            return try? JWJSONParser.config(from: data)
+        }()
+
         currentConfig = config
 
         if !settingConfig {
@@ -754,12 +872,12 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
             let license = config["license"] as? String
             self.setLicense(license: license)
-            
+
             if let bae = config["backgroundAudioEnabled"] as? Bool, let pe = config["pipEnabled"] as? Bool {
                 backgroundAudioEnabled = bae
                 pipEnabled = pe
             }
-            
+
             if backgroundAudioEnabled || pipEnabled {
                 let category = config["category"] != nil ? config["category"] as? String : "playback" // default category for playback
                 let categoryOptions = config["categoryOptions"] as? [String]
@@ -769,12 +887,17 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             } else {
                 self.deinitAudioSession()
             }
-            
+
             // Pull out top level iOS DRM values from config if present
-            // This is most often used in non-legacy configs using JWP DRM solutions
-            processSpcUrl = config["processSpcUrl"] as? String
-            fairplayCertUrl = config["certificateUrl"] as? String
-            contentUUID = config["contentUUID"] as? String
+            // This is most often used in non-legacy configs using JWP DRM solutions.
+            // Skip this on the URL-playlist (preBuiltConfig) path — fetchDeliveryAPIPlaylist
+            // already harvested drm.fairplay credentials into these properties and the
+            // top-level keys won't be populated in that shape of config.
+            if preBuiltConfig == nil {
+                processSpcUrl = config["processSpcUrl"] as? String
+                fairplayCertUrl = config["certificateUrl"] as? String
+                contentUUID = config["contentUUID"] as? String
+            }
             
             if forceLegacyConfig == true {
                 // Dangerous: check playlist for processSpcUrl / fairplayCertUrl in playlist
@@ -1630,6 +1753,56 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     // MARK: - DRM Delegate
 
+    /// Fetches a JW Platform Delivery API URL and extracts both the parsed JWPlayerItems
+    /// and the FairPlay credentials needed by this class's JWDRMContentKeyDataSource.
+    /// Items come from JWJSONParser.playlistItems (preserves the full drm blob on each
+    /// source for cast handoff). FairPlay URLs are harvested via plain JSONSerialization
+    /// from drm.fairplay on the first source that has them. Without this step the
+    /// content-key delegate returns nil for appIdentifierForURL and AVPlayer falls
+    /// through to trying to fetch the skd:// URI directly.
+    func fetchDeliveryAPIPlaylist(url: URL,
+                                  completion: @escaping (_ items: [JWPlayerItem]?, _ error: Error?) -> Void) {
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+            DispatchQueue.main.async {
+                guard let self = self else { completion(nil, error); return }
+                guard let data = data, error == nil else {
+                    print("Error fetching JW Platform playlist URL: \(error?.localizedDescription ?? "unknown")")
+                    completion(nil, error)
+                    return
+                }
+
+                // Accept either the full Delivery API envelope ({ "playlist": [...] })
+                // or a bare [item, item] array. JWJSONParser.playlistItems requires
+                // the latter (it force-casts to Array internally and will crash on
+                // a dict), so we unwrap the envelope before handing it off.
+                let rawJson = try? JSONSerialization.jsonObject(with: data)
+                var playlistArray: [[String: Any]] = []
+                if let envelope = rawJson as? [String: Any],
+                   let arr = envelope["playlist"] as? [[String: Any]] {
+                    playlistArray = arr
+                } else if let arr = rawJson as? [[String: Any]] {
+                    playlistArray = arr
+                }
+
+                // Harvest FairPlay URLs from the first source that declares them.
+                if let first = playlistArray.first,
+                   let sources = first["sources"] as? [[String: Any]],
+                   let fairplay = sources.compactMap({ ($0["drm"] as? [String: Any])?["fairplay"] as? [String: Any] }).first {
+                    self.processSpcUrl = fairplay["processSpcUrl"] as? String
+                    self.fairplayCertUrl = fairplay["certificateUrl"] as? String
+                    self.contentUUID = first["mediaid"] as? String
+                }
+
+                var items: [JWPlayerItem]? = nil
+                if !playlistArray.isEmpty,
+                   let arrayData = try? JSONSerialization.data(withJSONObject: playlistArray) {
+                    items = try? JWJSONParser.playlistItems(from: arrayData)
+                }
+                completion(items, nil)
+            }
+        }.resume()
+    }
+
     func contentIdentifierForURL(_ url: URL, completionHandler handler: @escaping (Data?) -> Void) {
         let data:Data! = url.host?.data(using: String.Encoding.utf8)
         handler(data)
@@ -1640,7 +1813,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             handler(nil)
             return
         }
-        
+
         let request = URLRequest(url: finalUrl)
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
@@ -1648,7 +1821,6 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 handler(nil)
                 return
             }
-            
             handler(data)
         }
         task.resume()

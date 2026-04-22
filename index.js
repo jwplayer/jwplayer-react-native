@@ -371,6 +371,7 @@ export default class JWPlayer extends Component {
 		onSeeked: PropTypes.func,
 		onRateChanged: PropTypes.func,
 		onPlaylistItem: PropTypes.func,
+		onPlaylistItemMetadataChanged: PropTypes.func,
 		onControlBarVisible: PropTypes.func,
 		onPlaylistComplete: PropTypes.func,
 		getAudioTracks: PropTypes.func,
@@ -539,6 +540,23 @@ export default class JWPlayer extends Component {
 	loadPlaylistWithUrl(playlistUrl) {
 		if (RNJWPlayerManager)
 			RNJWPlayerManager.loadPlaylistWithUrl(this.getRNJWPlayerBridgeHandle(), playlistUrl);
+	}
+
+	setPlaylistItemMetadata(metadata) {
+		if (!RNJWPlayerManager) return;
+		const {
+			title = null,
+			description = null,
+			image = null,
+			refreshNotification = false,
+		} = metadata || {};
+		RNJWPlayerManager.setPlaylistItemMetadata(
+			this.getRNJWPlayerBridgeHandle(),
+			title,
+			description,
+			image,
+			refreshNotification
+		);
 	}
 
 	setFullscreen(fullscreen) {

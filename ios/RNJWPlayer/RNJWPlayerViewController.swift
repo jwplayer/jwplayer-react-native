@@ -61,7 +61,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 
     override func jwplayer(_ player:JWPlayer, failedWithError code:UInt, message:String) {
         super.jwplayer(player, failedWithError:code, message:message)
-        parentView?.onPlayerError?(["error": message, "errorCode": code])
+        parentView?.onPlayerError?(["error": message, "errorCode": code, "description": message])
         parentView?.playerFailed = true
     }
 
@@ -73,12 +73,12 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 
     override func jwplayer(_ player:JWPlayer, encounteredWarning code:UInt, message:String) {
         super.jwplayer(player, encounteredWarning:code, message:message)
-        parentView?.onPlayerWarning?(["warning": message])
+        parentView?.onPlayerWarning?(["warning": message, "code": code])
     }
 
     override func jwplayer(_ player:JWPlayer, encounteredAdError code:UInt, message:String) {
         super.jwplayer(player, encounteredAdError:code, message:message)
-        parentView?.onPlayerAdError?(["error": message])
+        parentView?.onPlayerAdError?(["error": message, "code": code])
     }
 
 
@@ -532,7 +532,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 #if USE_GOOGLE_CAST
     override func castController(_ controller:JWCastController, castingBeganWithDevice device:JWCastingDevice) {
         super.castController(controller, castingBeganWithDevice:device)
-        parentView?.onCasting?([:])
+        parentView?.onCasting?(["device": device.name, "active": true, "available": true])
     }
 
     override func castController(_ controller:JWCastController, castingEndedWithError error: Error?) {

@@ -95,7 +95,7 @@ allprojects {
     }
 }
 
-def jwPlayerVersion = "4.24.2"
+def jwPlayerVersion = "4.25.0"
 def useLocalAARs = false // Set to false to revert to Maven dependencies
 def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK > 4.16.0
 def media3ExoVersion = "1.4.1"

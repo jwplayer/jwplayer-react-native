@@ -9,14 +9,14 @@ Pod::Spec.new do |s|
   s.license      = package['license']
   s.authors      = package['author']
   s.homepage     = package['homepage']
-  s.platform     = :ios, "15.0"
+  s.platform     = :ios, "15.6"
   s.source       = { :git => "https://github.com/jwplayer/jwplayer-react-native.git", :tag => "v#{s.version}" }
   s.source_files  = "ios/RNJWPlayer/*.{h,m,swift}"
   if defined?($RNJWPlayerUseLocalSDK)
     Pod::UI.puts "RNJWPlayer: using local JWPlayerKit.xcframework"
     s.vendored_frameworks = 'ios/frameworks/JWPlayerKit.xcframework'
   else
-    s.dependency   'JWPlayerKit', '4.25.2'
+    s.dependency   'JWPlayerKit', '4.26.0'
   end
   s.dependency   'React-Core'
   s.static_framework = true
@@ -31,19 +31,21 @@ Pod::Spec.new do |s|
     'OTHER_LDFLAGS': '-ObjC',
   }
 
+  swift_flags = ['$(inherited)']
+
   if defined?($RNJWPlayerUseGoogleCast)
     Pod::UI.puts "RNJWPlayer: enable Google Cast"
     s.dependency 'google-cast-sdk', '4.8.3'
-    s.pod_target_xcconfig = {
-      'OTHER_SWIFT_FLAGS' => '$(inherited) -D USE_GOOGLE_CAST'
-    }
+    swift_flags << '-D USE_GOOGLE_CAST'
   end
   if defined?($RNJWPlayerUseGoogleIMA)
     Pod::UI.puts "RNJWPlayer: enable IMA SDK"
     s.dependency 'GoogleAds-IMA-iOS-SDK', '3.22.1'
-    s.pod_target_xcconfig = {
-      'OTHER_SWIFT_FLAGS' => '$(inherited) -D USE_GOOGLE_IMA'
-    }
+    swift_flags << '-D USE_GOOGLE_IMA'
   end
+
+  s.pod_target_xcconfig = {
+    'OTHER_SWIFT_FLAGS' => swift_flags.join(' ')
+  }
   
 end

@@ -107,6 +107,7 @@ import com.jwplayer.pub.api.events.PlaylistItemEvent;
 import com.jwplayer.pub.api.events.ReadyEvent;
 import com.jwplayer.pub.api.events.SeekEvent;
 import com.jwplayer.pub.api.events.SeekedEvent;
+import com.jwplayer.pub.api.events.PlaylistItemMetadataChangedEvent;
 import com.jwplayer.pub.api.events.SetupErrorEvent;
 import com.jwplayer.pub.api.events.TimeEvent;
 import com.jwplayer.pub.api.events.listeners.AdvertisingEvents;
@@ -146,6 +147,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnTimeListener,
         VideoPlayerEvents.OnPlaylistListener,
         VideoPlayerEvents.OnPlaylistItemListener,
+        VideoPlayerEvents.OnPlaylistItemMetadataChangedListener,
         VideoPlayerEvents.OnPlaylistCompleteListener,
         VideoPlayerEvents.OnAudioTracksListener,
         VideoPlayerEvents.OnAudioTrackChangedListener,
@@ -256,6 +258,33 @@ public class RNJWPlayerView extends RelativeLayout implements
                 mMediaServiceController.bindService();
             }
         }
+    }
+
+    /**
+     * Temporary workaround for a JW Android SDK limitation: setPlaylistItemMetadata updates
+     * the MediaSessionCompat metadata but does not rebuild the foreground-service Notification,
+     * so the lock-screen / shade continues to show the old title / description / poster.
+     *
+     * Cycling the MediaServiceController forces MediaService.doStartForeground() to run
+     * NotificationHelper.createNotification() again, which reads the (already-updated) session
+     * text and rebuilds the visible notification. Expect a brief notification flicker and a
+     * momentary allowBackgroundAudio(false)→(true) transition while the service rebinds.
+     *
+     * Known limitation: the poster image is downloaded asynchronously by the SDK's internal
+     * MediaSessionHelper, and cycling the service resets that helper — so the rebuilt
+     * notification typically shows the previous poster. The poster refreshes on the next
+     * playback state change (pause/play, seek).
+     *
+     * Remove this workaround once the JW Android SDK refreshes the notification natively.
+     */
+    void refreshBackgroundAudioNotification() {
+        if (!backgroundAudioEnabled || mPlayer == null || mActivity == null) {
+            return;
+        }
+        doUnbindService();
+        mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
+                .build();
+        doBindService();
     }
 
     private void doUnbindService() {
@@ -431,6 +460,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.TIME,
                     EventType.PLAYLIST,
                     EventType.PLAYLIST_ITEM,
+                    EventType.PLAYLIST_ITEM_METADATA_CHANGED,
                     EventType.PLAYLIST_COMPLETE,
                     EventType.FIRST_FRAME,
                     EventType.CONTROLS,
@@ -521,6 +551,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.AUDIO_TRACK_CHANGED,
                     EventType.PLAYLIST,
                     EventType.PLAYLIST_ITEM,
+                    EventType.PLAYLIST_ITEM_METADATA_CHANGED,
                     EventType.PLAYLIST_COMPLETE,
                     EventType.FIRST_FRAME,
                     EventType.CONTROLS,
@@ -2087,6 +2118,17 @@ public class RNJWPlayerView extends RelativeLayout implements
     @Override
     public void onPlaylist(PlaylistEvent playlistEvent) {
 
+    }
+
+    @Override
+    public void onPlaylistItemMetadataChanged(PlaylistItemMetadataChangedEvent playlistItemMetadataChangedEvent) {
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "onPlaylistItemMetadataChanged");
+        event.putInt("index", playlistItemMetadataChangedEvent.getIndex());
+        Gson gson = new Gson();
+        String json = gson.toJson(playlistItemMetadataChangedEvent.getPlaylistItem());
+        event.putString("playlistItem", json);
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlaylistItemMetadataChanged", event);
     }
 
     @Override

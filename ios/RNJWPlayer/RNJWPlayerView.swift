@@ -932,29 +932,31 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             }
 
             do {
-                // If we already built a JWPlayerConfiguration from a fetched URL playlist
-                // use it directly. The legacy builder expects an array playlist and
-                // would otherwise produce an empty one from a URL-string config.
-                guard let resolvedConfig = preBuiltConfig ?? jwConfig else {
-                    print("Failed to build JWPlayerConfiguration from config")
-                    settingConfig = false
-                    return
-                }
                 let viewOnly = config["viewOnly"] as? Bool
-                if viewOnly == true {
-                    if forceLegacyConfig == true && preBuiltConfig == nil {
-                        self.setupPlayerView(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
+                // Branch on the legacy path first so its setup does not depend on the
+                // non-legacy JSON parser succeeding. Only build the resolved config
+                // (from a URL-fetch preBuilt or JWJSONParser output) when we actually
+                // need it. Mirrors the ordering in reconfigurePlayer.
+                if forceLegacyConfig == true && preBuiltConfig == nil {
+                    let legacyConfig = try self.getPlayerConfiguration(config: config)
+                    if viewOnly == true {
+                        self.setupPlayerView(config: config, playerConfig: legacyConfig)
                     } else {
-                        self.setupPlayerView(config: config, playerConfig: resolvedConfig)
+                        self.setupPlayerViewController(config: config, playerConfig: legacyConfig)
                     }
                 } else {
-                    if forceLegacyConfig == true && preBuiltConfig == nil {
-                        self.setupPlayerViewController(config: config, playerConfig: try self.getPlayerConfiguration(config: config))
+                    guard let resolvedConfig = preBuiltConfig ?? jwConfig else {
+                        print("Failed to build JWPlayerConfiguration from config")
+                        settingConfig = false
+                        return
+                    }
+                    if viewOnly == true {
+                        self.setupPlayerView(config: config, playerConfig: resolvedConfig)
                     } else {
                         self.setupPlayerViewController(config: config, playerConfig: resolvedConfig)
                     }
                 }
-                
+
                 if playlistItemCallback == true {
                     self.setupPlaylistItemCallback()
                 }

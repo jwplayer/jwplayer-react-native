@@ -263,7 +263,10 @@ public class Util {
         JWAdEventTypeSchedule(9),
         JWAdEventTypeSkipped(10),
         JWAdEventTypeStarted(11),
-        JWAdEventTypeCompanion(12);
+        JWAdEventTypeCompanion(12),
+        JWAdEventTypeLoaded(13),
+        JWAdEventTypeLoadedXml(14),
+        JWAdEventTypeAdBreakIgnored(15);
 
         private final int value;
 

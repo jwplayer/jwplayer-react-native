@@ -659,6 +659,12 @@ declare module "@jwplayer/jwplayer-react-native" {
     JWAdEventTypeStarted: 11;
     /// This event relays information about ad companions.
     JWAdEventTypeCompanion: 12;
+    /// This event is reported when the ad has loaded. (Android only)
+    JWAdEventTypeLoaded: 13;
+    /// This event is reported when the ad VAST XML has loaded. (Android only)
+    JWAdEventTypeLoadedXml: 14;
+    /// This event is reported when an ad break was ignored (e.g. because another is playing). (Android only)
+    JWAdEventTypeAdBreakIgnored: 15;
   };
 
   export const JWPlayerState: {

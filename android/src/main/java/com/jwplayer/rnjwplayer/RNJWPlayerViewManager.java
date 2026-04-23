@@ -145,6 +145,10 @@ public class RNJWPlayerViewManager extends SimpleViewManager<RNJWPlayerView> {
                     MapBuilder.of(
                             "phasedRegistrationNames",
                             MapBuilder.of("bubbled", "onPlaylistComplete")))
+            .put("topPlaylist",
+                    MapBuilder.of(
+                            "phasedRegistrationNames",
+                            MapBuilder.of("bubbled", "onPlaylist")))
             .put("topPlaylistItem",
                     MapBuilder.of(
                             "phasedRegistrationNames",

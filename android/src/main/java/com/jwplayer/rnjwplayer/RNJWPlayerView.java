@@ -1719,6 +1719,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adLoadedEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeLoaded));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1727,6 +1728,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adLoadedXmlEvent));
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeLoadedXml));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -1773,7 +1775,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adBreakIgnoredEvent));
-        // missing type code
+        event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeAdBreakIgnored));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
     }
 
@@ -2109,15 +2111,23 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onPlaylistItem");
         event.putInt("index", playlistItemEvent.getIndex());
-        Gson gson = new Gson();
-        String json = gson.toJson(playlistItemEvent.getPlaylistItem());
-        event.putString("playlistItem", json);
+        event.putString("playlistItem", JsonHelper.toJson(playlistItemEvent.getPlaylistItem()));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlaylistItem", event);
     }
 
     @Override
     public void onPlaylist(PlaylistEvent playlistEvent) {
-
+        WritableMap event = Arguments.createMap();
+        event.putString("message", "onPlaylist");
+        java.util.List<PlaylistItem> items = playlistEvent.getPlaylist();
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < items.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(JsonHelper.toJson(items.get(i)));
+        }
+        sb.append("]");
+        event.putString("playlist", sb.toString());
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlaylist", event);
     }
 
     @Override
@@ -2125,9 +2135,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onPlaylistItemMetadataChanged");
         event.putInt("index", playlistItemMetadataChangedEvent.getIndex());
-        Gson gson = new Gson();
-        String json = gson.toJson(playlistItemMetadataChangedEvent.getPlaylistItem());
-        event.putString("playlistItem", json);
+        event.putString("playlistItem", JsonHelper.toJson(playlistItemMetadataChangedEvent.getPlaylistItem()));
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlaylistItemMetadataChanged", event);
     }
 

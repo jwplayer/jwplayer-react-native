@@ -17,7 +17,7 @@ android/.settings
 android/.classpath
 android/.project
 android/libs
-ios/Frameworks
+ios/frameworks
 *.iml
 .eslintrc
 yarn-error.log

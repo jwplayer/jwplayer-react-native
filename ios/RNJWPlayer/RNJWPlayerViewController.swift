@@ -46,6 +46,32 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
         self.player.contentKeyDataSource = nil
     }
 
+    // Forwards JWPlayerKit's modal presentations (quality / audio / captions
+    // menus, related items, etc.) up to the top-most view controller in the
+    // key window so they draw over host chrome like UITabBarController. See
+    // GitHub issue #93. Falls back to super.present when self is already the
+    // topmost (e.g. when JW fullscreen is the topmost presented VC).
+    override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)? = nil) {
+        assert(Thread.isMainThread, "RNJWPlayerViewController.present must be called on the main thread")
+        if let top = Self.topMostViewController(), top !== self {
+            top.present(viewControllerToPresent, animated: flag, completion: completion)
+        } else {
+            super.present(viewControllerToPresent, animated: flag, completion: completion)
+        }
+    }
+
+    private static func topMostViewController() -> UIViewController? {
+        let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first(where: { $0.isKeyWindow })
+        var top = keyWindow?.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
+    }
+
     // MARK: - JWPlayer Delegate
 
     override func jwplayerIsReady(_ player:JWPlayer) {

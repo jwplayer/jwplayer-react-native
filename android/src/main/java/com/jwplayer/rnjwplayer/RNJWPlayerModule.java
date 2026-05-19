@@ -15,6 +15,7 @@ import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.jwplayer.pub.api.JWPlayer;
@@ -52,9 +53,15 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
             uiManagerType = UIManagerType.DEFAULT;
         }
         UIManager uiManager = UIManagerHelper.getUIManager(mReactContext, uiManagerType);
-        if (uiManager != null) {
+        if (uiManager == null) {
+            return null;
+        }
+        try {
             return (RNJWPlayerView) uiManager.resolveView(reactTag);
-        } else {
+        } catch (IllegalViewOperationException e) {
+            // Under Fabric, resolveView throws when the view tag is no longer mounted
+            // (e.g. the view was unmounted between Handler.post and the Runnable executing
+            // during backgrounding or navigation). Paper returns null in the same case.
             return null;
         }
     }

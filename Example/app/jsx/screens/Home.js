@@ -20,7 +20,7 @@ function formatBuildInfo(info) {
   return `v${info.version} (dev: ${info.branch} @ ${info.commit}${dirty})`;
 }
 
-const SCREENS = ['TypeScript Example', 'Single', 'On Before Next Playlist Item', 'Modal', 'List', 'DRM', 'Local', 'Sources', 'Youtube', 'Global Player', 'Item Metadata'];
+const SCREENS = ['TypeScript Example', 'Single', 'On Before Next Playlist Item', 'Modal', 'List', 'DRM', 'Local', 'Sources', 'Youtube', 'Global Player', 'Item Metadata', 'Bottom Tab Overlap (Issue #93)'];
 
 export default () => {
   const navigation = useNavigation();

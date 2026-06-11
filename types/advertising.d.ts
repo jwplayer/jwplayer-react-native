@@ -385,6 +385,18 @@ export interface VmapAdvertisingConfig extends BaseAdvertisingConfig {
    * Alternative way to specify VMAP URL (as string)
    */
   schedule?: string;
+
+  /**
+   * Lift a VMAP-level `<vmap:Extensions>` block down into each `<vmap:AdBreak>`
+   * so per-break consumers (e.g. skippable extensions) see it.
+   *
+   * Only affects inline VMAP XML supplied via `tag`/`schedule`; a remote VMAP
+   * URL is never modified. Defaults to `false`.
+   *
+   * @default false
+   * @platforms iOS, Android
+   */
+  liftsVMAPLevelExtensions?: boolean;
 }
 
 /**

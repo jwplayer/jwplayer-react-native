@@ -32,6 +32,10 @@ class RNJWPlayerAds {
         if let openBrowserOnAdClick = ads["openBrowserOnAdClick"] as? Bool {
             adConfigBuilder.openBrowserOnAdClick(openBrowserOnAdClick)
         }
+
+        if let liftsVMAPLevelExtensions = ads["liftsVMAPLevelExtensions"] as? Bool {
+            adConfigBuilder.liftsVMAPLevelExtensions(liftsVMAPLevelExtensions)
+        }
         
         if let adRulesDict = ads["adRules"] as? [String: Any], let adRules = getAdRules(from: adRulesDict) {
             adConfigBuilder.adRules(adRules)

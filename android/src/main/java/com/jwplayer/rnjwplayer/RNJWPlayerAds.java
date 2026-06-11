@@ -81,6 +81,15 @@ public class RNJWPlayerAds {
             builder.adRules(adRules);
         }
 
+        // NOTE: `liftsVMAPLevelExtensions` is intentionally NOT wired here.
+        // On Android the SDK exposes that setter only on VmapAdvertisingConfig.Builder,
+        // not on VastAdvertisingConfig.Builder (which is all this legacy path builds).
+        // The flag therefore only takes effect via the modern config path, where the
+        // SDK itself parses it in AdvertisingJsonHelper.parseVmapAdvertising and
+        // constructs a VmapAdvertisingConfig. (iOS unifies VAST/VMAP into one
+        // JWAdsAdvertisingConfigBuilder, so it can — and does — wire the flag for both
+        // its modern and legacy paths in RNJWPlayerAds.configureVAST.)
+
         return builder.build();
     }
 

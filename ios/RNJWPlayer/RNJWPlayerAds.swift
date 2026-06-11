@@ -33,6 +33,12 @@ class RNJWPlayerAds {
             adConfigBuilder.openBrowserOnAdClick(openBrowserOnAdClick)
         }
 
+        // iOS exposes liftsVMAPLevelExtensions on JWAdsAdvertisingConfigBuilder, the
+        // single builder backing both VAST and VMAP here, so wiring it once covers the
+        // modern and legacy config paths. (Android differs: the setter lives only on
+        // VmapAdvertisingConfig.Builder, which its legacy path never builds — see the
+        // note in RNJWPlayerAds.java#configureVastAdvertising — so on Android the flag
+        // works through the modern JSON config path only.)
         if let liftsVMAPLevelExtensions = ads["liftsVMAPLevelExtensions"] as? Bool {
             adConfigBuilder.liftsVMAPLevelExtensions(liftsVMAPLevelExtensions)
         }

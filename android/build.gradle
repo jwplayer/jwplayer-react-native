@@ -95,10 +95,10 @@ allprojects {
     }
 }
 
-def jwPlayerVersion = "4.25.2"
+def jwPlayerVersion = "4.26.0"
 def useLocalAARs = false // Set to false to revert to Maven dependencies
 def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK > 4.16.0
-def media3ExoVersion = "1.4.1"
+def media3ExoVersion = "1.10.0"
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
@@ -109,7 +109,7 @@ dependencies {
         implementation fileTree(dir: 'libs', include: ['jwplayer-core.aar', 'jwplayer-common.aar', 'jwplayer-chromecast.aar'])
         if (useIMA) {
             implementation fileTree(dir: 'libs', include: ['jwplayer-ima.aar'])
-            implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
+            implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.39.0'
             implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
             coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
         }
@@ -122,7 +122,7 @@ dependencies {
         // Optional: IMA Ads support
         if (useIMA) {
             implementation "com.jwplayer:jwplayer-ima:${safeExtGet('jwPlayerVersion', jwPlayerVersion)}"
-            implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
+            implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.39.0'
             implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
             coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
         }

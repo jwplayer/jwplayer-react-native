@@ -581,6 +581,13 @@ const playlistItem: JWPlaylistItem = {
   // Playback
   starttime: 0,      // Start position in seconds
   duration: 600,     // Duration in seconds
+
+  // Live streams only: target offset from the live edge in seconds.
+  // Positions playback further behind the live edge so captions have
+  // more time to process. Clamped to 5-45s by the native SDKs; omit
+  // or use 0 for default behavior. Ignored for VOD.
+  // Requires iOS SDK 4.27.0+ / Android SDK 4.26.0+
+  liveSyncDuration: 15,
   
   // Tracks
   tracks: [

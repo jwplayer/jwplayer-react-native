@@ -298,6 +298,11 @@ declare module "@jwplayer/jwplayer-react-native" {
     tracks?: Track[];
     recommendations?: string;
     startTime?: number;
+    /**
+     * Target offset from the live edge in seconds for live streams (clamped to 5-45s natively).
+     * Gives captions more time to process before playback reaches them. Ignored for VOD.
+     */
+    liveSyncDuration?: number;
     autostart?: boolean;
     /**
      * Data to be passed to Chromecast receiver (optional and typically used for DRM implementations)

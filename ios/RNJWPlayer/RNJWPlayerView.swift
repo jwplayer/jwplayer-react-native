@@ -1290,6 +1290,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             itemBuilder.startTime(startTime)
         }
 
+        if let liveSyncDuration = item["liveSyncDuration"] as? Double {
+            itemBuilder.liveSyncDuration(liveSyncDuration)
+        }
+
         if let recommendations = item["recommendations"] as? String, let recURL = URL(string: recommendations) {
             itemBuilder.recommendations(recURL)
         }

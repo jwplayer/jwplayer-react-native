@@ -301,8 +301,14 @@ export interface JWPlaylistItem {
    *
    * Positions playback further behind the live edge, giving captions and
    * other sidecar data more time to be processed before playback reaches them.
-   * Values are clamped to 5-45 seconds by the native SDKs; 0 or negative
-   * values leave the platform default behavior unchanged.
+   *
+   * This is a target, not a guarantee. The native SDKs clamp values to the
+   * 5-45 second range, and the stream constrains the result further: a stream
+   * may advertise a minimum hold-back from the live edge that the player
+   * cannot get closer than, so values below that hold-back may have no
+   * visible effect (exact behavior below the stream minimum differs between
+   * platforms). 0 or negative values leave the platform default behavior
+   * unchanged.
    *
    * Only affects live streams; ignored for VOD content.
    * Requires iOS SDK 4.27.0+ / Android SDK 4.26.0+

@@ -1290,7 +1290,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             itemBuilder.startTime(startTime)
         }
 
-        if let liveSyncDuration = item["liveSyncDuration"] as? Double {
+        // "_nativeLiveSyncDuration" is the key the SDK writes when serializing an
+        // item back out (e.g. in playlist-item event payloads), so accept both to
+        // survive a round-trip through getPlayerItem.
+        if let liveSyncDuration = (item["liveSyncDuration"] ?? item["_nativeLiveSyncDuration"]) as? Double {
             itemBuilder.liveSyncDuration(liveSyncDuration)
         }
 

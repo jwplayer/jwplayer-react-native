@@ -299,8 +299,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     recommendations?: string;
     startTime?: number;
     /**
-     * Target offset from the live edge in seconds for live streams (clamped to 5-45s natively).
-     * Gives captions more time to process before playback reaches them. Ignored for VOD.
+     * Target offset from the live edge in seconds for live streams. A target, not a
+     * guarantee: the native SDKs clamp values to 5-45s, and the stream's own hold-back
+     * may constrain the result further. Gives captions more time to process before
+     * playback reaches them. Ignored for VOD.
      */
     liveSyncDuration?: number;
     autostart?: boolean;

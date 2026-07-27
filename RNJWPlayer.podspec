@@ -40,7 +40,7 @@ Pod::Spec.new do |s|
   end
   if defined?($RNJWPlayerUseGoogleIMA)
     Pod::UI.puts "RNJWPlayer: enable IMA SDK"
-    s.dependency 'GoogleAds-IMA-iOS-SDK', '3.22.1'
+    s.dependency 'GoogleAds-IMA-iOS-SDK', '3.32.0'
     swift_flags << '-D USE_GOOGLE_IMA'
   end
 

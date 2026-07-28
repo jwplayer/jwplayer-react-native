@@ -587,7 +587,9 @@ const playlistItem: JWPlaylistItem = {
   // more time to process. A target, not a guarantee: the native SDKs
   // clamp values to 5-45s, and the stream's own hold-back may constrain
   // the result further. Omit or use 0 for default behavior. Ignored for
-  // VOD. Requires iOS SDK 4.27.0+ / Android SDK 4.26.0+
+  // VOD. Must be set on a playlist item as shown here — a root-level
+  // value is not applied on all platforms.
+  // Requires iOS SDK 4.27.0+ / Android SDK 4.26.0+
   liveSyncDuration: 15,
   
   // Tracks

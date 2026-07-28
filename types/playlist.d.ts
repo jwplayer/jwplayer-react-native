@@ -310,6 +310,9 @@ export interface JWPlaylistItem {
    * platforms). 0 or negative values leave the platform default behavior
    * unchanged.
    *
+   * Must be set on a playlist item; a root-level config value is not
+   * applied on all platforms.
+   *
    * Only affects live streams; ignored for VOD content.
    * Requires iOS SDK 4.27.0+ / Android SDK 4.26.0+
    */

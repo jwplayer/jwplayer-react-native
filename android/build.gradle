@@ -1,14 +1,3 @@
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.4.2'
-    }
-}
-
 apply plugin: 'com.android.library'
 
 def safeExtGet(prop, fallback) {
@@ -23,12 +12,17 @@ def useIMA = safeExtGet("RNJWPlayerUseGoogleIMA", "")?.toBoolean() ?: false
 def useCast = safeExtGet("RNJWPlayerUseGoogleCast", "")?.toBoolean() ?: false
 
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 28)
-    buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
+    namespace 'com.jwplayer.rnjwplayer'
+    compileSdk safeExtGet('compileSdkVersion', 36)
+    buildToolsVersion safeExtGet('buildToolsVersion', '36.0.0')
+
+    buildFeatures {
+        buildConfig true
+    }
 
     defaultConfig {
-        minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 28)
+        minSdkVersion safeExtGet('minSdkVersion', 24)
+        targetSdkVersion safeExtGet('targetSdkVersion', 36)
         versionCode 1
         versionName "1.0"
 
@@ -62,7 +56,7 @@ android {
             // ... other release configurations
         }
     }
-    lintOptions {
+    lint {
         warning 'InvalidPackage'
     }
     
@@ -85,10 +79,6 @@ allprojects {
         mavenLocal()
         mavenCentral()
         google()
-        maven {
-            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-            url "$rootDir/../node_modules/react-native/android"
-        }
         maven{
             url 'https://mvn.jwplayer.com/content/repositories/releases/'
         }
@@ -101,7 +91,7 @@ def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK 
 def media3ExoVersion = "1.10.0"
 
 dependencies {
-    implementation 'com.facebook.react:react-native:+'
+    implementation 'com.facebook.react:react-android'
     implementation 'com.google.code.gson:gson:2.9.0'
 
     if (useLocalAARs) {

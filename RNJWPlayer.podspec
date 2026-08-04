@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
     Pod::UI.puts "RNJWPlayer: using local JWPlayerKit.xcframework"
     s.vendored_frameworks = 'ios/frameworks/JWPlayerKit.xcframework'
   else
-    s.dependency   'JWPlayerKit', '4.26.2'
+    s.dependency   'JWPlayerKit', '4.27.0'
   end
   s.dependency   'React-Core'
   s.static_framework = true
@@ -40,7 +40,7 @@ Pod::Spec.new do |s|
   end
   if defined?($RNJWPlayerUseGoogleIMA)
     Pod::UI.puts "RNJWPlayer: enable IMA SDK"
-    s.dependency 'GoogleAds-IMA-iOS-SDK', '3.22.1'
+    s.dependency 'GoogleAds-IMA-iOS-SDK', '3.32.0'
     swift_flags << '-D USE_GOOGLE_IMA'
   end
 

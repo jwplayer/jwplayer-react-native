@@ -295,6 +295,28 @@ export interface JWPlaylistItem {
    * Typically used for related items
    */
   duration?: number;
+
+  /**
+   * Target offset from the live edge in seconds for live streams
+   *
+   * Positions playback further behind the live edge, giving captions and
+   * other sidecar data more time to be processed before playback reaches them.
+   *
+   * This is a target, not a guarantee. The native SDKs clamp values to the
+   * 5-45 second range, and the stream constrains the result further: a stream
+   * may advertise a minimum hold-back from the live edge that the player
+   * cannot get closer than, so values below that hold-back may have no
+   * visible effect (exact behavior below the stream minimum differs between
+   * platforms). 0 or negative values leave the platform default behavior
+   * unchanged.
+   *
+   * Must be set on a playlist item; a root-level config value is not
+   * applied on all platforms.
+   *
+   * Only affects live streams; ignored for VOD content.
+   * Requires iOS SDK 4.27.0+ / Android SDK 4.26.0+
+   */
+  liveSyncDuration?: number;
   
   /**
    * Whether to autostart this item

@@ -10,7 +10,6 @@ import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
-import com.zoontek.rnbootsplash.RNBootSplash
 
 class MainActivity : ReactActivity() {
 
@@ -18,9 +17,20 @@ class MainActivity : ReactActivity() {
         // The splash screen is initialized here, before super.onCreate, rather than from a
         // ReactActivityDelegate. The fragment factory is required when using react-native-screens.
         supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
-        RNBootSplash.init(this, R.style.BootTheme)
+        // react-native-bootsplash's post-splash view is deliberately not initialised.
+        // On API 31+ it draws a large black ring where the logo should be: its compat
+        // drawable does not resolve ?bootSplashLogo from this theme (verified with
+        // three different logo assets, and bootSplashBackground has no effect on it
+        // either), so it falls back to the library's own default. The platform splash
+        // screen configured in values-v31/BootTheme already shows the branded logo.
 
         super.onCreate(savedInstanceState)
+
+        // With the splash view gone, nothing covers the window between the platform
+        // splash exiting and React's first render, and the bare window is black.
+        // Painting it with the splash background makes that gap white instead.
+        window.setBackgroundDrawableResource(R.color.bootsplash_background)
+        window.decorView.setBackgroundResource(R.color.bootsplash_background)
 
         // Enable edge-to-edge display
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

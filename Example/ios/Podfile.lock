@@ -2292,7 +2292,7 @@ SPEC CHECKSUMS:
   FBLazyVector: 3c3be9a019176b5699455f7f66c5444b78a411c6
   google-cast-sdk: 1fb6724e94cc5ff23b359176e0cf6360586bb97a
   GoogleAds-IMA-iOS-SDK: b1b1e3b8f486cfb7c7a669a58a5380421f3bcaab
-  hermes-engine: 679cfd1776181761d10470a562742a33f6eda36c
+  hermes-engine: 7eea1e3f3435233379045fae078661362e253f15
   JWPlayerKit: f10fe4d7ed61f3c33231990b00e0a7f843bae1a8
   Protobuf: 8d5596f7468be5400861a6bbfb2dfe9d0d1cde34
   RCTDeprecation: bccb6545c26db881ecddfd83a3f9ea82aba1605f

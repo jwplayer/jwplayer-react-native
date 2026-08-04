@@ -10,11 +10,18 @@
     <item name="android:navigationBarColor">@android:color/transparent</item>
   </style>
 
-  <!-- BootTheme should inherit from Theme.SplashScreen -->
+  <!--
+    Pre-API-31 splash. Theme.BootSplash emulates the platform splash screen below 31
+    by drawing bootSplashLogo over bootSplashBackground as the window background.
+    The launcher icon doubles as the logo, so no dedicated asset is required; point
+    bootSplashLogo at a real drawable if one is ever added.
+    API 31+ is configured separately in values-v31/styles.xml.
+  -->
   <style name="BootTheme" parent="Theme.BootSplash">
-    <item name="windowSplashScreenBackground">@color/bootsplash_background</item>
-    <item name="windowSplashScreenIconBackgroundColor">@color/bootsplash_icon_background</item>
-    <item name="postSplashScreenTheme">@style/AppTheme</item>
+    <item name="bootSplashBackground">@color/bootsplash_background</item>
+    <item name="bootSplashLogo">@mipmap/ic_launcher</item>
+    <item name="postBootSplashTheme">@style/AppTheme</item>
+    <item name="darkContentBarsStyle">true</item>
   </style>
 
 </resources>

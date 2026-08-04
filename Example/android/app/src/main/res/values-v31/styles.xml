@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!--
+    API 31+ needs its own BootTheme: with the theme defined only in values/, the
+    platform splash screen did not pick up bootSplashBackground / bootSplashLogo.
+
+    windowSplashScreenIconBackgroundColor is set explicitly because the platform
+    draws the splash icon on a circular background and chooses its own colour when
+    the attribute is unset. Matching it to the splash background keeps that circle
+    invisible, so only the logo shows.
+  -->
+  <style name="BootTheme" parent="Theme.BootSplash">
+    <item name="bootSplashBackground">@color/bootsplash_background</item>
+    <item name="bootSplashLogo">@mipmap/ic_launcher</item>
+    <item name="postBootSplashTheme">@style/AppTheme</item>
+    <item name="darkContentBarsStyle">true</item>
+    <item name="android:windowSplashScreenIconBackgroundColor">@color/bootsplash_background</item>
+  </style>
+</resources>

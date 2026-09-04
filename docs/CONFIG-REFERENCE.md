@@ -597,9 +597,9 @@ const playlistItem: JWPlaylistItem = {
   // misreadings (e.g. "3m" read as "meters" rather than "minutes").
   // Ignored on Android. Requires iOS SDK 4.28.0+
   titleAccessibilityLabel: 'Three minute highlights',
-  titleAccessibilityHint: 'Opens the highlights video',
+  titleAccessibilityHint: 'Recorded live from Sunday\'s game',
   descriptionAccessibilityLabel: 'Best plays from Sunday',
-  descriptionAccessibilityHint: 'Describes the video',
+  descriptionAccessibilityHint: 'Includes the game-winning goal',
   
   // Tracks
   tracks: [

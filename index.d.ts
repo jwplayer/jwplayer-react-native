@@ -502,11 +502,14 @@ declare module "@jwplayer/jwplayer-react-native" {
   }
   /**
    * Why the player left fullscreen. Mirrors JWPlayerKit's `JWFullScreenExitReason`.
-   *
-   * Currently reported: `userTappedDismissButton` (the dedicated 'x' / close button),
-   * `userTappedToggleButton` (the shrink icon in the control bar), `external`
-   * (a `setFullscreen(false)` call or other request from outside the player UI), and
-   * `unknown`. The remaining values are reserved by the SDK and not reported today.
+   * The bridge forwards whatever value the SDK reports, unfiltered — as of
+   * JWPlayerKit 4.28.0, the SDK itself only ever emits `userTappedDismissButton`
+   * (the dedicated 'x' / close button), `userTappedToggleButton` (the shrink icon
+   * in the control bar), `external` (a `setFullscreen(false)` call or other
+   * request from outside the player UI), and `unknown` (fallback for an
+   * unrecognized reason). The remaining values are declared by the SDK for future
+   * use; if the SDK starts reporting one, it arrives here as-is with no bridge
+   * changes needed.
    * @platform ios
    */
   type FullScreenExitReason =

@@ -278,6 +278,39 @@ const config: JWPlayerConfig = {
 };
 ```
 
+### 7. VoiceOver Overrides for Title/Description
+
+**iOS Only · Requires iOS SDK 4.28.0+**
+
+Per-playlist-item overrides for what VoiceOver reads for the title and description, instead of reading the text itself. Useful for correcting misreadings (e.g. "3m" read as "meters" rather than "minutes"). Ignored on Android.
+
+```typescript
+const playlistItem: JWPlaylistItem = {
+  file: 'https://example.com/video.m3u8',
+  title: '3m Highlights',
+  titleAccessibilityLabel: 'Three minute highlights',   // ⚠️ iOS ONLY
+  titleAccessibilityHint: 'Recorded live from Sunday\'s game',   // ⚠️ iOS ONLY
+  description: 'Best plays',
+  descriptionAccessibilityLabel: 'Best plays from Sunday',   // ⚠️ iOS ONLY
+  descriptionAccessibilityHint: 'Includes the game-winning goal'   // ⚠️ iOS ONLY
+};
+```
+
+### 8. Fullscreen Exit Reason
+
+**iOS Only · Requires iOS SDK 4.28.0+**
+
+`onFullScreenExitRequested`/`onFullScreenExit` carry a `reason` field on iOS describing why fullscreen was exited (see `FullScreenExitReason` in `index.d.ts`). Android sends `{ message: string }` with no reason. As of 4.28.0 the SDK itself only ever reports `userTappedDismissButton`, `userTappedToggleButton`, `external`, or `unknown` — the type declares the remaining values for future SDK use.
+
+```typescript
+<JWPlayer
+  onFullScreenExit={({ nativeEvent }) => {
+    // nativeEvent.reason is set on iOS (SDK 4.28.0+), undefined otherwise
+    console.log(nativeEvent.reason);
+  }}
+/>
+```
+
 ---
 
 ## Android-Specific Features

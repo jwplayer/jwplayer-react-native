@@ -1282,6 +1282,24 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             itemBuilder.description(description)
         }
 
+        // VoiceOver overrides for the title / description shown in the player UI.
+        // Only meaningful when the SDK's own UI renders them (not viewOnly).
+        if let titleAccessibilityLabel = item["titleAccessibilityLabel"] as? String {
+            itemBuilder.titleAccessibilityLabel(titleAccessibilityLabel)
+        }
+
+        if let titleAccessibilityHint = item["titleAccessibilityHint"] as? String {
+            itemBuilder.titleAccessibilityHint(titleAccessibilityHint)
+        }
+
+        if let descriptionAccessibilityLabel = item["descriptionAccessibilityLabel"] as? String {
+            itemBuilder.descriptionAccessibilityLabel(descriptionAccessibilityLabel)
+        }
+
+        if let descriptionAccessibilityHint = item["descriptionAccessibilityHint"] as? String {
+            itemBuilder.descriptionAccessibilityHint(descriptionAccessibilityHint)
+        }
+
         if let image = item["image"] as? String, let imageURL = URL(string: image) {
             itemBuilder.posterImage(imageURL)
         }

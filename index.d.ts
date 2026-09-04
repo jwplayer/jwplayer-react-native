@@ -307,6 +307,28 @@ declare module "@jwplayer/jwplayer-react-native" {
      * Must be set on a playlist item; a root-level value is not applied on all platforms.
      */
     liveSyncDuration?: number;
+    /**
+     * Text VoiceOver reads for the title in the player UI, instead of the title itself.
+     * Requires iOS SDK 4.28.0+.
+     * @platform ios
+     */
+    titleAccessibilityLabel?: string;
+    /**
+     * VoiceOver hint for the title in the player UI. Requires iOS SDK 4.28.0+.
+     * @platform ios
+     */
+    titleAccessibilityHint?: string;
+    /**
+     * Text VoiceOver reads for the description in the player UI, instead of the
+     * description itself. Requires iOS SDK 4.28.0+.
+     * @platform ios
+     */
+    descriptionAccessibilityLabel?: string;
+    /**
+     * VoiceOver hint for the description in the player UI. Requires iOS SDK 4.28.0+.
+     * @platform ios
+     */
+    descriptionAccessibilityHint?: string;
     autostart?: boolean;
     /**
      * Data to be passed to Chromecast receiver (optional and typically used for DRM implementations)

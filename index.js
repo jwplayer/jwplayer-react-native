@@ -231,6 +231,11 @@ export default class JWPlayer extends Component {
 					image: PropTypes.string,
 					title: PropTypes.string,
 					desc: PropTypes.string,
+					// iOS only: VoiceOver overrides for the title / description in the player UI
+					titleAccessibilityLabel: PropTypes.string,
+					titleAccessibilityHint: PropTypes.string,
+					descriptionAccessibilityLabel: PropTypes.string,
+					descriptionAccessibilityHint: PropTypes.string,
 					mediaId: PropTypes.string,
 					autostart: PropTypes.bool,
 					userInfo: PropTypes.object,

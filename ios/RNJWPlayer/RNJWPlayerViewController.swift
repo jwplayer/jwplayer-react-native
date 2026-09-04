@@ -185,12 +185,40 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
         parentView?.onFullScreen?([:])
     }
 
+    // The SDK calls both the plain and the `reason:` variants of the dismiss
+    // callbacks for every exit. Emit from the `reason:` variants only so JS sees
+    // each event once, with the reason attached.
     func playerViewControllerWillDismissFullScreen(_ controller:JWPlayerViewController) {
-        parentView?.onFullScreenExitRequested?([:])
     }
 
     func playerViewControllerDidDismissFullScreen(_ controller:JWPlayerViewController) {
-        parentView?.onFullScreenExit?([:])
+    }
+
+    func playerViewControllerWillDismissFullScreen(_ controller:JWPlayerViewController, reason: JWFullScreenExitReason) {
+        parentView?.onFullScreenExitRequested?(["reason": Self.fullScreenExitReasonName(reason)])
+    }
+
+    func playerViewControllerDidDismissFullScreen(_ controller:JWPlayerViewController, reason: JWFullScreenExitReason) {
+        parentView?.onFullScreenExit?(["reason": Self.fullScreenExitReasonName(reason)])
+    }
+
+    /// Stable string names for `JWFullScreenExitReason`, matching the
+    /// `FullScreenExitReason` union in index.d.ts.
+    private static func fullScreenExitReasonName(_ reason: JWFullScreenExitReason) -> String {
+        switch reason {
+        case .unknown: return "unknown"
+        case .userTappedDismissButton: return "userTappedDismissButton"
+        case .userTappedToggleButton: return "userTappedToggleButton"
+        case .userSwipedDown: return "userSwipedDown"
+        case .orientationChange: return "orientationChange"
+        case .appBackgrounded: return "appBackgrounded"
+        case .pictureInPictureInitiated: return "pictureInPictureInitiated"
+        case .contentComplete: return "contentComplete"
+        case .adBreakEnd: return "adBreakEnd"
+        case .playbackError: return "playbackError"
+        case .external: return "external"
+        @unknown default: return "unknown"
+        }
     }
 
 	// MARK: JWPlayerViewControllerRelatedDelegate

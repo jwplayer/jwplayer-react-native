@@ -18,10 +18,10 @@ import JWPlayerKit
 
 class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     JWAdDelegate, JWAVDelegate, JWPlayerViewDelegate,
-    JWPlayerViewControllerFullScreenDelegate, JWPlayerViewControllerUIDelegate,
+    JWPlayerViewControllerUIDelegate,
     JWPlayerViewControllerRelatedDelegate, JWDRMContentKeyDataSource,
     JWTimeEventListener, AVPictureInPictureControllerDelegate
-{ 
+{
     
     // MARK: - RNJWPlayer allocation
 
@@ -1763,50 +1763,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         self.onControlBarVisible?(["visible": isVisible])
     }
 
-    func playerViewControllerWillGoFullScreen(_ controller:JWPlayerViewController) -> JWFullScreenViewController? {
-        self.onFullScreenRequested?([:])
-        return nil
-    }
-
-    func playerViewControllerDidGoFullScreen(_ controller:JWPlayerViewController) {
-        self.onFullScreen?([:])
-    }
-
-    // The SDK calls both the plain and the `reason:` variants of the dismiss
-    // callbacks for every exit. Emit from the `reason:` variants only so JS sees
-    // each event once, with the reason attached.
-    func playerViewControllerWillDismissFullScreen(_ controller:JWPlayerViewController) {
-    }
-
-    func playerViewControllerDidDismissFullScreen(_ controller:JWPlayerViewController) {
-    }
-
-    func playerViewControllerWillDismissFullScreen(_ controller:JWPlayerViewController, reason: JWFullScreenExitReason) {
-        self.onFullScreenExitRequested?(["reason": fullScreenExitReasonName(reason)])
-    }
-
-    func playerViewControllerDidDismissFullScreen(_ controller:JWPlayerViewController, reason: JWFullScreenExitReason) {
-        self.onFullScreenExit?(["reason": fullScreenExitReasonName(reason)])
-    }
-
-    /// Stable string names for `JWFullScreenExitReason`, matching the
-    /// `FullScreenExitReason` union in index.d.ts.
-    private func fullScreenExitReasonName(_ reason: JWFullScreenExitReason) -> String {
-        switch reason {
-        case .unknown: return "unknown"
-        case .userTappedDismissButton: return "userTappedDismissButton"
-        case .userTappedToggleButton: return "userTappedToggleButton"
-        case .userSwipedDown: return "userSwipedDown"
-        case .orientationChange: return "orientationChange"
-        case .appBackgrounded: return "appBackgrounded"
-        case .pictureInPictureInitiated: return "pictureInPictureInitiated"
-        case .contentComplete: return "contentComplete"
-        case .adBreakEnd: return "adBreakEnd"
-        case .playbackError: return "playbackError"
-        case .external: return "external"
-        @unknown default: return "unknown"
-        }
-    }
+    // Fullscreen present/dismiss delegate methods live on RNJWPlayerViewController,
+    // the object actually registered as the SDK's fullScreenDelegate (see
+    // RNJWPlayerViewController.setDelegates()) — this view is never assigned that
+    // role, so they don't belong here.
 
     func playerViewController(_ controller:JWPlayerViewController, relatedMenuClosedWithMethod method: JWRelatedInteraction) {
 

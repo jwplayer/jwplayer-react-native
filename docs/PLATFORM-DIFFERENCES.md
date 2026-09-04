@@ -676,6 +676,7 @@ advertising: {
 | **TextureView** | ❌ | ✅ | Android only |
 | **AirPlay** | ✅ | ❌ | iOS only |
 | **Title/description VoiceOver overrides** (`titleAccessibilityLabel` etc.) | ✅ | ❌ | iOS only |
+| **Fullscreen exit `reason`** (`onFullScreenExitRequested` / `onFullScreenExit` payload) | ✅ | ❌ | iOS only |
 | **IMA DAI** | ✅ | ✅ | Use `imaDaiSettings` |
 | **VAST/IMA** | ✅ | ✅ | Fully cross-platform |
 

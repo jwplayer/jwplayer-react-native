@@ -500,6 +500,34 @@ declare module "@jwplayer/jwplayer-react-native" {
     position: number;
     duration: number;
   }
+  /**
+   * Why the player left fullscreen. Mirrors JWPlayerKit's `JWFullScreenExitReason`.
+   *
+   * Currently reported: `userTappedDismissButton` (the dedicated 'x' / close button),
+   * `userTappedToggleButton` (the shrink icon in the control bar), `external`
+   * (a `setFullscreen(false)` call or other request from outside the player UI), and
+   * `unknown`. The remaining values are reserved by the SDK and not reported today.
+   * @platform ios
+   */
+  type FullScreenExitReason =
+    | "unknown"
+    | "userTappedDismissButton"
+    | "userTappedToggleButton"
+    | "userSwipedDown"
+    | "orientationChange"
+    | "appBackgrounded"
+    | "pictureInPictureInitiated"
+    | "contentComplete"
+    | "adBreakEnd"
+    | "playbackError"
+    | "external";
+  interface FullScreenExitEventProps {
+    /**
+     * Reason fullscreen was exited. Requires iOS SDK 4.28.0+; absent on Android.
+     * @platform ios
+     */
+    reason?: FullScreenExitReason;
+  }
   interface ControlBarVisibleEventProps {
     visible: boolean;
   }
@@ -621,8 +649,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     onTime?: (event: BaseEvent<TimeEventProps>) => void;
     onFullScreenRequested?: () => void;
     onFullScreen?: () => void;
-    onFullScreenExitRequested?: () => void;
-    onFullScreenExit?: () => void;
+    onFullScreenExitRequested?: (event?: BaseEvent<FullScreenExitEventProps>) => void;
+    onFullScreenExit?: (event?: BaseEvent<FullScreenExitEventProps>) => void;
     onControlBarVisible?: (event: BaseEvent<ControlBarVisibleEventProps>) => void;
     onPlaylistComplete?: () => void;
     onPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;

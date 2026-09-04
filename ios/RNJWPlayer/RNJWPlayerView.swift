@@ -1772,12 +1772,40 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         self.onFullScreen?([:])
     }
 
+    // The SDK calls both the plain and the `reason:` variants of the dismiss
+    // callbacks for every exit. Emit from the `reason:` variants only so JS sees
+    // each event once, with the reason attached.
     func playerViewControllerWillDismissFullScreen(_ controller:JWPlayerViewController) {
-        self.onFullScreenExitRequested?([:])
     }
 
     func playerViewControllerDidDismissFullScreen(_ controller:JWPlayerViewController) {
-        self.onFullScreenExit?([:])
+    }
+
+    func playerViewControllerWillDismissFullScreen(_ controller:JWPlayerViewController, reason: JWFullScreenExitReason) {
+        self.onFullScreenExitRequested?(["reason": fullScreenExitReasonName(reason)])
+    }
+
+    func playerViewControllerDidDismissFullScreen(_ controller:JWPlayerViewController, reason: JWFullScreenExitReason) {
+        self.onFullScreenExit?(["reason": fullScreenExitReasonName(reason)])
+    }
+
+    /// Stable string names for `JWFullScreenExitReason`, matching the
+    /// `FullScreenExitReason` union in index.d.ts.
+    private func fullScreenExitReasonName(_ reason: JWFullScreenExitReason) -> String {
+        switch reason {
+        case .unknown: return "unknown"
+        case .userTappedDismissButton: return "userTappedDismissButton"
+        case .userTappedToggleButton: return "userTappedToggleButton"
+        case .userSwipedDown: return "userSwipedDown"
+        case .orientationChange: return "orientationChange"
+        case .appBackgrounded: return "appBackgrounded"
+        case .pictureInPictureInitiated: return "pictureInPictureInitiated"
+        case .contentComplete: return "contentComplete"
+        case .adBreakEnd: return "adBreakEnd"
+        case .playbackError: return "playbackError"
+        case .external: return "external"
+        @unknown default: return "unknown"
+        }
     }
 
     func playerViewController(_ controller:JWPlayerViewController, relatedMenuClosedWithMethod method: JWRelatedInteraction) {

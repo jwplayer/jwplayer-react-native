@@ -317,7 +317,42 @@ export interface JWPlaylistItem {
    * Requires iOS SDK 4.27.0+ / Android SDK 4.26.0+
    */
   liveSyncDuration?: number;
-  
+
+  /**
+   * Text VoiceOver reads for the item's title in the player UI, instead of
+   * the title itself. Use it to correct misreadings (e.g. "3m" read as
+   * "meters" rather than "minutes").
+   *
+   * Requires iOS SDK 4.28.0+. Ignored on Android.
+   * @platform ios
+   */
+  titleAccessibilityLabel?: string;
+
+  /**
+   * VoiceOver hint for the item's title in the player UI.
+   *
+   * Requires iOS SDK 4.28.0+. Ignored on Android.
+   * @platform ios
+   */
+  titleAccessibilityHint?: string;
+
+  /**
+   * Text VoiceOver reads for the item's description in the player UI,
+   * instead of the description itself.
+   *
+   * Requires iOS SDK 4.28.0+. Ignored on Android.
+   * @platform ios
+   */
+  descriptionAccessibilityLabel?: string;
+
+  /**
+   * VoiceOver hint for the item's description in the player UI.
+   *
+   * Requires iOS SDK 4.28.0+. Ignored on Android.
+   * @platform ios
+   */
+  descriptionAccessibilityHint?: string;
+
   /**
    * Whether to autostart this item
    * @platform android

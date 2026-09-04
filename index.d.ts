@@ -307,6 +307,28 @@ declare module "@jwplayer/jwplayer-react-native" {
      * Must be set on a playlist item; a root-level value is not applied on all platforms.
      */
     liveSyncDuration?: number;
+    /**
+     * Text VoiceOver reads for the title in the player UI, instead of the title itself.
+     * Requires iOS SDK 4.28.0+.
+     * @platform ios
+     */
+    titleAccessibilityLabel?: string;
+    /**
+     * VoiceOver hint for the title in the player UI. Requires iOS SDK 4.28.0+.
+     * @platform ios
+     */
+    titleAccessibilityHint?: string;
+    /**
+     * Text VoiceOver reads for the description in the player UI, instead of the
+     * description itself. Requires iOS SDK 4.28.0+.
+     * @platform ios
+     */
+    descriptionAccessibilityLabel?: string;
+    /**
+     * VoiceOver hint for the description in the player UI. Requires iOS SDK 4.28.0+.
+     * @platform ios
+     */
+    descriptionAccessibilityHint?: string;
     autostart?: boolean;
     /**
      * Data to be passed to Chromecast receiver (optional and typically used for DRM implementations)
@@ -478,6 +500,37 @@ declare module "@jwplayer/jwplayer-react-native" {
     position: number;
     duration: number;
   }
+  /**
+   * Why the player left fullscreen. Mirrors JWPlayerKit's `JWFullScreenExitReason`.
+   * The bridge forwards whatever value the SDK reports, unfiltered — as of
+   * JWPlayerKit 4.28.0, the SDK itself only ever emits `userTappedDismissButton`
+   * (the dedicated 'x' / close button), `userTappedToggleButton` (the shrink icon
+   * in the control bar), `external` (a `setFullscreen(false)` call or other
+   * request from outside the player UI), and `unknown` (fallback for an
+   * unrecognized reason). The remaining values are declared by the SDK for future
+   * use; if the SDK starts reporting one, it arrives here as-is with no bridge
+   * changes needed.
+   * @platform ios
+   */
+  type FullScreenExitReason =
+    | "unknown"
+    | "userTappedDismissButton"
+    | "userTappedToggleButton"
+    | "userSwipedDown"
+    | "orientationChange"
+    | "appBackgrounded"
+    | "pictureInPictureInitiated"
+    | "contentComplete"
+    | "adBreakEnd"
+    | "playbackError"
+    | "external";
+  interface FullScreenExitEventProps {
+    /**
+     * Reason fullscreen was exited. Requires iOS SDK 4.28.0+; absent on Android.
+     * @platform ios
+     */
+    reason?: FullScreenExitReason;
+  }
   interface ControlBarVisibleEventProps {
     visible: boolean;
   }
@@ -496,6 +549,11 @@ declare module "@jwplayer/jwplayer-react-native" {
     error: string;
   }
   interface PlayerWarningEventProps {
+    /**
+     * Native SDK warning code. Notable ad-warning codes on iOS:
+     * - `70013` (JWPlayerKit 4.28.0+): an IMA ad break was skipped because a
+     *   Chromecast session is active. Informational; there is no opt-out.
+     */
     code?: number;
     warning?: string;
     adErrorCode?: number; // Android only
@@ -599,8 +657,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     onTime?: (event: BaseEvent<TimeEventProps>) => void;
     onFullScreenRequested?: () => void;
     onFullScreen?: () => void;
-    onFullScreenExitRequested?: () => void;
-    onFullScreenExit?: () => void;
+    onFullScreenExitRequested?: (event?: BaseEvent<FullScreenExitEventProps>) => void;
+    onFullScreenExit?: (event?: BaseEvent<FullScreenExitEventProps>) => void;
     onControlBarVisible?: (event: BaseEvent<ControlBarVisibleEventProps>) => void;
     onPlaylistComplete?: () => void;
     onPlaylistItem?: (event: BaseEvent<PlaylistItemEventProps>) => void;

@@ -278,6 +278,39 @@ const config: JWPlayerConfig = {
 };
 ```
 
+### 7. VoiceOver Overrides for Title/Description
+
+**iOS Only · Requires iOS SDK 4.28.0+**
+
+Per-playlist-item overrides for what VoiceOver reads for the title and description, instead of reading the text itself. Useful for correcting misreadings (e.g. "3m" read as "meters" rather than "minutes"). Ignored on Android.
+
+```typescript
+const playlistItem: JWPlaylistItem = {
+  file: 'https://example.com/video.m3u8',
+  title: '3m Highlights',
+  titleAccessibilityLabel: 'Three minute highlights',   // ⚠️ iOS ONLY
+  titleAccessibilityHint: 'Recorded live from Sunday\'s game',   // ⚠️ iOS ONLY
+  description: 'Best plays',
+  descriptionAccessibilityLabel: 'Best plays from Sunday',   // ⚠️ iOS ONLY
+  descriptionAccessibilityHint: 'Includes the game-winning goal'   // ⚠️ iOS ONLY
+};
+```
+
+### 8. Fullscreen Exit Reason
+
+**iOS Only · Requires iOS SDK 4.28.0+**
+
+`onFullScreenExitRequested`/`onFullScreenExit` carry a `reason` field on iOS describing why fullscreen was exited (see `FullScreenExitReason` in `index.d.ts`). Android sends `{ message: string }` with no reason. As of 4.28.0 the SDK itself only ever reports `userTappedDismissButton`, `userTappedToggleButton`, `external`, or `unknown` — the type declares the remaining values for future SDK use.
+
+```typescript
+<JWPlayer
+  onFullScreenExit={({ nativeEvent }) => {
+    // nativeEvent.reason is set on iOS (SDK 4.28.0+), undefined otherwise
+    console.log(nativeEvent.reason);
+  }}
+/>
+```
+
 ---
 
 ## Android-Specific Features
@@ -659,6 +692,26 @@ advertising: {
 }
 ```
 
+### 6. IMA Ad Breaks Are Skipped While Casting (iOS)
+
+Starting with JWPlayerKit 4.28.0, iOS drops IMA ad breaks while a Chromecast
+session is active. Previously the break played on the sending phone while the
+content was on the TV, so nobody saw the ad. There is no opt-out. Each skipped
+break is reported through `onPlayerAdWarning` with `code: 70013`, so handle that
+code as informational rather than as a failed ad request:
+
+```typescript
+<JWPlayer
+  onPlayerAdWarning={({ nativeEvent }) => {
+    if (nativeEvent.code === 70013) {
+      // Ad break dropped because a cast session is active; nothing to fix.
+      return;
+    }
+    reportAdWarning(nativeEvent);
+  }}
+/>
+```
+
 ---
 
 ## Summary Table
@@ -675,6 +728,8 @@ advertising: {
 | **HTTP Headers** | ❌ | ✅ | Android only |
 | **TextureView** | ❌ | ✅ | Android only |
 | **AirPlay** | ✅ | ❌ | iOS only |
+| **Title/description VoiceOver overrides** (`titleAccessibilityLabel` etc.) | ✅ | ❌ | iOS only |
+| **Fullscreen exit `reason`** (`onFullScreenExitRequested` / `onFullScreenExit` payload) | ✅ | ❌ | iOS only |
 | **IMA DAI** | ✅ | ✅ | Use `imaDaiSettings` |
 | **VAST/IMA** | ✅ | ✅ | Fully cross-platform |
 

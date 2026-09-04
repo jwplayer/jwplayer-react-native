@@ -659,6 +659,26 @@ advertising: {
 }
 ```
 
+### 6. IMA Ad Breaks Are Skipped While Casting (iOS)
+
+Starting with JWPlayerKit 4.28.0, iOS drops IMA ad breaks while a Chromecast
+session is active. Previously the break played on the sending phone while the
+content was on the TV, so nobody saw the ad. There is no opt-out. Each skipped
+break is reported through `onPlayerAdWarning` with `code: 70013`, so handle that
+code as informational rather than as a failed ad request:
+
+```typescript
+<JWPlayer
+  onPlayerAdWarning={({ nativeEvent }) => {
+    if (nativeEvent.code === 70013) {
+      // Ad break dropped because a cast session is active; nothing to fix.
+      return;
+    }
+    reportAdWarning(nativeEvent);
+  }}
+/>
+```
+
 ---
 
 ## Summary Table

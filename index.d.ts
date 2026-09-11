@@ -550,8 +550,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     | "ad-break-end"
     | "playback-error"
     | "external";
-  /** @deprecated Use {@link FullScreenExitReasonIOS} or {@link FullScreenExitReasonAndroid}; this alias is kept for source compatibility. */
-  type FullScreenExitReason = FullScreenExitReasonIOS;
+  /** @deprecated Use {@link FullScreenExitReasonIOS} or {@link FullScreenExitReasonAndroid} directly. This alias now covers both platforms' wire formats — it widened when Android started reporting a reason too, so existing code typed against the old iOS-only union should narrow by platform rather than relying on this alias remaining iOS-only. */
+  type FullScreenExitReason = FullScreenExitReasonIOS | FullScreenExitReasonAndroid;
   interface FullScreenExitEventProps {
     /**
      * Reason fullscreen was exited. Present on iOS (SDK 4.28.0+) and Android;

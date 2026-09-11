@@ -298,14 +298,18 @@ const playlistItem: JWPlaylistItem = {
 
 ### 8. Fullscreen Exit Reason
 
-**iOS Only · Requires iOS SDK 4.28.0+**
+Both platforms can report a `reason` field on `onFullScreenExit` describing why fullscreen was exited, but the two wire formats are **not interchangeable** — see `FullScreenExitReasonIOS` and `FullScreenExitReasonAndroid` in `index.d.ts`.
 
-`onFullScreenExitRequested`/`onFullScreenExit` carry a `reason` field on iOS describing why fullscreen was exited (see `FullScreenExitReason` in `index.d.ts`). Android sends `{ message: string }` with no reason. As of 4.28.0 the SDK itself only ever reports `userTappedDismissButton`, `userTappedToggleButton`, `external`, or `unknown` — the type declares the remaining values for future SDK use.
+- **iOS** (requires iOS SDK 4.28.0+): camelCase names, e.g. `userTappedDismissButton`. The SDK currently only ever reports `userTappedDismissButton`, `userTappedToggleButton`, `external`, or `unknown`; the type declares the remaining values for future SDK use.
+- **Android**: hyphenated names, e.g. `user-tapped-dismiss-button`. The SDK currently only ever reports `user-tapped-dismiss-button`, `user-tapped-toggle-button`, `orientation-change`, `external`, or `unknown`; the remaining values are declared for future SDK use.
+- **`onFullScreenExitRequested`** (fired before fullscreen teardown, not after) only carries `reason` on iOS — Android does not yet report a reason on this earlier event, only on `onFullScreenExit`.
 
 ```typescript
 <JWPlayer
   onFullScreenExit={({ nativeEvent }) => {
-    // nativeEvent.reason is set on iOS (SDK 4.28.0+), undefined otherwise
+    // nativeEvent.reason is set on both platforms, in each platform's own wire
+    // format — branch on Platform.OS if you need to compare against a specific
+    // reason rather than just logging/displaying it.
     console.log(nativeEvent.reason);
   }}
 />
@@ -729,7 +733,8 @@ code as informational rather than as a failed ad request:
 | **TextureView** | ❌ | ✅ | Android only |
 | **AirPlay** | ✅ | ❌ | iOS only |
 | **Title/description VoiceOver overrides** (`titleAccessibilityLabel` etc.) | ✅ | ❌ | iOS only |
-| **Fullscreen exit `reason`** (`onFullScreenExitRequested` / `onFullScreenExit` payload) | ✅ | ❌ | iOS only |
+| **Fullscreen exit `reason`** on `onFullScreenExit` | ✅ | ✅ | Different wire format per platform, see §8 |
+| **Fullscreen exit `reason`** on `onFullScreenExitRequested` | ✅ | ❌ | iOS only |
 | **IMA DAI** | ✅ | ✅ | Use `imaDaiSettings` |
 | **VAST/IMA** | ✅ | ✅ | Fully cross-platform |
 

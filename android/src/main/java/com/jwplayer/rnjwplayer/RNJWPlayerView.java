@@ -94,6 +94,7 @@ import com.jwplayer.pub.api.events.ErrorEvent;
 import com.jwplayer.pub.api.events.EventType;
 import com.jwplayer.pub.api.events.FirstFrameEvent;
 import com.jwplayer.pub.api.events.FullscreenEvent;
+import com.jwplayer.pub.api.events.FullscreenExitReasonEvent;
 import com.jwplayer.pub.api.events.IdleEvent;
 import com.jwplayer.pub.api.events.MetaEvent;
 import com.jwplayer.pub.api.events.PauseEvent;
@@ -136,6 +137,7 @@ import java.util.Objects;
 
 public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnFullscreenListener,
+        VideoPlayerEvents.OnFullscreenDidDismissListener,
         VideoPlayerEvents.OnReadyListener,
         VideoPlayerEvents.OnPlayListener,
         VideoPlayerEvents.OnPauseListener,
@@ -464,6 +466,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.PLAYLIST_COMPLETE,
                     EventType.FIRST_FRAME,
                     EventType.CONTROLS,
+                    EventType.FULLSCREEN_DID_DISMISS,
                     EventType.CONTROLBAR_VISIBILITY,
                     EventType.DISPLAY_CLICK,
                     EventType.FULLSCREEN,
@@ -555,6 +558,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.PLAYLIST_COMPLETE,
                     EventType.FIRST_FRAME,
                     EventType.CONTROLS,
+                    EventType.FULLSCREEN_DID_DISMISS,
                     EventType.CONTROLBAR_VISIBILITY,
                     EventType.DISPLAY_CLICK,
                     EventType.FULLSCREEN,
@@ -2044,14 +2048,26 @@ public class RNJWPlayerView extends RelativeLayout implements
                     getId(),
                     "topFullScreen",
                     eventExitFullscreen);
-        } else {
-            WritableMap eventExitFullscreen = Arguments.createMap();
-            eventExitFullscreen.putString("message", "onFullscreenExit");
-            getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-                    getId(),
-                    "topFullScreenExit",
-                    eventExitFullscreen);
         }
+        // The false (exit) case is intentionally not handled here: the SDK also fires
+        // onFullscreenDidDismiss(FullscreenExitReasonEvent) for every exit, which carries a
+        // reason. topFullScreenExit is emitted from there instead so it fires exactly once,
+        // with the reason included, matching the iOS bridge's approach.
+    }
+
+    /**
+     * Fired after the fullscreen handler has applied the exit, with the reason the SDK left
+     * fullscreen. Mirrors the iOS bridge's reason-carrying onFullScreenExit.
+     */
+    @Override
+    public void onFullscreenDidDismiss(FullscreenExitReasonEvent event) {
+        WritableMap eventExitFullscreen = Arguments.createMap();
+        eventExitFullscreen.putString("message", "onFullscreenExit");
+        eventExitFullscreen.putString("reason", event.getReason().toString());
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
+                getId(),
+                "topFullScreenExit",
+                eventExitFullscreen);
     }
 
     @Override

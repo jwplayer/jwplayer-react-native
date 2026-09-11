@@ -501,18 +501,18 @@ declare module "@jwplayer/jwplayer-react-native" {
     duration: number;
   }
   /**
-   * Why the player left fullscreen. Mirrors JWPlayerKit's `JWFullScreenExitReason`.
-   * The bridge forwards whatever value the SDK reports, unfiltered — as of
-   * JWPlayerKit 4.28.0, the SDK itself only ever emits `userTappedDismissButton`
-   * (the dedicated 'x' / close button), `userTappedToggleButton` (the shrink icon
-   * in the control bar), `external` (a `setFullscreen(false)` call or other
-   * request from outside the player UI), and `unknown` (fallback for an
-   * unrecognized reason). The remaining values are declared by the SDK for future
-   * use; if the SDK starts reporting one, it arrives here as-is with no bridge
-   * changes needed.
+   * Why the player left fullscreen (iOS wire format). Mirrors JWPlayerKit's
+   * `JWFullScreenExitReason`. The bridge forwards whatever value the SDK reports,
+   * unfiltered — as of JWPlayerKit 4.28.0, the SDK itself only ever emits
+   * `userTappedDismissButton` (the dedicated 'x' / close button),
+   * `userTappedToggleButton` (the shrink icon in the control bar), `external`
+   * (a `setFullscreen(false)` call or other request from outside the player UI),
+   * and `unknown` (fallback for an unrecognized reason). The remaining values are
+   * declared by the SDK for future use; if the SDK starts reporting one, it
+   * arrives here as-is with no bridge changes needed.
    * @platform ios
    */
-  type FullScreenExitReason =
+  type FullScreenExitReasonIOS =
     | "unknown"
     | "userTappedDismissButton"
     | "userTappedToggleButton"
@@ -524,12 +524,41 @@ declare module "@jwplayer/jwplayer-react-native" {
     | "adBreakEnd"
     | "playbackError"
     | "external";
+  /**
+   * Why the player left fullscreen (Android wire format). Mirrors the Android
+   * SDK's `FullscreenExitReason`. As of the Android SDK version this bridge
+   * currently depends on, the SDK itself only ever reports
+   * `user-tapped-dismiss-button`, `user-tapped-toggle-button`,
+   * `orientation-change`, `external`, and `unknown`; the remaining values are
+   * reserved for future use.
+   *
+   * Note this uses hyphenated names, not the camelCase iOS uses for the same
+   * semantic reasons (e.g. Android's `orientation-change` vs. iOS's
+   * `orientationChange`) — the two platforms are not wire-compatible, so branch
+   * on `Platform.OS` rather than comparing `reason` directly across platforms.
+   * @platform android
+   */
+  type FullScreenExitReasonAndroid =
+    | "unknown"
+    | "user-tapped-dismiss-button"
+    | "user-tapped-toggle-button"
+    | "user-swiped-down"
+    | "orientation-change"
+    | "app-backgrounded"
+    | "pip-initiated"
+    | "content-complete"
+    | "ad-break-end"
+    | "playback-error"
+    | "external";
+  /** @deprecated Use {@link FullScreenExitReasonIOS} or {@link FullScreenExitReasonAndroid}; this alias is kept for source compatibility. */
+  type FullScreenExitReason = FullScreenExitReasonIOS;
   interface FullScreenExitEventProps {
     /**
-     * Reason fullscreen was exited. Requires iOS SDK 4.28.0+; absent on Android.
-     * @platform ios
+     * Reason fullscreen was exited. Present on iOS (SDK 4.28.0+) and Android;
+     * the two platforms use different, non-interchangeable wire formats — see
+     * {@link FullScreenExitReasonIOS} and {@link FullScreenExitReasonAndroid}.
      */
-    reason?: FullScreenExitReason;
+    reason?: FullScreenExitReasonIOS | FullScreenExitReasonAndroid;
   }
   interface ControlBarVisibleEventProps {
     visible: boolean;

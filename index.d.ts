@@ -612,6 +612,179 @@ declare module "@jwplayer/jwplayer-react-native" {
     /** @deprecated Use tracks array instead */
     default?: boolean;
   }
+  /**
+   * Discriminator for `onMeta` / `onMetadataCueParsed` payloads. Mirrors the web
+   * player's `metadataType` values where the native SDKs expose the same data;
+   * `external` and `access-log` are native-only additions. See docs/METADATA-EVENTS.md.
+   */
+  type MetadataType =
+    | 'id3'
+    | 'emsg'
+    | 'date-range'
+    | 'program-date-time'
+    | 'external'
+    | 'media'
+    | 'access-log'
+    | 'unknown';
+
+  interface MetadataEventBase {
+    metadataType: MetadataType;
+    /**
+     * Cue start in seconds, relative to the stream. Omitted when the SDK does not
+     * report it (Android ID3 and emsg).
+     */
+    metadataTime?: number;
+  }
+
+  /**
+   * ID3 frame id (`TIT2`, `TXXX`, `PRIV`, ...) → value. Frames that carry a
+   * description / owner nest as `{ [description]: value }`. Binary payloads are base64.
+   */
+  interface Id3MetadataFrames {
+    [frameId: string]: string | number | string[] | { [description: string]: any } | null | undefined;
+  }
+  interface Id3MetadataEventProps extends MetadataEventBase {
+    metadataType: 'id3';
+    metadata: Id3MetadataFrames & {
+      /** Friendly aliases the web player also exposes, when the matching frame is present. */
+      title?: string;
+      artist?: string;
+      album?: string;
+      url?: string;
+    };
+  }
+
+  interface DateRangeAttribute {
+    name: string;
+    /** Strings from the manifest; iOS reports numeric attributes as numbers and binary ones as `0x…` hex. */
+    value: string | number | null;
+  }
+  interface DateRangeMetadataEventProps extends MetadataEventBase {
+    metadataType: 'date-range';
+    metadata: {
+      tag: 'EXT-X-DATERANGE';
+      /** The `ID` attribute, when present. */
+      id?: string;
+      start: number;
+      end: number;
+      duration: number;
+      /** ISO 8601 */
+      startDate?: string;
+      /** ISO 8601 */
+      endDate?: string;
+      /** Every attribute on the tag, including SCTE-35 payloads (`SCTE35-OUT` / `SCTE35-IN` / `SCTE35-CMD`). */
+      attributes: DateRangeAttribute[];
+      /** Raw tag text. @platform android */
+      content?: string;
+    };
+  }
+
+  interface ProgramDateTimeMetadataEventProps extends MetadataEventBase {
+    metadataType: 'program-date-time';
+    /** ISO 8601. Hoisted to the top level like the web player's `meta` event. */
+    programDateTime: string | null;
+    metadata: {
+      programDateTime: string | null;
+      start: number;
+      end: number;
+      /** Raw tag text. @platform android */
+      content?: string;
+    };
+  }
+
+  /** DASH `emsg` boxes. One event per message. @platform android */
+  interface EmsgMetadataEventProps extends MetadataEventBase {
+    metadataType: 'emsg';
+    metadata: {
+      id: number;
+      schemeIdUri: string;
+      value: string;
+      /** Seconds; `null` when the box has no duration. */
+      duration: number | null;
+      /** base64-encoded message payload. */
+      messageData: string | null;
+    };
+  }
+
+  /** Cue points supplied through `externalMetadata` on the playlist item (or config on iOS). */
+  interface ExternalMetadataEventProps extends MetadataEventBase {
+    metadataType: 'external';
+    metadata: {
+      /** The configured `identifier` (iOS) or the configured `id` as a string (Android). */
+      identifier: string;
+      /** Present when the identifier is numeric (always on Android). */
+      id?: number;
+      start: number;
+      end: number;
+    };
+  }
+
+  /**
+   * Media information, flat like the web player's `media` event. iOS fires it once
+   * media metadata is known; Android fires it when the selected video / audio track
+   * format is reported and adds track details under `metadata`.
+   */
+  interface MediaMetadataEventProps {
+    metadataType: 'media';
+    /** `null` for a non-finite (live) duration. @platform ios */
+    duration?: number | null;
+    height?: number;
+    width?: number;
+    frameRate?: number;
+    /** @platform ios */
+    seekRange?: { start: number | null; end: number | null };
+    /** @platform ios */
+    drm?: 'fairplay' | null;
+    /** Track-format details. Unknown fields are omitted. @platform android */
+    metadata?: {
+      videoBitrate?: number;
+      videoId?: string;
+      videoMimeType?: string;
+      droppedFrames?: number;
+      audioBitrate?: number;
+      audioChannels?: number;
+      audioSamplingRate?: number;
+      audioId?: string;
+      audioMimeType?: string;
+      language?: string;
+    };
+  }
+
+  /** `AVPlayerItemAccessLog` sample. Fires frequently during playback. @platform ios */
+  interface AccessLogMetadataEventProps {
+    metadataType: 'access-log';
+    metadata: {
+      observedBitrate?: number;
+      indicatedBitrate?: number;
+      droppedFrames?: number;
+    };
+  }
+
+  /** An in-playlist cue the SDK did not classify. @platform android */
+  interface UnknownMetadataEventProps extends MetadataEventBase {
+    metadataType: 'unknown';
+    metadata: { content?: string; [key: string]: any };
+  }
+
+  /** Payload of `onMeta`. Narrow on `metadataType`. */
+  type MetaEventProps =
+    | Id3MetadataEventProps
+    | EmsgMetadataEventProps
+    | DateRangeMetadataEventProps
+    | ProgramDateTimeMetadataEventProps
+    | ExternalMetadataEventProps
+    | MediaMetadataEventProps
+    | AccessLogMetadataEventProps
+    | UnknownMetadataEventProps;
+
+  /** Payload of `onMetadataCueParsed`. `media` and `access-log` never fire at parse time. */
+  type MetadataCueParsedEventProps =
+    | Id3MetadataEventProps
+    | EmsgMetadataEventProps
+    | DateRangeMetadataEventProps
+    | ProgramDateTimeMetadataEventProps
+    | ExternalMetadataEventProps
+    | UnknownMetadataEventProps;
   interface CastingEventProps {
     device?: string;
     active?: boolean;
@@ -694,6 +867,17 @@ declare module "@jwplayer/jwplayer-react-native" {
     onPlaylistItemMetadataChanged?: (event: BaseEvent<PlaylistItemEventProps>) => void;
     onCaptionsChanged?: (event: BaseEvent<CaptionsChangedEventProps>) => void;
     onCaptionsList?: (event: BaseEvent<CaptionsListEventProps>) => void;
+    /**
+     * Timed metadata reached during playback (ID3, EXT-X-DATERANGE incl. SCTE-35,
+     * EXT-X-PROGRAM-DATE-TIME, DASH emsg, `externalMetadata` cue points) plus media /
+     * access-log metadata. Mirrors the web player's `meta` event. See docs/METADATA-EVENTS.md.
+     */
+    onMeta?: (event: BaseEvent<MetaEventProps>) => void;
+    /**
+     * A metadata cue was parsed from the manifest / segment ahead of playback reaching it.
+     * Mirrors the web player's `metadataCueParsed` event. See docs/METADATA-EVENTS.md.
+     */
+    onMetadataCueParsed?: (event: BaseEvent<MetadataCueParsedEventProps>) => void;
     onAudioTracks?: () => void;
     /** @platform ios */
     onIdle?: () => void;

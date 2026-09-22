@@ -388,6 +388,19 @@ export default class JWPlayer extends Component {
 		onCaptionsList: PropTypes.func,
 		onAudioTracks: PropTypes.func,
 		/**
+		 * Fired when playback reaches timed metadata (ID3, EXT-X-DATERANGE incl. SCTE-35,
+		 * EXT-X-PROGRAM-DATE-TIME, DASH emsg, `externalMetadata` cue points) or when
+		 * media / access-log metadata is received. Mirrors the web player's `meta` event:
+		 * `{ metadataType, metadataTime?, metadata?, ... }`. See docs/METADATA-EVENTS.md.
+		 */
+		onMeta: PropTypes.func,
+		/**
+		 * Fired when a metadata cue is first parsed from the manifest / segment, ahead of
+		 * playback reaching it. Same payload shape as `onMeta`. Mirrors the web player's
+		 * `metadataCueParsed` event. See docs/METADATA-EVENTS.md.
+		 */
+		onMetadataCueParsed: PropTypes.func,
+		/**
 		 * Callback that is fired when the player is about to play the next playlist item.
 		 * Indented to be paired with `playlistItemCallbackEnabled` prop
 		 * 

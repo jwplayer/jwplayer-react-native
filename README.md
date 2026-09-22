@@ -275,6 +275,7 @@ The library now features a **unified configuration system** that provides consis
 - **[Platform Differences](./docs/PLATFORM-DIFFERENCES.md)** - Detailed comparison of iOS vs Android features
 - **[Migration Guide](./docs/MIGRATION-GUIDE.md)** - Guide for upgrading to the unified type system
 - **[Props Documentation](./docs/props.md)** - Component props reference
+- **[Metadata Events](./docs/METADATA-EVENTS.md)** - `onMeta` / `onMetadataCueParsed` payload reference (ID3, SCTE-35 date ranges, program date time, emsg, external cue points)
 
 ### Quick Example
 
@@ -329,7 +330,7 @@ The library supports two configuration modes:
 
 ## Advanced Topics
 
-[Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm) | [Picture in Picture (PiP)](#picture-in-picture-pip) | [Styling](#styling)
+[Advertising](#advertising) | [Background Audio](#background-audio) | [Casting](#casting) | [DRM](#drm) | [Metadata Events](#metadata-events) | [Picture in Picture (PiP)](#picture-in-picture-pip) | [Styling](#styling)
 
 <br />
 
@@ -609,6 +610,38 @@ A sample of overring a color via XML can be seen in this [colors file](Example/a
 
 #### iOS Styling
 You can use the styling elements as defined in the [Legacy Readme](/docs/legacy_readme.md#styling). 
+
+<br /><br />
+
+### Metadata Events
+
+Timed metadata embedded in the stream (ID3, `EXT-X-DATERANGE` including SCTE-35 markers, `EXT-X-PROGRAM-DATE-TIME`, DASH `emsg`), cue points you configure with `externalMetadata`, and media / access-log information are surfaced through two callbacks that mirror the web player's `meta` and `metadataCueParsed` events. Both deliver the same `{ metadataType, metadataTime?, metadata?, ... }` payload, so one handler type covers every kind of metadata:
+
+```jsx
+<JWPlayer
+  config={config}
+  onMetadataCueParsed={({nativeEvent}) => {
+    // Fired when a cue is parsed, ahead of playback reaching it.
+    console.log('parsed', nativeEvent.metadataType, nativeEvent.metadataTime);
+  }}
+  onMeta={({nativeEvent}) => {
+    // Fired when playback enters the cue (or media / access-log info arrives).
+    switch (nativeEvent.metadataType) {
+      case 'id3':
+        console.log(nativeEvent.metadata.title ?? nativeEvent.metadata);
+        break;
+      case 'date-range':
+        console.log(nativeEvent.metadata.attributes);
+        break;
+      case 'program-date-time':
+        console.log(nativeEvent.programDateTime);
+        break;
+    }
+  }}
+/>
+```
+
+See [Metadata Events](./docs/METADATA-EVENTS.md) for the full payload reference and per-platform coverage, and the **Metadata Events** screen in the `Example` app for a live demo against public test streams.
 
 <br /><br />
 

@@ -315,6 +315,33 @@ Both platforms can report a `reason` field on `onFullScreenExit` describing why 
 />
 ```
 
+### 9. Metadata Events
+
+`onMeta` and `onMetadataCueParsed` share one payload shape on both platforms (`{ metadataType, metadataTime?, metadata?, ... }`, mirroring the web player), but the native SDKs do not expose the same sources. See [Metadata Events](./METADATA-EVENTS.md) for payloads.
+
+| `metadataType` | iOS | Android | Notes |
+|----------------|:---:|:-------:|-------|
+| `id3` | `onMeta` | `onMeta`, `onMetadataCueParsed` | iOS reports `metadataTime`; Android does not know the cue time for ID3. |
+| `date-range` | both | both | SCTE-35 markers arrive as attributes. iOS re-encodes binary attributes as `0x…` hex; Android passes manifest strings and adds `content`. |
+| `program-date-time` | both | both | Android adds `content` (raw tag). |
+| `emsg` | ❌ | both | The iOS SDK does not expose DASH event messages. |
+| `external` | both | `onMeta` only | iOS reads `identifier`, Android reads `id` from the config — supply both. |
+| `media` | `onMeta` | `onMeta` | iOS: `duration`, `seekRange`, `drm`. Android: track-format details under `metadata`, fires on every format change. |
+| `access-log` | `onMeta` | ❌ | Periodic bitrate / dropped-frame samples from `AVPlayer`. |
+| `unknown` | ❌ | both | Unclassified in-playlist cues. |
+
+```typescript
+<JWPlayer
+  onMeta={({ nativeEvent }) => {
+    // Narrow on metadataType; the TS union gives you the right `metadata` shape.
+    if (nativeEvent.metadataType === 'date-range') {
+      const scte = nativeEvent.metadata.attributes.find(a => a.name.startsWith('SCTE35'));
+      // iOS: '0xFC30…' hex string; Android: the manifest's attribute string.
+    }
+  }}
+/>
+```
+
 ---
 
 ## Android-Specific Features
@@ -735,6 +762,12 @@ code as informational rather than as a failed ad request:
 | **Title/description VoiceOver overrides** (`titleAccessibilityLabel` etc.) | ✅ | ❌ | iOS only |
 | **Fullscreen exit `reason`** on `onFullScreenExit` | ✅ | ✅ | Different wire format per platform, see §8 |
 | **Fullscreen exit `reason`** on `onFullScreenExitRequested` | ✅ | ❌ | iOS only |
+| **`onMeta` / `onMetadataCueParsed`**: `date-range` (incl. SCTE-35), `program-date-time` | ✅ | ✅ | Cross-platform, see §9 |
+| **`onMeta`** `id3` | ✅ | ✅ | Cross-platform; `metadataTime` iOS only, see §9 |
+| **`onMetadataCueParsed`** `id3` | ❌ | ✅ | Android only |
+| **`onMeta`** `emsg` (DASH event messages) | ❌ | ✅ | Android only |
+| **`onMeta`** `external` (`externalMetadata` cue points) | ✅ | ✅ | Supply both `identifier` and `id`, see §9 |
+| **`onMeta`** `access-log` (bitrate / dropped frames) | ✅ | ❌ | iOS only |
 | **IMA DAI** | ✅ | ✅ | Use `imaDaiSettings` |
 | **VAST/IMA** | ✅ | ✅ | Fully cross-platform |
 

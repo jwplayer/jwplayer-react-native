@@ -182,17 +182,23 @@ export interface JWTrack {
  * 
  * Maximum 5 items; excess will be ignored.
  * 
- * @platform ios
+ * Each item is reported back through `onMeta` (both platforms) and
+ * `onMetadataCueParsed` (iOS) with `metadataType: 'external'`.
+ * See docs/METADATA-EVENTS.md.
+ *
+ * The two native SDKs read different keys: iOS requires `identifier`,
+ * Android requires `id`. Supply both for cross-platform configs.
  */
 export interface JWExternalMetadata {
   /**
-   * Unique identifier for this metadata item
-   * Required.
+   * Unique identifier for this metadata item.
+   * Required on iOS (the iOS SDK ignores items without it).
    */
   identifier: string;
   
   /**
-   * Alternative naming for identifier
+   * Numeric identifier.
+   * Required on Android (the Android SDK ignores items without it).
    */
   id?: number;
   
@@ -447,10 +453,10 @@ export interface JWPlaylistItem {
   assetOptions?: Record<string, any>;
   
   /**
-   * Array of external metadata for this item
-   * Overrides player-level external metadata
-   * Maximum 5 items
-   * @platform ios
+   * Array of external metadata cue points for this item.
+   * Overrides player-level external metadata (iOS).
+   * Maximum 5 items; each fires `onMeta` with `metadataType: 'external'`.
+   * See docs/METADATA-EVENTS.md.
    */
   externalMetadata?: JWExternalMetadata[];
   

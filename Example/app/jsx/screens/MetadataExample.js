@@ -31,7 +31,7 @@ const STREAMS = [
     key: 'daterange',
     label: 'DATERANGE + PDT',
     hint:
-      'VOD with EXT-X-PROGRAM-DATE-TIME and EXT-X-DATERANGE tags, plus an ID3 TXXX frame every 5s. Expect `program-date-time` and `date-range` when parsed and again as playback reaches each cue, and `id3` throughout.',
+      'VOD with EXT-X-PROGRAM-DATE-TIME and EXT-X-DATERANGE tags, plus an ID3 TXXX frame every 5s. Expect `program-date-time` and `date-range` when parsed and again as playback reaches each cue, and `id3` throughout. On iOS the date ranges arrive once the SDK knows the content start date, and this asset\'s variants disagree on it, so they can come late with large `start` values.',
     playlist: [
       {
         title: 'Date range metadata',
@@ -40,36 +40,36 @@ const STREAMS = [
     ],
   },
   {
-    key: 'scte',
-    label: 'SCTE-35',
-    hint:
-      'VOD with SCTE-35 markers carried in EXT-X-DATERANGE attributes (SCTE35-OUT / SCTE35-IN). Look inside `metadata.attributes` of the `date-range` events.',
-    playlist: [
-      {
-        title: 'SCTE-35 metadata',
-        file: 'https://playertest.longtailvideo.com/adaptive/bipbop_16x9/bipbop_16x9_variant_with_scte_tags.m3u8',
-      },
-    ],
-  },
-  {
     key: 'external',
     label: 'External',
     hint:
-      'Cue points supplied in the config via `externalMetadata`. iOS reads `identifier`, Android reads `id`, so both are provided. Expect `external` at 5s, 15s and 30s.',
+      'Cue points supplied in the config via `externalMetadata`. Only `identifier` is needed: the wrapper derives the integer `id` the Android SDK reads. Expect `external` at 5s, 15s and 30s.',
     playlist: [
       {
         title: 'External metadata cue points',
         file: 'https://content.bitsontherun.com/videos/q1fx20VZ-52qL9xLP.mp4',
         externalMetadata: [
-          {identifier: '1', id: 1, startTime: 5, endTime: 10},
-          {identifier: '2', id: 2, startTime: 15, endTime: 20},
-          {identifier: '3', id: 3, startTime: 30, endTime: 35},
+          {identifier: '1', startTime: 5, endTime: 10},
+          {identifier: '2', startTime: 15, endTime: 20},
+          {identifier: '3', startTime: 30, endTime: 35},
         ],
       },
     ],
   },
   ...(Platform.OS === 'android'
     ? [
+        {
+          key: 'scte',
+          label: 'SCTE-35',
+          hint:
+            'VOD with SCTE-35 markers carried in EXT-X-DATERANGE attributes (SCTE35-OUT / SCTE35-IN). Look inside `metadata.attributes` of the `date-range` events. Android only: AVFoundation rejects this test manifest (it reuses a DATERANGE ID with different START-DATEs), so iOS stalls on it.',
+          playlist: [
+            {
+              title: 'SCTE-35 metadata',
+              file: 'https://playertest.longtailvideo.com/adaptive/bipbop_16x9/bipbop_16x9_variant_with_scte_tags.m3u8',
+            },
+          ],
+        },
         {
           key: 'emsg',
           label: 'DASH emsg',
@@ -86,15 +86,28 @@ const STREAMS = [
     : []),
 ];
 
-const MAX_LOG = 60;
 // `access-log` (iOS) and `media` (Android, on every format change) are chatty;
-// they are always counted but hidden from the log unless toggled on.
+// they are always counted but hidden from the log unless toggled on. The two
+// buckets are trimmed separately so the chatty ones can never evict the cue
+// events this screen exists to show.
 const NOISY_TYPES = ['access-log', 'media'];
+const MAX_LOG = 60;
+const MAX_NOISY_LOG = 20;
+const EMPTY_LOG = {events: [], counts: {}};
+
+const isNoisy = ev => NOISY_TYPES.includes(ev.type);
+
+const trimLog = events => {
+  let kept = 0;
+  let keptNoisy = 0;
+  return events.filter(ev =>
+    isNoisy(ev) ? keptNoisy++ < MAX_NOISY_LOG : kept++ < MAX_LOG,
+  );
+};
 
 export default () => {
   const [streamKey, setStreamKey] = useState(STREAMS[0].key);
-  const [events, setEvents] = useState([]);
-  const [counts, setCounts] = useState({});
+  const [log, setLog] = useState(EMPTY_LOG);
   const [showNoisy, setShowNoisy] = useState(false);
 
   const stream = STREAMS.find(s => s.key === streamKey) || STREAMS[0];
@@ -104,20 +117,19 @@ export default () => {
     const {message, ...payload} = e.nativeEvent || {};
     const type = payload.metadataType || 'unknown';
     const countKey = `${phase} ${type}`;
+    const entry = {
+      id: `${Date.now()}-${Math.random()}`,
+      phase,
+      type,
+      time: new Date().toLocaleTimeString(),
+      payload,
+    };
 
-    setCounts(prev => ({...prev, [countKey]: (prev[countKey] || 0) + 1}));
-    setEvents(prev =>
-      [
-        {
-          id: `${Date.now()}-${Math.random()}`,
-          phase,
-          type,
-          time: new Date().toLocaleTimeString(),
-          payload,
-        },
-        ...prev,
-      ].slice(0, MAX_LOG),
-    );
+    // One state update per event: the counts and the trimmed log move together.
+    setLog(prev => ({
+      events: trimLog([entry, ...prev.events]),
+      counts: {...prev.counts, [countKey]: (prev.counts[countKey] || 0) + 1},
+    }));
   };
 
   const onMeta = e => record('onMeta', e);
@@ -125,13 +137,11 @@ export default () => {
 
   const selectStream = key => {
     setStreamKey(key);
-    setEvents([]);
-    setCounts({});
+    setLog(EMPTY_LOG);
   };
 
-  const visibleEvents = showNoisy
-    ? events
-    : events.filter(ev => !NOISY_TYPES.includes(ev.type));
+  const {events, counts} = log;
+  const visibleEvents = showNoisy ? events : events.filter(ev => !isNoisy(ev));
 
   return (
     <View style={globalStyles.container}>
@@ -183,12 +193,7 @@ export default () => {
           <Text style={styles.toggleLabel}>Show media / access-log</Text>
           <Switch value={showNoisy} onValueChange={setShowNoisy} />
         </View>
-        <Pressable
-          style={styles.clear}
-          onPress={() => {
-            setEvents([]);
-            setCounts({});
-          }}>
+        <Pressable style={styles.clear} onPress={() => setLog(EMPTY_LOG)}>
           <Text style={styles.clearText}>Clear</Text>
         </Pressable>
       </View>

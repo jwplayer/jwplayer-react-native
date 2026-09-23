@@ -186,19 +186,23 @@ export interface JWTrack {
  * `onMetadataCueParsed` (iOS) with `metadataType: 'external'`.
  * See docs/METADATA-EVENTS.md.
  *
- * The two native SDKs read different keys: iOS requires `identifier`,
- * Android requires `id`. Supply both for cross-platform configs.
+ * The iOS SDK reads `identifier` and the Android SDK reads the integer `id`.
+ * The wrapper derives each from the other, so an integer-string `identifier`
+ * (`'1'`) is all a cross-platform config needs. Items the current platform
+ * cannot represent (a non-integer identifier on Android, or a missing
+ * `startTime` / `endTime`) are dropped with a console warning instead of
+ * being handed to the SDK.
  */
 export interface JWExternalMetadata {
   /**
-   * Unique identifier for this metadata item.
-   * Required on iOS (the iOS SDK ignores items without it).
+   * Unique identifier for this metadata item, reported back as
+   * `metadata.identifier`. Use an integer string to target Android too.
    */
   identifier: string;
   
   /**
-   * Numeric identifier.
-   * Required on Android (the Android SDK ignores items without it).
+   * Integer identifier the Android SDK reads. Derived from `identifier`
+   * when omitted; when supplied, it also fills in a missing `identifier`.
    */
   id?: number;
   

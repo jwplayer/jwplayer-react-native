@@ -2232,11 +2232,15 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func jwplayer(_ player: JWPlayer, externalMetadataCueParsed metadata: JWExternalMetadata) {
-        self.onMetadataCueParsed?(RNJWPlayerMetadata.external(metadata))
+        if let payload = RNJWPlayerMetadata.external(metadata) {
+            self.onMetadataCueParsed?(payload)
+        }
     }
 
     func jwplayer(_ player: JWPlayer, externalMetadata metadata: JWExternalMetadata) {
-        self.onMeta?(RNJWPlayerMetadata.external(metadata))
+        if let payload = RNJWPlayerMetadata.external(metadata) {
+            self.onMeta?(payload)
+        }
     }
 
     func jwplayer(_ player: JWPlayer, programDateTimeMetadataCueParsed metadata: JWProgramDateTimeMetadata) {

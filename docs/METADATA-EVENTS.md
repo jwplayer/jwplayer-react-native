@@ -12,7 +12,7 @@ Both callbacks deliver the same payload shape, so one handler type covers everyt
 ```ts
 {
   metadataType: 'id3' | 'emsg' | 'date-range' | 'program-date-time' | 'external' | 'media' | 'access-log' | 'unknown',
-  metadataTime?: number,      // cue start, seconds relative to the stream (omitted when unknown)
+  metadataTime?: number,      // cue start, seconds relative to the stream (omitted when unknown or negative)
   programDateTime?: string,   // ISO 8601, only on program-date-time (hoisted like the web player)
   metadata?: { ... },         // per-type body, see below
   // media only, flat like the web player:
@@ -65,12 +65,14 @@ The **Metadata Events** screen in the [Example app](../Example/app/jsx/screens/M
 | `date-range` | `#EXT-X-DATERANGE` (including SCTE-35 attributes) | iOS, Android | iOS, Android |
 | `program-date-time` | `#EXT-X-PROGRAM-DATE-TIME` | iOS, Android | iOS, Android |
 | `emsg` | DASH event message boxes | Android | Android |
-| `external` | `externalMetadata` cue points from your config | iOS | iOS, Android |
+| `external` | `externalMetadata` cue points from your config | iOS | iOS†, Android |
 | `media` | Media / track information | – | iOS, Android |
 | `access-log` | `AVPlayer` access-log samples | – | iOS |
-| `unknown` | Anything the SDK reports without a recognised type | Android | Android |
+| `unknown` | Forward-compatibility fallback for Android cue types this wrapper does not classify yet (none with the current SDK) | Android | Android |
 
 The web player also emits `scte-35` (for `#EXT-X-CUE-OUT` / `#EXT-X-CUE-IN` tags) and `discontinuity`. Neither native SDK exposes those, so they are not part of this API. SCTE-35 markers carried in `#EXT-X-DATERANGE` attributes **are** delivered, inside `date-range` events.
+
+† **Known iOS SDK limitation (JWPlayerKit 4.28.0):** the wrapper forwards the playback-time `external` event as soon as the SDK dispatches it, but in our device testing the SDK only dispatched the parse-time event (`onMetadataCueParsed`) and never the playback-time one, for MP4 and HLS content alike. Tracked as SDK-12315. Until the SDK fix lands, drive playback-time logic for external cues on iOS from `onMetadataCueParsed` plus `onTime`. Android fires `onMeta` for external cues as expected.
 
 ---
 
@@ -95,9 +97,10 @@ ID3 frames embedded in the stream, flattened into a `{ frameId: value }` map exa
 
 - Frames that carry a description or owner (`TXXX`, `WXXX`, `PRIV`, `GEOB`, `APIC`, `COMM`) nest their value under it: `{ "TXXX": { "<description>": value } }`.
 - Binary payloads (`PRIV`, `GEOB.data`, `APIC.pictureData`, unrecognised frames) are **base64** strings.
-- The web player's friendly aliases are included when the matching frame is present: `title` (`TIT2`/`TT2`), `artist` (`TPE1`/`TP1`), `album` (`TALB`/`TAL`), `url` (`WXXX`).
+- The web player's friendly aliases are included when the matching frame is present: `title` (`TIT2`/`TT2`), `artist` (`TPE1`/`TP1`), `album` (`TALB`/`TAL`), `url` (`WXXX`). They are always strings.
 - **iOS** reports `metadataTime` (the frame's start). The iOS SDK keys frames by id, so two frames with the same id in one group collapse to one entry.
 - **Android** does not know the cue time for playback-time ID3 frames, so `metadataTime` is omitted on `onMeta`. On `onMetadataCueParsed` it is omitted as well.
+- **Android** keeps every frame in a group: when the same id appears both with and without a description, the description-less value nests under the empty-string key (`{ "TXXX": { "": "a", "segment-id": "b" } }`). A text frame carrying several values (ID3v2.4) is reported as an array; its alias is the first value.
 
 ### `date-range`
 
@@ -125,9 +128,11 @@ ID3 frames embedded in the stream, flattened into a `{ frameId: value }` map exa
 }
 ```
 
-- `attributes` is an array of `{ name, value }` (the web player's shape), so repeated or arbitrary `X-` attributes are preserved.
-- `id`, `startDate`, `endDate` are lifted out of the attributes for convenience. `duration` falls back to `end - start` when `PLANNED-DURATION` is absent.
-- **iOS** re-encodes binary attributes such as `SCTE35-OUT` / `SCTE35-IN` / `SCTE35-CMD` as `0x…` hex strings, matching how they appear in the manifest. Numeric attributes arrive as numbers.
+- `attributes` is an array of `{ name, value }` (the web player's shape), so arbitrary `X-` attributes are preserved. iOS keeps manifest order and repeated names; Android receives the attributes from its SDK as a map, so they arrive sorted by name and a repeated name keeps only its last value.
+- `startDate` and `endDate` are re-emitted as UTC ISO 8601 on both platforms, whatever offset the manifest used.
+- `id`, `startDate`, `endDate` are lifted out of the attributes for convenience. On both platforms `duration` is `PLANNED-DURATION` when present, otherwise the `DURATION` attribute, otherwise `end - start`.
+- **iOS** re-encodes binary attributes such as `SCTE35-OUT` / `SCTE35-IN` / `SCTE35-CMD` as `0x…` hex strings, matching how they appear in the manifest. Numeric attributes arrive as numbers. The iOS SDK formats the `START-DATE` / `END-DATE` *attribute strings* in the device's local time zone while still appending `Z`, so read dates from `metadata.startDate` / `metadata.endDate` (correct UTC) rather than from the attributes (SDK-12315).
+- **iOS** computes `start` / `end` relative to the content start date of the variant playlist AVPlayer selected. If the variants of a stream disagree on their first `EXT-X-PROGRAM-DATE-TIME`, the reported `start` shifts accordingly and `onMeta` fires when that shifted position is reached.
 - **Android** passes every attribute as the string from the manifest and adds `content`, the raw tag text.
 
 ### `program-date-time`
@@ -180,13 +185,15 @@ const config = {
   playlist: [{
     file: 'https://example.com/video.m3u8',
     externalMetadata: [
-      // iOS reads `identifier`, Android reads `id` — provide both for cross-platform configs.
-      {identifier: '1', id: 1, startTime: 5, endTime: 10},
-      {identifier: '2', id: 2, startTime: 30, endTime: 35},
+      // An integer-string identifier is all a cross-platform config needs.
+      {identifier: '1', startTime: 5, endTime: 10},
+      {identifier: '2', startTime: 30, endTime: 35},
     ],
   }],
 };
 ```
+
+The iOS SDK reads `identifier` and the Android SDK reads the integer `id`; the wrapper derives each from the other before the config reaches the SDK, so you can supply either. Items the current platform cannot represent (a non-integer identifier on Android, or a missing `startTime` / `endTime`) are dropped with a `console.warn` rather than being handed to the SDK, where they would otherwise invalidate the whole config (Android) or surface as an empty placeholder cue (iOS).
 
 ```json
 {
@@ -201,8 +208,8 @@ const config = {
 }
 ```
 
-- `identifier` is always a string. `id` is present when the identifier is numeric (always on Android).
-- Both SDKs cap external metadata at **5 items per playlist item**; extra items are dropped with a native warning.
+- `identifier` is always a string. `id` is present when the identifier is an integer (always on Android).
+- Both SDKs keep only the first **5 items per playlist item**: Android logs a warning (`Only 5 External Metadata are allowed`), iOS drops the rest silently.
 
 ### `media`
 
@@ -242,7 +249,7 @@ This event can fire frequently during playback. Filter on `metadataType` early i
 
 ### `unknown`
 
-Emitted only by Android when the SDK reports an in-playlist metadata cue it does not classify. `metadata.content` holds the raw tag text when available.
+Reserved for Android. It is the fallback for in-playlist cue types a future Android SDK may report that this wrapper does not classify yet; with the currently pinned SDK every cue type maps to one of the types above, so it does not fire. `metadata.content` holds the raw tag text when available.
 
 ---
 

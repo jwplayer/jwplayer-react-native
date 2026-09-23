@@ -18,6 +18,90 @@ const RCT_RNJWPLAYER_REF = 'RNJWPlayerKey';
 
 const RNJWPlayer = requireNativeComponent('RNJWPlayerView');
 
+const INTEGER_STRING = /^-?\d+$/;
+
+/**
+ * The two native SDKs read different keys from an `externalMetadata` item: the
+ * iOS SDK requires a string `identifier`, the Android SDK requires an integer `id`
+ * and throws on the *whole* config when it is missing (which makes the wrapper fall
+ * back to the legacy builder and silently drop every other JW-config-only key).
+ * Derive each key from the other so callers only need `identifier`, and drop items
+ * this platform cannot represent instead of handing them to the SDK, where they
+ * would either break the config (Android) or surface as a bogus cue (iOS).
+ */
+export function normalizeExternalMetadata(list) {
+	if (!Array.isArray(list)) {
+		return list;
+	}
+	const normalized = [];
+	list.forEach((item) => {
+		if (!item || typeof item !== 'object') {
+			return;
+		}
+		let { identifier, id } = item;
+		if (identifier == null && id != null) {
+			identifier = String(id);
+		}
+		identifier = identifier == null ? '' : String(identifier).trim();
+		if (typeof id === 'string' && INTEGER_STRING.test(id.trim())) {
+			id = parseInt(id, 10);
+		}
+		if (id == null && INTEGER_STRING.test(identifier)) {
+			id = parseInt(identifier, 10);
+		}
+
+		let reason;
+		if (identifier === '') {
+			reason = '`identifier` is required';
+		} else if (!Number.isFinite(item.startTime) || !Number.isFinite(item.endTime)) {
+			reason = '`startTime` and `endTime` must be numbers';
+		} else if (Platform.OS === 'android' && !Number.isInteger(id)) {
+			reason = 'the Android SDK needs an integer `id` (or an integer-string `identifier`)';
+		}
+		if (reason) {
+			console.warn(
+				`[jwplayer-react-native] Dropping externalMetadata item ${JSON.stringify(item)}: ${reason}.`
+			);
+			return;
+		}
+
+		const result = { ...item, identifier };
+		if (Number.isInteger(id)) {
+			result.id = id;
+		}
+		normalized.push(result);
+	});
+	return normalized;
+}
+
+/**
+ * Returns `config` with every `externalMetadata` list (top level and per playlist
+ * item) normalized. The same object is returned when there is nothing to change.
+ */
+export function normalizeConfig(config) {
+	if (!config || typeof config !== 'object') {
+		return config;
+	}
+	let result = config;
+	if (Array.isArray(config.externalMetadata)) {
+		result = { ...result, externalMetadata: normalizeExternalMetadata(config.externalMetadata) };
+	}
+	if (Array.isArray(config.playlist)) {
+		let changed = false;
+		const playlist = config.playlist.map((item) => {
+			if (item && typeof item === 'object' && Array.isArray(item.externalMetadata)) {
+				changed = true;
+				return { ...item, externalMetadata: normalizeExternalMetadata(item.externalMetadata) };
+			}
+			return item;
+		});
+		if (changed) {
+			result = { ...result, playlist };
+		}
+	}
+	return result;
+}
+
 const JWPlayerStateIOS = {
 	JWPlayerStateUnknown: 0,
 	JWPlayerStateIdle: 1,
@@ -820,11 +904,19 @@ export default class JWPlayer extends Component {
 	}
 
 	render() {
+		// Normalize once per distinct config object so the native side sees a stable
+		// reference (and no spurious reconfigure) across re-renders.
+		const { config } = this.props;
+		if (config !== this._lastConfig) {
+			this._lastConfig = config;
+			this._normalizedConfig = normalizeConfig(config);
+		}
 		return (
 			<RNJWPlayer
 				ref={(player) => (this[this.ref_key] = player)}
 				key={this.ref_key}
 				{...this.props}
+				config={this._normalizedConfig}
 			/>
 		);
 	}

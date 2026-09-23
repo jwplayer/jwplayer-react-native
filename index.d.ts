@@ -631,7 +631,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     metadataType: MetadataType;
     /**
      * Cue start in seconds, relative to the stream. Omitted when the SDK does not
-     * report it (Android ID3 and emsg).
+     * report it (Android ID3 and emsg) or reports a negative value; the raw value
+     * is still available as `metadata.start` where the type carries one.
      */
     metadataTime?: number;
   }
@@ -646,7 +647,11 @@ declare module "@jwplayer/jwplayer-react-native" {
   interface Id3MetadataEventProps extends MetadataEventBase {
     metadataType: 'id3';
     metadata: Id3MetadataFrames & {
-      /** Friendly aliases the web player also exposes, when the matching frame is present. */
+      /**
+       * Friendly aliases the web player also exposes, when the matching frame is present.
+       * Always a string: when a text frame carries several values (ID3v2.4, Android only)
+       * the frame entry is a `string[]` and the alias is its first value.
+       */
       title?: string;
       artist?: string;
       album?: string;
@@ -656,7 +661,10 @@ declare module "@jwplayer/jwplayer-react-native" {
 
   interface DateRangeAttribute {
     name: string;
-    /** Strings from the manifest; iOS reports numeric attributes as numbers and binary ones as `0x…` hex. */
+    /**
+     * Strings from the manifest; iOS reports numeric attributes as numbers and binary ones as `0x…` hex.
+     * The iOS SDK formats `START-DATE` / `END-DATE` strings in local time; prefer `metadata.startDate` / `endDate`.
+     */
     value: string | number | null;
   }
   interface DateRangeMetadataEventProps extends MetadataEventBase {
@@ -672,7 +680,10 @@ declare module "@jwplayer/jwplayer-react-native" {
       startDate?: string;
       /** ISO 8601 */
       endDate?: string;
-      /** Every attribute on the tag, including SCTE-35 payloads (`SCTE35-OUT` / `SCTE35-IN` / `SCTE35-CMD`). */
+      /**
+       * Every attribute on the tag, including SCTE-35 payloads (`SCTE35-OUT` / `SCTE35-IN` / `SCTE35-CMD`).
+       * Manifest order on iOS; sorted by name on Android.
+       */
       attributes: DateRangeAttribute[];
       /** Raw tag text. @platform android */
       content?: string;
@@ -706,13 +717,17 @@ declare module "@jwplayer/jwplayer-react-native" {
     };
   }
 
-  /** Cue points supplied through `externalMetadata` on the playlist item (or config on iOS). */
+  /**
+   * Cue points supplied through `externalMetadata` on the playlist item (or config on iOS).
+   * On iOS, JWPlayerKit 4.28.0 delivers these through `onMetadataCueParsed` only (SDK-12315);
+   * the playback-time `onMeta` event is forwarded as soon as the SDK dispatches it.
+   */
   interface ExternalMetadataEventProps extends MetadataEventBase {
     metadataType: 'external';
     metadata: {
-      /** The configured `identifier` (iOS) or the configured `id` as a string (Android). */
+      /** The configured `identifier` (derived from `id` when only that was supplied). */
       identifier: string;
-      /** Present when the identifier is numeric (always on Android). */
+      /** Present when the identifier is an integer (always on Android). */
       id?: number;
       start: number;
       end: number;
@@ -760,7 +775,11 @@ declare module "@jwplayer/jwplayer-react-native" {
     };
   }
 
-  /** An in-playlist cue the SDK did not classify. @platform android */
+  /**
+   * Forward-compatibility fallback for in-playlist cue types a future Android SDK may
+   * report that this wrapper does not classify yet. Does not fire with the currently
+   * pinned SDK. @platform android
+   */
   interface UnknownMetadataEventProps extends MetadataEventBase {
     metadataType: 'unknown';
     metadata: { content?: string; [key: string]: any };

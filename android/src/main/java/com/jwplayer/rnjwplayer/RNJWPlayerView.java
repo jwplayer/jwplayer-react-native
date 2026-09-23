@@ -1220,8 +1220,14 @@ public class RNJWPlayerView extends RelativeLayout implements
                 checkAndWarnImaConfig(obj, null);
                 
                 jwConfig = JsonHelper.parseConfigJson(obj);
-                isJwConfig = true;
-                return jwConfig;  // Return directly if valid JW config
+                // JsonHelper swallows the JSONException and returns null for a config the SDK
+                // parser rejects; a null here would NPE on getUiConfig() below, so treat it like
+                // a parse failure and fall back to the legacy builder.
+                if (jwConfig != null) {
+                    isJwConfig = true;
+                    return jwConfig;  // Return directly if valid JW config
+                }
+                Log.d(TAG, "JW config parser rejected the config, using legacy builder");
             } catch (Exception ex) {
                 Log.d(TAG, "Not a JW config format, using legacy builder: " + ex.getMessage());
                 isJwConfig = false;
@@ -1423,7 +1429,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                 checkAndWarnImaConfig(obj, null);
                 
                 jwConfig = JsonHelper.parseConfigJson(obj);
-                isJwConfig = true;
+                // JsonHelper swallows the JSONException and returns null; never hand null to setup().
+                isJwConfig = jwConfig != null;
+                if (!isJwConfig) {
+                    Log.e(TAG, "JW config parser rejected the config, falling back to legacy");
+                }
             } catch (Exception ex) {
                 Log.e(TAG, "Not a valid JW config format, falling back to legacy: " + ex.toString());
                 isJwConfig = false;

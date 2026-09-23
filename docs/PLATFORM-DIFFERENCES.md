@@ -322,13 +322,13 @@ Both platforms can report a `reason` field on `onFullScreenExit` describing why 
 | `metadataType` | iOS | Android | Notes |
 |----------------|:---:|:-------:|-------|
 | `id3` | `onMeta` | `onMeta`, `onMetadataCueParsed` | iOS reports `metadataTime`; Android does not know the cue time for ID3. |
-| `date-range` | both | both | SCTE-35 markers arrive as attributes. iOS re-encodes binary attributes as `0x…` hex; Android passes manifest strings and adds `content`. |
+| `date-range` | both | both | SCTE-35 markers arrive as attributes. iOS re-encodes binary attributes as `0x…` hex and formats date attribute strings in local time (use `startDate` / `endDate`); Android passes manifest strings, sorted by name, and adds `content`. |
 | `program-date-time` | both | both | Android adds `content` (raw tag). |
 | `emsg` | ❌ | both | The iOS SDK does not expose DASH event messages. |
-| `external` | both | `onMeta` only | iOS reads `identifier`, Android reads `id` from the config — supply both. |
+| `external` | `onMetadataCueParsed` (see note) | `onMeta` only | iOS reads `identifier`, Android reads the integer `id`; the wrapper derives each from the other, so an integer-string `identifier` is enough. JWPlayerKit 4.28.0 did not dispatch the playback-time event in our testing (SDK-12315); the wrapper forwards it as soon as the SDK does. |
 | `media` | `onMeta` | `onMeta` | iOS: `duration`, `seekRange`, `drm`. Android: track-format details under `metadata`, fires on every format change. |
 | `access-log` | `onMeta` | ❌ | Periodic bitrate / dropped-frame samples from `AVPlayer`. |
-| `unknown` | ❌ | both | Unclassified in-playlist cues. |
+| `unknown` | ❌ | both | Reserved fallback for future Android cue types; does not fire with the current SDK. |
 
 ```typescript
 <JWPlayer
@@ -766,7 +766,7 @@ code as informational rather than as a failed ad request:
 | **`onMeta`** `id3` | ✅ | ✅ | Cross-platform; `metadataTime` iOS only, see §9 |
 | **`onMetadataCueParsed`** `id3` | ❌ | ✅ | Android only |
 | **`onMeta`** `emsg` (DASH event messages) | ❌ | ✅ | Android only |
-| **`onMeta`** `external` (`externalMetadata` cue points) | ✅ | ✅ | Supply both `identifier` and `id`, see §9 |
+| **`onMeta`** `external` (`externalMetadata` cue points) | ✅ | ✅ | An integer-string `identifier` covers both platforms, see §9 |
 | **`onMeta`** `access-log` (bitrate / dropped frames) | ✅ | ❌ | iOS only |
 | **IMA DAI** | ✅ | ✅ | Use `imaDaiSettings` |
 | **VAST/IMA** | ✅ | ✅ | Fully cross-platform |

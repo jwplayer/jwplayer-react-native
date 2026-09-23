@@ -3,6 +3,7 @@ package com.jwplayer.rnjwplayer;
 import android.util.Base64;
 
 import androidx.media3.common.C;
+import androidx.media3.common.ParserException;
 import androidx.media3.extractor.metadata.emsg.EventMessage;
 import androidx.media3.extractor.metadata.id3.ApicFrame;
 import androidx.media3.extractor.metadata.id3.BinaryFrame;
@@ -14,8 +15,6 @@ import androidx.media3.extractor.metadata.id3.PrivFrame;
 import androidx.media3.extractor.metadata.id3.TextInformationFrame;
 import androidx.media3.extractor.metadata.id3.UrlLinkFrame;
 
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.jwplayer.pub.api.events.DateRangeEvent;
 import com.jwplayer.pub.api.events.InPlaylistTimedMetadataEvent;
@@ -33,6 +32,7 @@ import com.jwplayer.pub.api.media.playlists.ExternalMetadata;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -79,9 +79,9 @@ final class RNJWPlayerMetadata {
         List<Id3Frame> frames = metadata.getId3Metadata();
         if (frames != null && !frames.isEmpty()) {
             // The SDK does not report a cue time for playback-time ID3 frames.
-            return toWritableMap(id3(frames, Double.NaN));
+            return MapUtil.toWritableMap(id3(frames, Double.NaN));
         }
-        return toWritableMap(media(metadata));
+        return MapUtil.toWritableMap(media(metadata));
     }
 
     /** {@code EXT-X-DATERANGE} / {@code EXT-X-PROGRAM-DATE-TIME} reached during playback. */
@@ -91,18 +91,18 @@ final class RNJWPlayerMetadata {
         }
         if (event instanceof DateRangeEvent) {
             DateRangeEvent dateRange = (DateRangeEvent) event;
-            return toWritableMap(dateRange(dateRange.getRawTag(), dateRange.getStart(), dateRange.getEnd(),
+            return MapUtil.toWritableMap(dateRange(dateRange.getRawTag(), dateRange.getStart(), dateRange.getEnd(),
                     dateRange.getDuration(), dateRange.getId(), dateRange.getStartDate(), dateRange.getAttributes()));
         }
         if (event instanceof ProgramDateTimeEvent) {
             ProgramDateTimeEvent pdt = (ProgramDateTimeEvent) event;
-            return toWritableMap(programDateTime(pdt.getRawTag(), pdt.getStart(), pdt.getEnd(), pdt.getProgramDateTime()));
+            return MapUtil.toWritableMap(programDateTime(pdt.getRawTag(), pdt.getStart(), pdt.getEnd(), pdt.getProgramDateTime()));
         }
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("content", event.getRawTag());
         body.put("start", event.getStart());
         body.put("end", event.getEnd());
-        return toWritableMap(event(TYPE_UNKNOWN, event.getStart(), body));
+        return MapUtil.toWritableMap(event(TYPE_UNKNOWN, event.getStart(), body));
     }
 
     /** DASH {@code emsg} boxes reached during playback: one event per message, like the web player. */
@@ -113,7 +113,7 @@ final class RNJWPlayerMetadata {
         }
         for (EventMessage message : messages) {
             if (message != null) {
-                events.add(toWritableMap(emsg(message)));
+                events.add(MapUtil.toWritableMap(emsg(message)));
             }
         }
         return events;
@@ -129,7 +129,7 @@ final class RNJWPlayerMetadata {
         body.put("id", metadata.getId());
         body.put("start", metadata.getStartTime());
         body.put("end", metadata.getEndTime());
-        return toWritableMap(event(TYPE_EXTERNAL, metadata.getStartTime(), body));
+        return MapUtil.toWritableMap(event(TYPE_EXTERNAL, metadata.getStartTime(), body));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ final class RNJWPlayerMetadata {
         switch (cue.getMetadataCueType()) {
             case ID3: {
                 ID3MetadataCue id3Cue = (ID3MetadataCue) cue;
-                events.add(toWritableMap(id3(id3Cue.getId3Frames(), id3Cue.getStart())));
+                events.add(MapUtil.toWritableMap(id3(id3Cue.getId3Frames(), id3Cue.getStart())));
                 break;
             }
             case EMSG: {
@@ -155,7 +155,7 @@ final class RNJWPlayerMetadata {
                 if (emsgCue.getEMSGs() != null) {
                     for (EventMessage message : emsgCue.getEMSGs()) {
                         if (message != null) {
-                            events.add(toWritableMap(emsg(message)));
+                            events.add(MapUtil.toWritableMap(emsg(message)));
                         }
                     }
                 }
@@ -163,13 +163,13 @@ final class RNJWPlayerMetadata {
             }
             case DATE_RANGE: {
                 DateRangeMetadataCue dateRange = (DateRangeMetadataCue) cue;
-                events.add(toWritableMap(dateRange(dateRange.getRawTag(), dateRange.getStart(), dateRange.getEnd(),
+                events.add(MapUtil.toWritableMap(dateRange(dateRange.getRawTag(), dateRange.getStart(), dateRange.getEnd(),
                         dateRange.getDuration(), dateRange.getId(), dateRange.getStartDate(), dateRange.getAttributes())));
                 break;
             }
             case PROGRAM_DATE_TIME: {
                 ProgramDateTimeMetadataCue pdt = (ProgramDateTimeMetadataCue) cue;
-                events.add(toWritableMap(programDateTime(pdt.getRawTag(), pdt.getStart(), pdt.getEnd(), pdt.getProgramDateTime())));
+                events.add(MapUtil.toWritableMap(programDateTime(pdt.getRawTag(), pdt.getStart(), pdt.getEnd(), pdt.getProgramDateTime())));
                 break;
             }
             default: {
@@ -177,7 +177,7 @@ final class RNJWPlayerMetadata {
                 if (cue instanceof InPlaylistTimedMetadataCue) {
                     body.put("content", ((InPlaylistTimedMetadataCue) cue).getRawTag());
                 }
-                events.add(toWritableMap(event(TYPE_UNKNOWN, cue.getStart(), body)));
+                events.add(MapUtil.toWritableMap(event(TYPE_UNKNOWN, cue.getStart(), body)));
                 break;
             }
         }
@@ -210,9 +210,12 @@ final class RNJWPlayerMetadata {
         String id = frame.id;
         if (frame instanceof TextInformationFrame) {
             TextInformationFrame text = (TextInformationFrame) frame;
+            // ID3v2.4 allows several null-separated values per text frame. The frame entry keeps
+            // them all; the friendly alias stays a string (the first value, as ExoPlayer's own
+            // MediaMetadata mapping does).
             Object value = text.values.size() == 1 ? text.values.get(0) : new ArrayList<Object>(text.values);
             putNested(target, id, text.description, value);
-            putAlias(target, id, value);
+            putAlias(target, id, text.values.isEmpty() ? null : text.values.get(0));
         } else if (frame instanceof UrlLinkFrame) {
             UrlLinkFrame url = (UrlLinkFrame) frame;
             putNested(target, id, url.description, url.url);
@@ -258,25 +261,37 @@ final class RNJWPlayerMetadata {
         }
     }
 
+    /**
+     * One ID3 group can carry the same frame id several times, with and without a description
+     * (e.g. {@code TXXX} with an empty description next to {@code TXXX(segment-id)}). Nothing is
+     * overwritten: once a frame id nests, a description-less value lives under the empty-string key.
+     */
     @SuppressWarnings("unchecked")
     private static void putNested(Map<String, Object> target, String key, String description, Object value) {
-        if (description == null || description.isEmpty()) {
+        String nestedKey = description == null ? "" : description;
+        Object existing = target.get(key);
+        if (nestedKey.isEmpty() && !(existing instanceof Map)) {
             target.put(key, value);
             return;
         }
-        Object existing = target.get(key);
         Map<String, Object> nested;
         if (existing instanceof Map) {
             nested = (Map<String, Object>) existing;
         } else {
             nested = new LinkedHashMap<>();
+            if (existing != null) {
+                nested.put("", existing);
+            }
             target.put(key, nested);
         }
-        nested.put(description, value);
+        nested.put(nestedKey, value);
     }
 
     /** Friendly aliases the web player also exposes (title, artist, album, url). */
     private static void putAlias(Map<String, Object> target, String id, Object value) {
+        if (value == null) {
+            return;
+        }
         String alias;
         switch (id) {
             case "TIT2":
@@ -337,13 +352,23 @@ final class RNJWPlayerMetadata {
         List<Object> attributeList = new ArrayList<>();
         String endDate = null;
         if (attributes != null) {
-            for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            // The SDK collects the tag's attributes into a HashMap, so manifest order is gone and
+            // a repeated name has already collapsed to one value. Sort by name for a stable order.
+            List<String> names = new ArrayList<>();
+            for (String name : attributes.keySet()) {
+                if (name != null) {
+                    names.add(name);
+                }
+            }
+            Collections.sort(names);
+            for (String name : names) {
+                String value = attributes.get(name);
                 Map<String, Object> attribute = new LinkedHashMap<>();
-                attribute.put("name", entry.getKey());
-                attribute.put("value", entry.getValue());
+                attribute.put("name", name);
+                attribute.put("value", value);
                 attributeList.add(attribute);
-                if ("END-DATE".equals(entry.getKey())) {
-                    endDate = entry.getValue();
+                if ("END-DATE".equals(name)) {
+                    endDate = value;
                 }
             }
         }
@@ -373,7 +398,7 @@ final class RNJWPlayerMetadata {
             body.put("startDate", iso8601(startDate));
         }
         if (endDate != null) {
-            body.put("endDate", endDate);
+            body.put("endDate", isoDateAttribute(endDate));
         }
         if (id != null && !id.isEmpty()) {
             body.put("id", id);
@@ -452,67 +477,16 @@ final class RNJWPlayerMetadata {
         return format.format(date);
     }
 
-    // MapUtil.toWritableMap does not handle List or Long values (and drains its input), so the
-    // bridge conversion lives here.
-
-    @SuppressWarnings("unchecked")
-    static WritableMap toWritableMap(Map<String, Object> map) {
-        WritableMap result = Arguments.createMap();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            putValue(result, entry.getKey(), entry.getValue());
-        }
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static WritableArray toWritableArray(List<Object> list) {
-        WritableArray result = Arguments.createArray();
-        for (Object value : list) {
-            if (value == null) {
-                result.pushNull();
-            } else if (value instanceof Boolean) {
-                result.pushBoolean((Boolean) value);
-            } else if (value instanceof Integer) {
-                result.pushInt((Integer) value);
-            } else if (value instanceof Number) {
-                double number = ((Number) value).doubleValue();
-                if (Double.isNaN(number) || Double.isInfinite(number)) {
-                    result.pushNull();
-                } else {
-                    result.pushDouble(number);
-                }
-            } else if (value instanceof Map) {
-                result.pushMap(toWritableMap((Map<String, Object>) value));
-            } else if (value instanceof List) {
-                result.pushArray(toWritableArray((List<Object>) value));
-            } else {
-                result.pushString(String.valueOf(value));
-            }
-        }
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void putValue(WritableMap target, String key, Object value) {
-        if (value == null) {
-            target.putNull(key);
-        } else if (value instanceof Boolean) {
-            target.putBoolean(key, (Boolean) value);
-        } else if (value instanceof Integer) {
-            target.putInt(key, (Integer) value);
-        } else if (value instanceof Number) {
-            double number = ((Number) value).doubleValue();
-            if (Double.isNaN(number) || Double.isInfinite(number)) {
-                target.putNull(key);
-            } else {
-                target.putDouble(key, number);
-            }
-        } else if (value instanceof Map) {
-            target.putMap(key, toWritableMap((Map<String, Object>) value));
-        } else if (value instanceof List) {
-            target.putArray(key, toWritableArray((List<Object>) value));
-        } else {
-            target.putString(key, String.valueOf(value));
+    /**
+     * Re-emits a manifest date attribute (e.g. {@code END-DATE}) through the same UTC formatter as
+     * {@code startDate}, so both fields share one format whatever offset the manifest used. Falls
+     * back to the raw string when it does not parse. Fully qualified to avoid this package's Util.
+     */
+    private static String isoDateAttribute(String value) {
+        try {
+            return iso8601(new Date(androidx.media3.common.util.Util.parseXsDateTime(value)));
+        } catch (ParserException | RuntimeException e) {
+            return value;
         }
     }
 }

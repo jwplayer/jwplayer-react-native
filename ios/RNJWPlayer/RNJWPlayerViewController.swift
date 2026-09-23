@@ -724,12 +724,16 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 
     override func jwplayer(_ player: JWPlayer, externalMetadataCueParsed metadata: JWExternalMetadata) {
         super.jwplayer(player, externalMetadataCueParsed: metadata)
-        parentView?.onMetadataCueParsed?(RNJWPlayerMetadata.external(metadata))
+        if let payload = RNJWPlayerMetadata.external(metadata) {
+            parentView?.onMetadataCueParsed?(payload)
+        }
     }
 
     override func jwplayer(_ player: JWPlayer, externalMetadata metadata: JWExternalMetadata) {
         super.jwplayer(player, externalMetadata: metadata)
-        parentView?.onMeta?(RNJWPlayerMetadata.external(metadata))
+        if let payload = RNJWPlayerMetadata.external(metadata) {
+            parentView?.onMeta?(payload)
+        }
     }
 
     override func jwplayer(_ player: JWPlayer, programDateTimeMetadataCueParsed metadata: JWProgramDateTimeMetadata) {

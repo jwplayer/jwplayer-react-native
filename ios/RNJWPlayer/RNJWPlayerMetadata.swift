@@ -71,11 +71,23 @@ enum RNJWPlayerMetadata {
             }
         }
 
+        // The SDK only derives `duration` from PLANNED-DURATION (with END-DATE it reports the
+        // cue's end position instead). Mirror the Android side and the web player: PLANNED-DURATION,
+        // then the DURATION attribute, then the cue's own span.
+        var duration = metadata.duration
+        if numeric(attributeNamed("PLANNED-DURATION", in: attributes)) == nil {
+            if let declared = numeric(attributeNamed("DURATION", in: attributes)) {
+                duration = declared
+            } else if metadata.start.isFinite, metadata.end.isFinite {
+                duration = max(0, metadata.end - metadata.start)
+            }
+        }
+
         var body: [String: Any] = [
             "tag": "EXT-X-DATERANGE",
             "start": number(metadata.start),
             "end": number(metadata.end),
-            "duration": number(metadata.duration),
+            "duration": number(duration),
             "attributes": attributes,
         ]
         if let startDate = metadata.startDate {
@@ -107,7 +119,15 @@ enum RNJWPlayerMetadata {
     }
 
     /// `JWExternalMetadata` (configured via `externalMetadata`) → `{ metadataType: "external", ... }`
-    static func external(_ metadata: JWExternalMetadata) -> [String: Any] {
+    ///
+    /// Returns `nil` for the placeholder the iOS SDK's JSON parser substitutes for an item it
+    /// could not read (`identifier: "", startTime: -1, endTime: -1`), so a misconfigured item
+    /// never surfaces as a bogus cue. `index.js` normalizes items before they reach the SDK;
+    /// this is the last line of defence.
+    static func external(_ metadata: JWExternalMetadata) -> [String: Any]? {
+        guard !metadata.identifier.isEmpty, metadata.startTime >= 0 else {
+            return nil
+        }
         var body: [String: Any] = [
             "identifier": metadata.identifier,
             "start": number(metadata.startTime),
@@ -170,12 +190,29 @@ enum RNJWPlayerMetadata {
         return iso8601Formatter.string(from: date)
     }
 
+    /// `metadataTime` is only reported for a known, non-negative cue start, matching Android
+    /// (which uses -1 as its "unknown" sentinel) so both platforms omit it under the same rule.
     private static func event(type: String, time: Double, metadata: [String: Any]) -> [String: Any] {
         var payload: [String: Any] = ["metadataType": type, "metadata": metadata]
-        if time.isFinite {
+        if time.isFinite && time >= 0 {
             payload["metadataTime"] = time
         }
         return payload
+    }
+
+    private static func attributeNamed(_ name: String, in attributes: [[String: Any]]) -> Any? {
+        return attributes.first { ($0["name"] as? String) == name }?["value"]
+    }
+
+    /// Date-range attribute values arrive as numbers or manifest strings depending on the SDK path.
+    private static func numeric(_ value: Any?) -> Double? {
+        if let number = value as? NSNumber {
+            return number.doubleValue.isFinite ? number.doubleValue : nil
+        }
+        if let string = value as? String, let parsed = Double(string.trimmingCharacters(in: .whitespaces)) {
+            return parsed.isFinite ? parsed : nil
+        }
+        return nil
     }
 
     /// `NSJSONSerialization` rejects NaN / infinity, which live streams can report for durations.

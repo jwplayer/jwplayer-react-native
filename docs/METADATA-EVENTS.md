@@ -193,7 +193,7 @@ const config = {
 };
 ```
 
-The iOS SDK reads `identifier` and the Android SDK reads the integer `id`; the wrapper derives each from the other before the config reaches the SDK, so you can supply either. Items the current platform cannot represent (a non-integer identifier on Android, or a missing `startTime` / `endTime`) are dropped with a `console.warn` rather than being handed to the SDK, where they would otherwise invalidate the whole config (Android) or surface as an empty placeholder cue (iOS).
+The iOS SDK reads `identifier` and the Android SDK reads the integer `id`; the wrapper derives each from the other before the items reach the SDK (on the `config` prop as well as `loadPlaylist`, `resolveNextPlaylistItem` and `recreatePlayerWithConfig`), so you can supply either. Items the current platform cannot represent (a non-integer identifier on Android, or a missing `startTime` / `endTime`) are dropped with a `console.warn` rather than being handed to the SDK, where they would otherwise invalidate the whole config (Android) or surface as an empty placeholder cue (iOS).
 
 ```json
 {

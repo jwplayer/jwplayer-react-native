@@ -75,6 +75,19 @@ export function normalizeExternalMetadata(list) {
 }
 
 /**
+ * Returns a playlist item with its `externalMetadata` list normalized. The same
+ * object is returned when there is nothing to change. Every path that hands a
+ * playlist item to native goes through this (`config`, `loadPlaylist`,
+ * `resolveNextPlaylistItem`, `recreatePlayerWithConfig`).
+ */
+export function normalizePlaylistItem(item) {
+	if (!item || typeof item !== 'object' || !Array.isArray(item.externalMetadata)) {
+		return item;
+	}
+	return { ...item, externalMetadata: normalizeExternalMetadata(item.externalMetadata) };
+}
+
+/**
  * Returns `config` with every `externalMetadata` list (top level and per playlist
  * item) normalized. The same object is returned when there is nothing to change.
  */
@@ -89,11 +102,11 @@ export function normalizeConfig(config) {
 	if (Array.isArray(config.playlist)) {
 		let changed = false;
 		const playlist = config.playlist.map((item) => {
-			if (item && typeof item === 'object' && Array.isArray(item.externalMetadata)) {
+			const normalized = normalizePlaylistItem(item);
+			if (normalized !== item) {
 				changed = true;
-				return { ...item, externalMetadata: normalizeExternalMetadata(item.externalMetadata) };
 			}
-			return item;
+			return normalized;
 		});
 		if (changed) {
 			result = { ...result, playlist };
@@ -636,7 +649,10 @@ export default class JWPlayer extends Component {
 
 	loadPlaylist(playlistItems) {
 		if (RNJWPlayerManager)
-			RNJWPlayerManager.loadPlaylist(this.getRNJWPlayerBridgeHandle(), playlistItems);
+			RNJWPlayerManager.loadPlaylist(
+				this.getRNJWPlayerBridgeHandle(),
+				Array.isArray(playlistItems) ? playlistItems.map(normalizePlaylistItem) : playlistItems
+			);
 	}
 
 	loadPlaylistWithUrl(playlistUrl) {
@@ -860,7 +876,7 @@ export default class JWPlayer extends Component {
 		if (RNJWPlayerManager && typeof bridgeHandle === 'number') {
 			RNJWPlayerManager.resolveNextPlaylistItem(
 				bridgeHandle,
-				playlistItem
+				normalizePlaylistItem(playlistItem)
 			);
 		}
 	}
@@ -894,7 +910,7 @@ export default class JWPlayer extends Component {
 		if (RNJWPlayerManager) {
 			RNJWPlayerManager.recreatePlayerWithConfig(
 				this.getRNJWPlayerBridgeHandle(),
-				config
+				normalizeConfig(config)
 			);
 		}
 	}

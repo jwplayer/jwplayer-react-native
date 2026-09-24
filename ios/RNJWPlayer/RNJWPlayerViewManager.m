@@ -36,6 +36,10 @@ RCT_EXPORT_VIEW_PROPERTY(onAudioTracks, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onCaptionsChanged, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onCaptionsList, RCTDirectEventBlock);
 
+/* metadata events */
+RCT_EXPORT_VIEW_PROPERTY(onMeta, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onMetadataCueParsed, RCTDirectEventBlock);
+
 /* player events */
 RCT_EXPORT_VIEW_PROPERTY(onPlayerReady, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onSetupPlayerError, RCTDirectEventBlock);

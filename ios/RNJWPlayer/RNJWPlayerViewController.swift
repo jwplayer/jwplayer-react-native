@@ -701,6 +701,61 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
         parentView.onCaptionsList?(["index": currentIndex, "tracks": tracks])
     }
 
+    // MARK: - JWPlayer Metadata Delegates
+    //
+    // JWPlayerViewController registers itself for every metadataDelegates slot and
+    // rejects reassignment, so the overrides below are the only hook on this path.
+    // `super` must run first: the SDK uses these to drive its own UI.
+
+    override func jwplayer(_ player: JWPlayer, id3Metadata metadata: JWID3Metadata) {
+        super.jwplayer(player, id3Metadata: metadata)
+        parentView?.onMeta?(RNJWPlayerMetadata.id3(metadata))
+    }
+
+    override func jwplayer(_ player: JWPlayer, dateRangeMetadataCueParsed metadata: JWDateRangeMetadata) {
+        super.jwplayer(player, dateRangeMetadataCueParsed: metadata)
+        parentView?.onMetadataCueParsed?(RNJWPlayerMetadata.dateRange(metadata))
+    }
+
+    override func jwplayer(_ player: JWPlayer, dateRangeMetadata metadata: JWDateRangeMetadata) {
+        super.jwplayer(player, dateRangeMetadata: metadata)
+        parentView?.onMeta?(RNJWPlayerMetadata.dateRange(metadata))
+    }
+
+    override func jwplayer(_ player: JWPlayer, externalMetadataCueParsed metadata: JWExternalMetadata) {
+        super.jwplayer(player, externalMetadataCueParsed: metadata)
+        if let payload = RNJWPlayerMetadata.external(metadata) {
+            parentView?.onMetadataCueParsed?(payload)
+        }
+    }
+
+    override func jwplayer(_ player: JWPlayer, externalMetadata metadata: JWExternalMetadata) {
+        super.jwplayer(player, externalMetadata: metadata)
+        if let payload = RNJWPlayerMetadata.external(metadata) {
+            parentView?.onMeta?(payload)
+        }
+    }
+
+    override func jwplayer(_ player: JWPlayer, programDateTimeMetadataCueParsed metadata: JWProgramDateTimeMetadata) {
+        super.jwplayer(player, programDateTimeMetadataCueParsed: metadata)
+        parentView?.onMetadataCueParsed?(RNJWPlayerMetadata.programDateTime(metadata))
+    }
+
+    override func jwplayer(_ player: JWPlayer, programDateTimeMetadata metadata: JWProgramDateTimeMetadata) {
+        super.jwplayer(player, programDateTimeMetadata: metadata)
+        parentView?.onMeta?(RNJWPlayerMetadata.programDateTime(metadata))
+    }
+
+    override func jwplayer(_ player: JWPlayer, didReceiveMediaMetadata metadata: JWMediaMetadata) {
+        super.jwplayer(player, didReceiveMediaMetadata: metadata)
+        parentView?.onMeta?(RNJWPlayerMetadata.media(metadata))
+    }
+
+    override func jwplayer(_ player: JWPlayer, didReceiveAccessLogMetadata metadata: JWAccessLogMetadata) {
+        super.jwplayer(player, didReceiveAccessLogMetadata: metadata)
+        parentView?.onMeta?(RNJWPlayerMetadata.accessLog(metadata))
+    }
+
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { _ in

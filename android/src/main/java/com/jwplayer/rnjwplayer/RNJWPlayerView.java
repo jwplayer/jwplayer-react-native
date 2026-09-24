@@ -97,6 +97,10 @@ import com.jwplayer.pub.api.events.FullscreenEvent;
 import com.jwplayer.pub.api.events.FullscreenExitReasonEvent;
 import com.jwplayer.pub.api.events.IdleEvent;
 import com.jwplayer.pub.api.events.MetaEvent;
+import com.jwplayer.pub.api.events.MetadataCueParsedEvent;
+import com.jwplayer.pub.api.events.InPlaylistTimedMetadataEvent;
+import com.jwplayer.pub.api.events.EventMessageMetadataEvent;
+import com.jwplayer.pub.api.events.ExternalMetadataEvent;
 import com.jwplayer.pub.api.events.PauseEvent;
 import com.jwplayer.pub.api.events.PipCloseEvent;
 import com.jwplayer.pub.api.events.PipOpenEvent;
@@ -163,6 +167,10 @@ public class RNJWPlayerView extends RelativeLayout implements
         VideoPlayerEvents.OnCaptionsListListener,
         VideoPlayerEvents.OnCaptionsChangedListener,
         VideoPlayerEvents.OnMetaListener,
+        VideoPlayerEvents.OnMetaDataCueParsedListener,
+        VideoPlayerEvents.OnInPlaylistTimedMetadataListener,
+        VideoPlayerEvents.OnEventMessageMetadataListener,
+        VideoPlayerEvents.OnExternalMetadataListener,
         VideoPlayerEvents.PlaylistItemCallbackListener,
 
         CastingEvents.OnCastListener,
@@ -476,6 +484,10 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.CAPTIONS_LIST,
                     EventType.CAPTIONS_CHANGED,
                     EventType.META,
+                    EventType.METADATA_CUE_PARSED,
+                    EventType.IN_PLAYLIST_TIMED_METADATA,
+                    EventType.EVENT_MESSAGE_METADATA,
+                    EventType.EXTERNAL_METADATA,
 
                     // Ad events
                     EventType.BEFORE_PLAY,
@@ -568,6 +580,10 @@ public class RNJWPlayerView extends RelativeLayout implements
                     EventType.CAPTIONS_LIST,
                     EventType.CAPTIONS_CHANGED,
                     EventType.META,
+                    EventType.METADATA_CUE_PARSED,
+                    EventType.IN_PLAYLIST_TIMED_METADATA,
+                    EventType.EVENT_MESSAGE_METADATA,
+                    EventType.EXTERNAL_METADATA,
                     // Ad events
                     EventType.BEFORE_PLAY,
                     EventType.BEFORE_COMPLETE,
@@ -1204,8 +1220,14 @@ public class RNJWPlayerView extends RelativeLayout implements
                 checkAndWarnImaConfig(obj, null);
                 
                 jwConfig = JsonHelper.parseConfigJson(obj);
-                isJwConfig = true;
-                return jwConfig;  // Return directly if valid JW config
+                // JsonHelper swallows the JSONException and returns null for a config the SDK
+                // parser rejects; a null here would NPE on getUiConfig() below, so treat it like
+                // a parse failure and fall back to the legacy builder.
+                if (jwConfig != null) {
+                    isJwConfig = true;
+                    return jwConfig;  // Return directly if valid JW config
+                }
+                Log.d(TAG, "JW config parser rejected the config, using legacy builder");
             } catch (Exception ex) {
                 Log.d(TAG, "Not a JW config format, using legacy builder: " + ex.getMessage());
                 isJwConfig = false;
@@ -1407,7 +1429,11 @@ public class RNJWPlayerView extends RelativeLayout implements
                 checkAndWarnImaConfig(obj, null);
                 
                 jwConfig = JsonHelper.parseConfigJson(obj);
-                isJwConfig = true;
+                // JsonHelper swallows the JSONException and returns null; never hand null to setup().
+                isJwConfig = jwConfig != null;
+                if (!isJwConfig) {
+                    Log.e(TAG, "JW config parser rejected the config, falling back to legacy");
+                }
             } catch (Exception ex) {
                 Log.e(TAG, "Not a valid JW config format, falling back to legacy: " + ex.toString());
                 isJwConfig = false;
@@ -2214,7 +2240,47 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     @Override
     public void onMeta(MetaEvent metaEvent) {
+        // Carries either ID3 frames reached during playback or track-format statistics;
+        // RNJWPlayerMetadata maps each to its own `metadataType` (`id3` / `media`).
+        emitMetadataEvent("topMeta", "onMeta", RNJWPlayerMetadata.fromMetaEvent(metaEvent));
+    }
 
+    @Override
+    public void onMeta(InPlaylistTimedMetadataEvent inPlaylistTimedMetadataEvent) {
+        // EXT-X-DATERANGE / EXT-X-PROGRAM-DATE-TIME reached during playback.
+        emitMetadataEvent("topMeta", "onMeta",
+                RNJWPlayerMetadata.fromInPlaylistTimedMetadata(inPlaylistTimedMetadataEvent));
+    }
+
+    @Override
+    public void onMeta(EventMessageMetadataEvent eventMessageMetadataEvent) {
+        // DASH emsg boxes reached during playback: one JS event per message.
+        for (WritableMap event : RNJWPlayerMetadata.fromEventMessages(eventMessageMetadataEvent.getEventMessages())) {
+            emitMetadataEvent("topMeta", "onMeta", event);
+        }
+    }
+
+    @Override
+    public void onMeta(ExternalMetadataEvent externalMetadataEvent) {
+        // A configured `externalMetadata` cue point reached during playback.
+        emitMetadataEvent("topMeta", "onMeta",
+                RNJWPlayerMetadata.fromExternalMetadata(externalMetadataEvent.getExternalMetadata()));
+    }
+
+    @Override
+    public void onMetadataCueParsed(MetadataCueParsedEvent metadataCueParsedEvent) {
+        // A metadata cue was parsed ahead of playback (ID3, emsg, date-range, program-date-time).
+        for (WritableMap event : RNJWPlayerMetadata.fromMetadataCueParsed(metadataCueParsedEvent)) {
+            emitMetadataEvent("topMetadataCueParsed", "onMetadataCueParsed", event);
+        }
+    }
+
+    private void emitMetadataEvent(String topEvent, String message, WritableMap event) {
+        if (event == null) {
+            return;
+        }
+        event.putString("message", message);
+        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), topEvent, event);
     }
 
     // Picture in Picture events

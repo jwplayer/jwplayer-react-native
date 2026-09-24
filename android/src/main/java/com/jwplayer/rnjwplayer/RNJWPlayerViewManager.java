@@ -217,6 +217,14 @@ public class RNJWPlayerViewManager extends SimpleViewManager<RNJWPlayerView> {
                     MapBuilder.of(
                             "phasedRegistrationNames",
                             MapBuilder.of("bubbled", "onBeforeNextPlaylistItem")))
+            .put("topMeta",
+                    MapBuilder.of(
+                            "phasedRegistrationNames",
+                            MapBuilder.of("bubbled", "onMeta")))
+            .put("topMetadataCueParsed",
+                    MapBuilder.of(
+                            "phasedRegistrationNames",
+                            MapBuilder.of("bubbled", "onMetadataCueParsed")))
             .build();
   }
 

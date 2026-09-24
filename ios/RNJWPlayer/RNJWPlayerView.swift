@@ -20,7 +20,9 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     JWAdDelegate, JWAVDelegate, JWPlayerViewDelegate,
     JWPlayerViewControllerUIDelegate,
     JWPlayerViewControllerRelatedDelegate, JWDRMContentKeyDataSource,
-    JWTimeEventListener, AVPictureInPictureControllerDelegate
+    JWTimeEventListener, AVPictureInPictureControllerDelegate,
+    JWID3MetadataDelegate, JWDateRangeMetadataDelegate, JWExternalMetadataDelegate,
+    JWProgramDateTimeMetadataDelegate, JWMediaMetadataDelegate, JWAccessLogMetadataDelegate
 {
     
     // MARK: - RNJWPlayer allocation
@@ -109,6 +111,8 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     @objc var onCaptionsChanged: RCTDirectEventBlock?
     @objc var onCaptionsList: RCTDirectEventBlock?
     @objc var onBeforeNextPlaylistItem: RCTDirectEventBlock?
+    @objc var onMeta: RCTDirectEventBlock?
+    @objc var onMetadataCueParsed: RCTDirectEventBlock?
     
     init() {
         super.init(frame: CGRect(x: 20, y: 0, width: UIScreen.main.bounds.width - 40, height: 300))
@@ -1596,6 +1600,14 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         playerView.player.avDelegate = self
         playerView.player.contentKeyDataSource = self
 
+        // Metadata delegates are weak; this view outlives the player so it can own them.
+        playerView.player.metadataDelegates.id3MetadataDelegate = self
+        playerView.player.metadataDelegates.dateRangeMetadataDelegate = self
+        playerView.player.metadataDelegates.externalMetadataDelegate = self
+        playerView.player.metadataDelegates.programDateTimeMetadataDelegate = self
+        playerView.player.metadataDelegates.mediaMetadataDelegate = self
+        playerView.player.metadataDelegates.accessLogMetadataDelegate = self
+
         playerView.player.configurePlayer(with: playerConfig)
 
         if pipEnabled {
@@ -2199,6 +2211,52 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         }
         let currentIndex = player.currentCaptionsTrack
         self.onCaptionsList?(["index": currentIndex, "tracks": tracks])
+    }
+
+    // MARK: - JWPlayer Metadata Delegates (viewOnly / JWPlayerView path)
+    //
+    // The default JWPlayerViewController path forwards these from
+    // RNJWPlayerViewController instead. Payloads are built by RNJWPlayerMetadata
+    // so both paths emit the same shape.
+
+    func jwplayer(_ player: JWPlayer, id3Metadata metadata: JWID3Metadata) {
+        self.onMeta?(RNJWPlayerMetadata.id3(metadata))
+    }
+
+    func jwplayer(_ player: JWPlayer, dateRangeMetadataCueParsed metadata: JWDateRangeMetadata) {
+        self.onMetadataCueParsed?(RNJWPlayerMetadata.dateRange(metadata))
+    }
+
+    func jwplayer(_ player: JWPlayer, dateRangeMetadata metadata: JWDateRangeMetadata) {
+        self.onMeta?(RNJWPlayerMetadata.dateRange(metadata))
+    }
+
+    func jwplayer(_ player: JWPlayer, externalMetadataCueParsed metadata: JWExternalMetadata) {
+        if let payload = RNJWPlayerMetadata.external(metadata) {
+            self.onMetadataCueParsed?(payload)
+        }
+    }
+
+    func jwplayer(_ player: JWPlayer, externalMetadata metadata: JWExternalMetadata) {
+        if let payload = RNJWPlayerMetadata.external(metadata) {
+            self.onMeta?(payload)
+        }
+    }
+
+    func jwplayer(_ player: JWPlayer, programDateTimeMetadataCueParsed metadata: JWProgramDateTimeMetadata) {
+        self.onMetadataCueParsed?(RNJWPlayerMetadata.programDateTime(metadata))
+    }
+
+    func jwplayer(_ player: JWPlayer, programDateTimeMetadata metadata: JWProgramDateTimeMetadata) {
+        self.onMeta?(RNJWPlayerMetadata.programDateTime(metadata))
+    }
+
+    func jwplayer(_ player: JWPlayer, didReceiveMediaMetadata metadata: JWMediaMetadata) {
+        self.onMeta?(RNJWPlayerMetadata.media(metadata))
+    }
+
+    func jwplayer(_ player: JWPlayer, didReceiveAccessLogMetadata metadata: JWAccessLogMetadata) {
+        self.onMeta?(RNJWPlayerMetadata.accessLog(metadata))
     }
 
     // MARK: - JWPlayer audio session && interruption handling

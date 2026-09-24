@@ -182,17 +182,27 @@ export interface JWTrack {
  * 
  * Maximum 5 items; excess will be ignored.
  * 
- * @platform ios
+ * Each item is reported back through `onMeta` (both platforms) and
+ * `onMetadataCueParsed` (iOS) with `metadataType: 'external'`.
+ * See docs/METADATA-EVENTS.md.
+ *
+ * The iOS SDK reads `identifier` and the Android SDK reads the integer `id`.
+ * The wrapper derives each from the other, so an integer-string `identifier`
+ * (`'1'`) is all a cross-platform config needs. Items the current platform
+ * cannot represent (a non-integer identifier on Android, or a missing
+ * `startTime` / `endTime`) are dropped with a console warning instead of
+ * being handed to the SDK.
  */
 export interface JWExternalMetadata {
   /**
-   * Unique identifier for this metadata item
-   * Required.
+   * Unique identifier for this metadata item, reported back as
+   * `metadata.identifier`. Use an integer string to target Android too.
    */
   identifier: string;
   
   /**
-   * Alternative naming for identifier
+   * Integer identifier the Android SDK reads. Derived from `identifier`
+   * when omitted; when supplied, it also fills in a missing `identifier`.
    */
   id?: number;
   
@@ -447,10 +457,10 @@ export interface JWPlaylistItem {
   assetOptions?: Record<string, any>;
   
   /**
-   * Array of external metadata for this item
-   * Overrides player-level external metadata
-   * Maximum 5 items
-   * @platform ios
+   * Array of external metadata cue points for this item.
+   * Overrides player-level external metadata (iOS).
+   * Maximum 5 items; each fires `onMeta` with `metadataType: 'external'`.
+   * See docs/METADATA-EVENTS.md.
    */
   externalMetadata?: JWExternalMetadata[];
   

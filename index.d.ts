@@ -254,11 +254,37 @@ declare module "@jwplayer/jwplayer-react-native" {
     timeBetweenAds: number;
     startOnSeek: 'none' | 'pre'; // Mapped from JWAdShownOnSeek
   }
-  // interface FriendlyObstruction {
-  //   viewId: string;
-  //   purpose: 'mediaControls' | 'closeAd' | 'notVisible' | 'other'; // Mapped from JWFriendlyObstructionPurpose
-  //   reason?: string;
-  // }
+  /** Mapped to JWFriendlyObstructionPurpose on iOS. */
+  type FriendlyObstructionPurpose = 'mediaControls' | 'closeAd' | 'notVisible' | 'other';
+  /** A ref to a mounted view, the component instance itself, or its node handle. */
+  type FriendlyObstructionTarget = React.RefObject<any> | React.Component<any, any> | number;
+  interface FriendlyObstruction {
+    /**
+     * The overlay view. A layout-only `<View>` is flattened away by the New Architecture and
+     * has no native view to register, so give it `collapsable={false}`.
+     */
+    ref: FriendlyObstructionTarget;
+    /**
+     * Only use `notVisible` for a view that is really hidden while the ad plays; the SDK
+     * ignores a visible view declared `notVisible`.
+     */
+    purpose: FriendlyObstructionPurpose;
+    /**
+     * Shown to the measurement vendor. OMID accepts up to 50 letters, digits and spaces;
+     * anything else is stripped.
+     */
+    reason?: string;
+  }
+  interface FriendlyObstructionsResult {
+    registered: number;
+    /**
+     * `index` points into the array passed in. `noRef`: the ref was not attached yet.
+     * `notFound`: no native view (usually flattened). `containsPlayer`: the view contains the
+     * player, which would hide real obstructions from the vendor. `noPlayer`: the native player
+     * view was not available (for example, the player unmounted).
+     */
+    failed: { index: number; reason: 'noRef' | 'notFound' | 'containsPlayer' | 'noPlayer' }[];
+  }
   type ClientTypes = "vast" | "ima" | "ima_dai";
   interface VASTAdvertising {
     adSchedule?: AdSchedule[];
@@ -268,6 +294,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     adClient: "vast";
     adRules?: AdRule;
     adSettings?: JWAdSettings;
+    /** See `omidSupport` in the unified advertising types. @platform ios */
+    omidSupport?: JwOmidSupport;
+    /** @platform ios */
+    allowedOmidVendors?: string[];
   }
   interface IMAAdvertising {
     adSchedule?: AdSchedule[];
@@ -834,6 +864,17 @@ declare module "@jwplayer/jwplayer-react-native" {
         refreshNotification?: boolean;
     }): void;
     setFullscreen(fullScreen: boolean): void;
+    /**
+     * Declares app views drawn over the player as OMID friendly obstructions so they don't
+     * lower ad viewability. Registering a ref again replaces its purpose and reason. The
+     * obstructions survive player re-creation; deregister a view before it unmounts.
+     * @platform ios (no-op on Android, resolves `{ registered: 0, failed: [] }`)
+     */
+    registerFriendlyObstructions(obstructions: FriendlyObstruction[]): Promise<FriendlyObstructionsResult>;
+    /** @platform ios */
+    deregisterFriendlyObstructions(refs: FriendlyObstructionTarget[]): void;
+    /** @platform ios */
+    deregisterAllFriendlyObstructions(): void;
     time(): Promise<number | null>;
     position(): Promise<number | null>;
     togglePIP(): void;

@@ -398,9 +398,11 @@ When using an **IMA** ad client you need to do some additional setup.
 | **`adRules`**                 | Ad rules for VAST client.                                                                                | `{startOn: Number, frequency: Number, timeBetweenAds: Number, startOnSeek: 'none' \| 'pre'}` | VAST only               |
 | **`imaSettings`**             | Settings specific to Google IMA SDK.                                                                     | `{locale: String, ppid: String, maxRedirects: Number, sessionID: String, debugMode: Boolean}` | IMA and IMA DAI         |
 | **`companionAdSlots`**        | Array of objects representing companion ad slots.                                                        | `{viewId: String, size?: {width: Number, height: Number}}[]` | IMA only                |
-| **`friendlyObstructions`**    | Array of objects representing friendly obstructions for viewability measurement.                         | `{viewId: String, purpose: 'mediaControls' \| 'closeAd' \| 'notVisible' \| 'other', reason?: String}[]` | IMA and IMA DAI         |
+| **`friendlyObstructions`**    | Not supported as a config key. Use the `registerFriendlyObstructions` method instead ([OMID Viewability](./OMID-VIEWABILITY.md)). | — | — |
 | **`googleDAIStream`**         | Stream configuration for Google DAI (Dynamic Ad Insertion).                                              | `{videoID?: String, cmsID?: String, assetKey?: String, apiKey?: String, adTagParameters?: {[key: string]: string}}` | IMA DAI only            |
 | **`tag`**         | Vast xml URL.                                              | `String` | Vast only (iOS only)            |
+| **`omidSupport`** | Enables OMID viewability measurement. Off when omitted, unless `allowedOmidVendors` is set. | `'auto' \| 'enabled' \| 'disabled'` | Vast only (iOS only) |
+| **`allowedOmidVendors`** | OMID vendor keys allowed to run verification scripts. Empty allows all. | `String[]` | Vast only (iOS only) |
 
 ##### Related
 

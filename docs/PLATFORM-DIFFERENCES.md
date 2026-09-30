@@ -315,6 +315,10 @@ Both platforms can report a `reason` field on `onFullScreenExit` describing why 
 />
 ```
 
+### 9. OMID Friendly Obstructions
+
+`registerFriendlyObstructions`, `deregisterFriendlyObstructions` and `deregisterAllFriendlyObstructions` declare app views drawn over the player so OMID doesn't count them as covering the ad. They are iOS only for now; on Android they do nothing. `omidSupport` / `allowedOmidVendors` also work with `forceLegacyConfig` on iOS only. See [OMID Viewability](./OMID-VIEWABILITY.md).
+
 ---
 
 ## Android-Specific Features

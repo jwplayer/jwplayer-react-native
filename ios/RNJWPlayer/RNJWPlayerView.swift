@@ -1441,6 +1441,12 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             if (advertisingConfig != nil) {
                 configBuilder.advertising(advertisingConfig!)
             }
+
+            // OMID only attaches to the JW VAST client, which is also the fallback above.
+            let isVAST = jwAdClient != .GoogleIMA && jwAdClient != .GoogleIMADAI
+            if isVAST, advertisingConfig != nil, let omidConfig = RNJWPlayerAds.configureOMID(with: ads) {
+                configBuilder.adTracker(omidConfig)
+            }
         }
 
         let playerConfig = try configBuilder.build()
@@ -1467,6 +1473,8 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             playerViewController.view.frame = self.frame
             self.addSubview(playerViewController.view)
             playerViewController.setDelegates()
+            // The player only exists once the controller's view has loaded.
+            applyFriendlyObstructions(to: playerViewController.player)
         }
 
         if let ib = config["interfaceBehavior"] as? String {
@@ -1595,6 +1603,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         playerView.player.adDelegate = self
         playerView.player.avDelegate = self
         playerView.player.contentKeyDataSource = self
+        applyFriendlyObstructions(to: playerView.player)
 
         playerView.player.configurePlayer(with: playerConfig)
 
@@ -1639,6 +1648,84 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         } else {
             DispatchQueue.main.sync(execute: cleanup)
         }
+    }
+
+    // MARK: - Friendly obstructions
+
+    /// An app-declared obstruction. JWFriendlyObstruction doesn't expose its view publicly, so
+    /// the view is also held here (weakly) to tell when the React view has unmounted.
+    struct AppFriendlyObstruction {
+        let obstruction: JWFriendlyObstruction
+        weak var view: UIView?
+    }
+
+    /// App-declared friendly obstructions keyed by React tag. Kept here rather than only on the
+    /// player because every new JWPlayer starts with an empty obstruction manager, so they are
+    /// re-registered whenever the player is rebuilt.
+    var appFriendlyObstructions: [NSNumber: AppFriendlyObstruction] = [:]
+
+    var activePlayer: JWPlayerProtocol? {
+        if let playerView = playerView {
+            return playerView.player
+        }
+        return playerViewController?.player
+    }
+
+    /// Registers obstructions, replacing any earlier entry for the same React tag so a changed
+    /// purpose or reason takes effect (the SDK dedups by view, so it must be deregistered first).
+    func registerFriendlyObstructions(_ obstructions: [NSNumber: AppFriendlyObstruction]) {
+        pruneStaleFriendlyObstructions()
+        let replaced = obstructions.keys.compactMap { appFriendlyObstructions[$0]?.obstruction }
+        if !replaced.isEmpty {
+            activePlayer?.friendlyObstructions.deregister(replaced)
+        }
+        appFriendlyObstructions.merge(obstructions) { _, new in new }
+        activePlayer?.friendlyObstructions.register(obstructions.values.map { $0.obstruction })
+    }
+
+    func deregisterFriendlyObstructions(tags: [NSNumber]) {
+        let removed = tags.compactMap { appFriendlyObstructions.removeValue(forKey: $0)?.obstruction }
+        if !removed.isEmpty {
+            activePlayer?.friendlyObstructions.deregister(removed)
+        }
+    }
+
+    func deregisterAllFriendlyObstructions() {
+        deregisterFriendlyObstructions(tags: Array(appFriendlyObstructions.keys))
+    }
+
+    /// Called right after a new player is created, before it is configured.
+    func applyFriendlyObstructions(to player: JWPlayerProtocol) {
+        pruneStaleFriendlyObstructions()
+        if !appFriendlyObstructions.isEmpty {
+            player.friendlyObstructions.register(appFriendlyObstructions.values.map { $0.obstruction })
+        }
+    }
+
+    /// Drops entries whose React view unmounted without being deregistered. OMIDPlugin adds
+    /// obstructions in a throwing loop, so a nil view would abort registration of every
+    /// obstruction after it (including the player's own controls). On Fabric an unmounted view
+    /// is recycled rather than freed: its `tag` is reset to 0 and it may later back a different
+    /// component, so identity is checked by tag, not just by liveness.
+    func pruneStaleFriendlyObstructions() {
+        let stale = appFriendlyObstructions.filter { tag, entry in
+            guard let view = entry.view else { return true }
+            return view.reactTag != tag && view.tag != tag.intValue
+        }
+        guard !stale.isEmpty else { return }
+        stale.keys.forEach { appFriendlyObstructions.removeValue(forKey: $0) }
+        activePlayer?.friendlyObstructions.deregister(stale.values.map { $0.obstruction })
+    }
+
+    /// OMID rejects a detailed reason that is longer than 50 characters or contains anything
+    /// but letters, digits and spaces, which would make the SDK skip the obstruction.
+    static func sanitizedObstructionReason(_ reason: String?) -> String? {
+        guard let reason = reason else { return nil }
+        let allowed = reason.unicodeScalars.filter {
+            ($0.isASCII && CharacterSet.alphanumerics.contains($0)) || $0 == " "
+        }
+        let sanitized = String(String.UnicodeScalarView(allowed)).trimmingCharacters(in: .whitespaces)
+        return sanitized.isEmpty ? nil : String(sanitized.prefix(50))
     }
 
     func toggleUIGroup(view: UIView, name: String, ofSubview: String?, show: Bool) {
@@ -2156,6 +2243,9 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     // MARK: - JWPlayer Ad Delegate
 
     func jwplayer(_ player:JWPlayer, adEvent event:JWAdEvent) {
+        if event.type == .adBreakStart || event.type == .request {
+            pruneStaleFriendlyObstructions()
+        }
         self.onAdEvent?(["client": event.client.rawValue, "type": event.type.rawValue])
     }
 

@@ -275,6 +275,7 @@ The library now features a **unified configuration system** that provides consis
 - **[Platform Differences](./docs/PLATFORM-DIFFERENCES.md)** - Detailed comparison of iOS vs Android features
 - **[Migration Guide](./docs/MIGRATION-GUIDE.md)** - Guide for upgrading to the unified type system
 - **[Props Documentation](./docs/props.md)** - Component props reference
+- **[OMID Viewability](./docs/OMID-VIEWABILITY.md)** - Enabling OMID for VAST ads and declaring app overlays as friendly obstructions
 
 ### Quick Example
 

@@ -17,7 +17,7 @@ class RNJWPlayerViewManager: RCTViewManager {
         return true
     }
     
-    private func getPlayerView(reactTag: NSNumber) -> RNJWPlayerView? {
+    private func getPlayerView(reactTag: NSNumber, logFailure: Bool = true) -> RNJWPlayerView? {
         guard let bridge = self.bridge else {
             print("❌ RNJWPlayerViewManager: Bridge is nil")
             return nil
@@ -36,8 +36,30 @@ class RNJWPlayerViewManager: RCTViewManager {
             return view
         }
         
-        print("❌ Invalid view returned for tag \(reactTag)")
+        if logFailure {
+            print("❌ Invalid view returned for tag \(reactTag)")
+        }
         return nil
+    }
+
+    private static let playerLookupAttempts = 20
+
+    /// A call made from an effect that runs when the player mounts can arrive before the
+    /// RNJWPlayerView exists: on the New Architecture the interop layer creates it a moment
+    /// after mount. Retry every 50ms (about 1s in total) before giving up.
+    private func withPlayerView(_ reactTag: NSNumber, attempt: Int = 0, _ body: @escaping (RNJWPlayerView) -> Void, onMissing: @escaping () -> Void) {
+        let isLastAttempt = attempt >= Self.playerLookupAttempts - 1
+        if let view = getPlayerView(reactTag: reactTag, logFailure: isLastAttempt) {
+            body(view)
+            return
+        }
+        guard !isLastAttempt else {
+            onMissing()
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.withPlayerView(reactTag, attempt: attempt + 1, body, onMissing: onMissing)
+        }
     }
     
     @objc func state(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
@@ -656,6 +678,64 @@ class RNJWPlayerViewManager: RCTViewManager {
             } catch {
                 print("Error serializing updated playlist item: \(error)")
             }
+        }
+    }
+
+    // MARK: - Friendly obstructions
+
+    /// Resolves each React tag to its native view and registers it as a friendly obstruction.
+    /// Resolves with `{ failed: [{ tag, reason }] }` so JS can say which refs could not be used.
+    @objc func registerFriendlyObstructions(_ reactTag: NSNumber, _ obstructions: [[String: Any]], _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
+        DispatchQueue.main.async {
+            self.withPlayerView(reactTag, { view in
+                var resolved: [NSNumber: RNJWPlayerView.AppFriendlyObstruction] = [:]
+                var failed: [[String: Any]] = []
+                for entry in obstructions {
+                    guard let tag = entry["tag"] as? NSNumber else { continue }
+                    // Covers Fabric (component view registry), bridgeless and Paper. A layout-only
+                    // Fabric <View> is flattened away and has no native view: use collapsable={false}.
+                    guard let target = self.bridge?.uiManager?.view(forReactTag: tag) else {
+                        failed.append(["tag": tag, "reason": "notFound"])
+                        continue
+                    }
+                    // Declaring the player (or anything containing it) friendly would hide real
+                    // obstructions from the viewability vendor. Overlays rendered as children of
+                    // the player are fine: they sit beside the ad surface like the SDK's own controls.
+                    if view.isDescendant(of: target) {
+                        failed.append(["tag": tag, "reason": "containsPlayer"])
+                        continue
+                    }
+                    let purpose = RNJWPlayerAds.mapStringToJWFriendlyObstructionPurpose(entry["purpose"] as? String)
+                    let reason = RNJWPlayerView.sanitizedObstructionReason(entry["reason"] as? String)
+                    let obstruction = JWFriendlyObstruction(view: target, purpose: purpose, reason: reason)
+                    resolved[tag] = RNJWPlayerView.AppFriendlyObstruction(obstruction: obstruction, view: target)
+                }
+
+                view.registerFriendlyObstructions(resolved)
+                resolve(["failed": failed])
+            }, onMissing: {
+                reject("no_player", "RNJWPlayerView not found for tag \(reactTag)", nil)
+            })
+        }
+    }
+
+    @objc func deregisterFriendlyObstructions(_ reactTag: NSNumber, _ tags: [NSNumber]) {
+        DispatchQueue.main.async {
+            self.withPlayerView(reactTag, { view in
+                view.deregisterFriendlyObstructions(tags: tags)
+            }, onMissing: {
+                print("❌ Failed to deregister friendly obstructions: RNJWPlayerView not found for tag \(reactTag)")
+            })
+        }
+    }
+
+    @objc func deregisterAllFriendlyObstructions(_ reactTag: NSNumber) {
+        DispatchQueue.main.async {
+            self.withPlayerView(reactTag, { view in
+                view.deregisterAllFriendlyObstructions()
+            }, onMissing: {
+                print("❌ Failed to deregister friendly obstructions: RNJWPlayerView not found for tag \(reactTag)")
+            })
         }
     }
 

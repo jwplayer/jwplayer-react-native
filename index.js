@@ -18,6 +18,15 @@ const RCT_RNJWPLAYER_REF = 'RNJWPlayerKey';
 
 const RNJWPlayer = requireNativeComponent('RNJWPlayerView');
 
+// Accepts a ref object, a component instance, or a raw node handle.
+function resolveNodeHandle(target) {
+	if (target == null) return null;
+	if (typeof target === 'number') return target;
+	const instance =
+		typeof target === 'object' && 'current' in target ? target.current : target;
+	return instance ? findNodeHandle(instance) : null;
+}
+
 const JWPlayerStateIOS = {
 	JWPlayerStateUnknown: 0,
 	JWPlayerStateIdle: 1,
@@ -562,6 +571,73 @@ export default class JWPlayer extends Component {
 			image,
 			refreshNotification
 		);
+	}
+
+	/**
+	 * Declares app views that sit over the player (custom controls, badges, gradients) as
+	 * OMID friendly obstructions so they don't reduce ad viewability. iOS only for now.
+	 * Resolves with the entries that could not be registered, by index into `obstructions`.
+	 */
+	async registerFriendlyObstructions(obstructions) {
+		const result = { registered: 0, failed: [] };
+		if (!RNJWPlayerManager || Platform.OS !== 'ios' || !Array.isArray(obstructions)) {
+			return result;
+		}
+
+		const entries = [];
+		const indexByTag = {};
+		obstructions.forEach((obstruction, index) => {
+			const tag = resolveNodeHandle(obstruction && obstruction.ref);
+			if (tag == null) {
+				result.failed.push({ index, reason: 'noRef' });
+				return;
+			}
+			indexByTag[tag] = index;
+			entries.push({ tag, purpose: obstruction.purpose, reason: obstruction.reason });
+		});
+
+		if (entries.length > 0) {
+			try {
+				const response = await RNJWPlayerManager.registerFriendlyObstructions(
+					this.getRNJWPlayerBridgeHandle(),
+					entries
+				);
+				const nativeFailed = (response && response.failed) || [];
+				nativeFailed.forEach(({ tag, reason }) =>
+					result.failed.push({ index: indexByTag[tag], reason })
+				);
+				result.registered = entries.length - nativeFailed.length;
+			} catch (e) {
+				// The native player view never became available (e.g. the player unmounted).
+				entries.forEach(({ tag }) =>
+					result.failed.push({ index: indexByTag[tag], reason: 'noPlayer' })
+				);
+			}
+		}
+
+		if (result.failed.length > 0) {
+			console.warn(
+				'JWPlayer: some friendly obstructions were not registered. "notFound" usually means the view was flattened away; add collapsable={false} to it.',
+				result.failed
+			);
+		}
+		return result;
+	}
+
+	deregisterFriendlyObstructions(refs) {
+		if (!RNJWPlayerManager || Platform.OS !== 'ios' || !Array.isArray(refs)) return;
+		const tags = refs.map(resolveNodeHandle).filter((tag) => tag != null);
+		RNJWPlayerManager.deregisterFriendlyObstructions(
+			this.getRNJWPlayerBridgeHandle(),
+			tags
+		);
+	}
+
+	deregisterAllFriendlyObstructions() {
+		if (RNJWPlayerManager && Platform.OS === 'ios')
+			RNJWPlayerManager.deregisterAllFriendlyObstructions(
+				this.getRNJWPlayerBridgeHandle()
+			);
 	}
 
 	setFullscreen(fullscreen) {

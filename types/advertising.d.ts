@@ -335,13 +335,19 @@ export interface BaseAdvertisingConfig {
   conditionaladoptout?: boolean;
   
   /**
-   * OMID support level
+   * OMID (Open Measurement) viewability support for JW VAST ads (`client: 'vast'`).
+   * `'auto'` and `'enabled'` both turn it on; when omitted, OMID is on only if
+   * `allowedOmidVendors` is set. IMA runs its own OMID session and ignores this.
+   * Honored on the default config path and, on iOS, the `forceLegacyConfig` path.
+   * App views drawn over the player should be declared with
+   * `registerFriendlyObstructions` so they don't lower viewability.
    * @default 'disabled'
    */
   omidSupport?: OmidSupport;
   
   /**
-   * List of allowed OMID vendor keys
+   * Vendor keys whose OMID verification scripts may run (e.g. `'integralads.com-omid'`).
+   * Empty or omitted allows every vendor. Setting it enables OMID when `omidSupport` is omitted.
    */
   allowedOmidVendors?: string[];
   

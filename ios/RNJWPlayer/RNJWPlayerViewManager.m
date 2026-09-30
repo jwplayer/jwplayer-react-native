@@ -145,4 +145,10 @@ RCT_EXTERN_METHOD(setFullscreen: (nonnull NSNumber *)reactTag: (BOOL)fullscreen)
 
 RCT_EXTERN_METHOD(setPlaylistItemMetadata: (nonnull NSNumber *)reactTag : (NSString *)title : (NSString *)description : (NSString *)image : (BOOL)refreshNotification)
 
+RCT_EXTERN_METHOD(registerFriendlyObstructions: (nonnull NSNumber *)reactTag : (nonnull NSArray *)obstructions : (RCTPromiseResolveBlock)resolve : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(deregisterFriendlyObstructions: (nonnull NSNumber *)reactTag : (nonnull NSArray *)tags)
+
+RCT_EXTERN_METHOD(deregisterAllFriendlyObstructions: (nonnull NSNumber *)reactTag)
+
 @end

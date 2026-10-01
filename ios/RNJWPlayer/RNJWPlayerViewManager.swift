@@ -48,6 +48,24 @@ class RNJWPlayerViewManager: RCTViewManager {
 
     private static let playerLookupAttempts = 20
 
+    /// Resolves React tags to their native views. A view mounted just before the call that
+    /// registers it (for example from its own mount effect) may not be in the view registry yet
+    /// on the New Architecture, so missing tags are retried every 50ms (about 1s in total).
+    /// Tags still missing after that are left out, typically a flattened layout-only view.
+    private func resolveReactViews(_ tags: [NSNumber], attempt: Int = 0, found: [NSNumber: UIView] = [:], _ completion: @escaping ([NSNumber: UIView]) -> Void) {
+        var found = found
+        for tag in tags where found[tag] == nil {
+            found[tag] = reactView(forTag: tag, as: UIView.self)
+        }
+        if found.count == Set(tags).count || attempt >= Self.playerLookupAttempts - 1 {
+            completion(found)
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.resolveReactViews(tags, attempt: attempt + 1, found: found, completion)
+        }
+    }
+
     /// Runs `body` on the main queue with the RNJWPlayerView for `reactTag`, or with nil if it
     /// never shows up. A call made from an effect that runs when the player mounts can arrive
     /// before the view exists: on the New Architecture the interop layer creates it a moment
@@ -703,36 +721,39 @@ class RNJWPlayerViewManager: RCTViewManager {
                 return
             }
 
-            var resolved: [NSNumber: RNJWPlayerView.AppFriendlyObstruction] = [:]
-            var failed: [[String: Any]] = []
-            for entry in obstructions {
-                guard let tag = entry["tag"] as? NSNumber else { continue }
-                // A layout-only Fabric <View> is flattened away and has no native view: use collapsable={false}.
-                guard let target = self.reactView(forTag: tag, as: UIView.self) else {
-                    failed.append(["tag": tag, "reason": "notFound"])
-                    continue
+            let tags = obstructions.compactMap { $0["tag"] as? NSNumber }
+            self.resolveReactViews(tags) { targets in
+                var resolved: [NSNumber: RNJWPlayerView.AppFriendlyObstruction] = [:]
+                var failed: [[String: Any]] = []
+                for entry in obstructions {
+                    guard let tag = entry["tag"] as? NSNumber else { continue }
+                    // A layout-only Fabric <View> is flattened away and has no native view: use collapsable={false}.
+                    guard let target = targets[tag] else {
+                        failed.append(["tag": tag, "reason": "notFound"])
+                        continue
+                    }
+                    // Declaring the player (or anything containing it) friendly would hide real
+                    // obstructions from the viewability vendor. Overlays rendered as children of
+                    // the player are fine: they sit beside the ad surface like the SDK's own controls.
+                    if view.isDescendant(of: target) {
+                        failed.append(["tag": tag, "reason": "containsPlayer"])
+                        continue
+                    }
+                    let purpose = RCTConvert.JWFriendlyObstructionPurpose(entry["purpose"] as? String)
+                    // The SDK silently drops a `.notVisible` obstruction whose view is on screen, since
+                    // OMID would then treat the whole view as covering the ad. Report it instead.
+                    if purpose == .notVisible, !(target.isHidden || target.alpha <= 0) {
+                        failed.append(["tag": tag, "reason": "visible"])
+                        continue
+                    }
+                    let reason = RNJWPlayerView.sanitizedObstructionReason(entry["reason"] as? String)
+                    let obstruction = JWFriendlyObstruction(view: target, purpose: purpose, reason: reason)
+                    resolved[tag] = RNJWPlayerView.AppFriendlyObstruction(obstruction: obstruction, view: target)
                 }
-                // Declaring the player (or anything containing it) friendly would hide real
-                // obstructions from the viewability vendor. Overlays rendered as children of
-                // the player are fine: they sit beside the ad surface like the SDK's own controls.
-                if view.isDescendant(of: target) {
-                    failed.append(["tag": tag, "reason": "containsPlayer"])
-                    continue
-                }
-                let purpose = RCTConvert.JWFriendlyObstructionPurpose(entry["purpose"] as? String)
-                // The SDK silently drops a `.notVisible` obstruction whose view is on screen, since
-                // OMID would then treat the whole view as covering the ad. Report it instead.
-                if purpose == .notVisible, !(target.isHidden || target.alpha <= 0) {
-                    failed.append(["tag": tag, "reason": "visible"])
-                    continue
-                }
-                let reason = RNJWPlayerView.sanitizedObstructionReason(entry["reason"] as? String)
-                let obstruction = JWFriendlyObstruction(view: target, purpose: purpose, reason: reason)
-                resolved[tag] = RNJWPlayerView.AppFriendlyObstruction(obstruction: obstruction, view: target)
-            }
 
-            view.registerFriendlyObstructions(resolved)
-            resolve(["failed": failed])
+                view.registerFriendlyObstructions(resolved)
+                resolve(["failed": failed])
+            }
         }
     }
 

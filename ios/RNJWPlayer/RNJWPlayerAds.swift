@@ -77,19 +77,6 @@ class RNJWPlayerAds {
         return try? omidBuilder.build()
     }
 
-    static func mapStringToJWFriendlyObstructionPurpose(_ purposeString: String?) -> JWFriendlyObstructionPurpose {
-        switch purposeString {
-        case "mediaControls":
-            return .mediaControls
-        case "closeAd":
-            return .closeAd
-        case "notVisible":
-            return .notVisible
-        default:
-            return .other
-        }
-    }
-
     // Convert configureIMAWithAds function
     static func configureIMA(with ads: [String: Any]) -> JWAdvertisingConfig? {
         // Ensure Google IMA SDK is available

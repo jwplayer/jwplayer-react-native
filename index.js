@@ -27,6 +27,16 @@ function resolveNodeHandle(target) {
 	return instance ? findNodeHandle(instance) : null;
 }
 
+// Why a friendly obstruction was not registered, shown with the warning.
+const FRIENDLY_OBSTRUCTION_HINTS = {
+	noRef: 'the ref is not attached to a mounted view',
+	notFound: 'no native view; a layout-only <View> is flattened away, so add collapsable={false}',
+	containsPlayer: 'the view contains the player; register the overlay itself',
+	visible: "purpose 'notVisible' was used for a view that is on screen",
+	duplicate: 'the same view appears again later in the array; the later entry was used',
+	noPlayer: 'the native player view was not available (for example, the player unmounted)',
+};
+
 const JWPlayerStateIOS = {
 	JWPlayerStateUnknown: 0,
 	JWPlayerStateIdle: 1,
@@ -413,7 +423,11 @@ export default class JWPlayer extends Component {
 
 		this._playerId = playerId++;
 		this.ref_key = `${RCT_RNJWPLAYER_REF}-${this._playerId}`;
-	
+		// Friendly obstructions registered through this player: ref -> { tag, purpose, reason }.
+		// The tag is captured at registration because React has already cleared a ref by the
+		// time an unmount cleanup calls deregister.
+		this._friendlyObstructions = new Map();
+		this._onFriendlyObstructionsPruned = this._onFriendlyObstructionsPruned.bind(this);
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
@@ -584,41 +598,79 @@ export default class JWPlayer extends Component {
 			return result;
 		}
 
-		const entries = [];
-		const indexByTag = {};
+		// Natively there is one registration per view, so the last entry for a view wins.
+		const byTag = new Map();
 		obstructions.forEach((obstruction, index) => {
 			const tag = resolveNodeHandle(obstruction && obstruction.ref);
 			if (tag == null) {
 				result.failed.push({ index, reason: 'noRef' });
 				return;
 			}
-			indexByTag[tag] = index;
-			entries.push({ tag, purpose: obstruction.purpose, reason: obstruction.reason });
+			const earlier = byTag.get(tag);
+			if (earlier) {
+				result.failed.push({ index: earlier.index, reason: 'duplicate' });
+			}
+			byTag.set(tag, { index, obstruction });
 		});
 
-		if (entries.length > 0) {
-			try {
-				const response = await RNJWPlayerManager.registerFriendlyObstructions(
-					this.getRNJWPlayerBridgeHandle(),
-					entries
-				);
-				const nativeFailed = (response && response.failed) || [];
-				nativeFailed.forEach(({ tag, reason }) =>
-					result.failed.push({ index: indexByTag[tag], reason })
-				);
-				result.registered = entries.length - nativeFailed.length;
-			} catch (e) {
-				// The native player view never became available (e.g. the player unmounted).
-				entries.forEach(({ tag }) =>
-					result.failed.push({ index: indexByTag[tag], reason: 'noPlayer' })
-				);
+		if (byTag.size > 0) {
+			const handle = this.getRNJWPlayerBridgeHandle();
+			const allNoPlayer = () =>
+				Array.from(byTag.keys(), (tag) => ({ tag, reason: 'noPlayer' }));
+			let nativeFailed;
+			if (handle == null) {
+				nativeFailed = allNoPlayer();
+			} else {
+				try {
+					const response = await RNJWPlayerManager.registerFriendlyObstructions(
+						handle,
+						Array.from(byTag, ([tag, { obstruction }]) => ({
+							tag,
+							purpose: obstruction.purpose,
+							reason: obstruction.reason,
+						}))
+					);
+					nativeFailed = (response && response.failed) || [];
+				} catch (e) {
+					// Only the native "player view never showed up" rejection means noPlayer.
+					if (!e || e.code !== 'no_player') throw e;
+					nativeFailed = allNoPlayer();
+				}
+			}
+
+			const failedTags = new Set();
+			nativeFailed.forEach(({ tag, reason }) => {
+				failedTags.add(tag);
+				result.failed.push({ index: byTag.get(tag).index, reason });
+			});
+
+			const replacedTags = [];
+			byTag.forEach(({ obstruction }, tag) => {
+				if (failedTags.has(tag)) return;
+				const previous = this._friendlyObstructions.get(obstruction.ref);
+				if (previous && previous.tag !== tag) replacedTags.push(previous.tag);
+				this._forgetFriendlyObstructionTag(tag);
+				this._friendlyObstructions.set(obstruction.ref, {
+					tag,
+					purpose: obstruction.purpose,
+					reason: obstruction.reason,
+				});
+				result.registered += 1;
+			});
+			// The ref now points at a different view than it did when it was last registered.
+			if (replacedTags.length > 0) {
+				RNJWPlayerManager.deregisterFriendlyObstructions(handle, replacedTags);
 			}
 		}
 
 		if (result.failed.length > 0) {
+			result.failed.sort((a, b) => a.index - b.index);
 			console.warn(
-				'JWPlayer: some friendly obstructions were not registered. "notFound" usually means the view was flattened away; add collapsable={false} to it.',
-				result.failed
+				'JWPlayer: some friendly obstructions were not registered.',
+				result.failed.map((failure) => ({
+					...failure,
+					hint: FRIENDLY_OBSTRUCTION_HINTS[failure.reason],
+				}))
 			);
 		}
 		return result;
@@ -626,18 +678,57 @@ export default class JWPlayer extends Component {
 
 	deregisterFriendlyObstructions(refs) {
 		if (!RNJWPlayerManager || Platform.OS !== 'ios' || !Array.isArray(refs)) return;
-		const tags = refs.map(resolveNodeHandle).filter((tag) => tag != null);
-		RNJWPlayerManager.deregisterFriendlyObstructions(
-			this.getRNJWPlayerBridgeHandle(),
-			tags
-		);
+		const tags = [];
+		refs.forEach((ref) => {
+			const stored = this._friendlyObstructions.get(ref);
+			const tag = stored ? stored.tag : resolveNodeHandle(ref);
+			this._friendlyObstructions.delete(ref);
+			if (tag != null) {
+				this._forgetFriendlyObstructionTag(tag);
+				tags.push(tag);
+			}
+		});
+		const handle = this.getRNJWPlayerBridgeHandle();
+		// Without a native view the player has unmounted, and its registrations went with it.
+		if (tags.length > 0 && handle != null) {
+			RNJWPlayerManager.deregisterFriendlyObstructions(handle, tags);
+		}
 	}
 
 	deregisterAllFriendlyObstructions() {
-		if (RNJWPlayerManager && Platform.OS === 'ios')
-			RNJWPlayerManager.deregisterAllFriendlyObstructions(
-				this.getRNJWPlayerBridgeHandle()
+		if (!RNJWPlayerManager || Platform.OS !== 'ios') return;
+		this._friendlyObstructions.clear();
+		const handle = this.getRNJWPlayerBridgeHandle();
+		if (handle != null) {
+			RNJWPlayerManager.deregisterAllFriendlyObstructions(handle);
+		}
+	}
+
+	_forgetFriendlyObstructionTag(tag) {
+		this._friendlyObstructions.forEach((entry, ref) => {
+			if (entry.tag === tag) this._friendlyObstructions.delete(ref);
+		});
+	}
+
+	// Native dropped these registrations because their view unmounted or was replaced. A ref
+	// that now points at a new native view (a remount, or Fabric re-creating the view) is
+	// registered again; the rest are forgotten.
+	_onFriendlyObstructionsPruned(event) {
+		const pruned = new Set((event && event.nativeEvent && event.nativeEvent.tags) || []);
+		const remounted = [];
+		this._friendlyObstructions.forEach((entry, ref) => {
+			if (!pruned.has(entry.tag)) return;
+			this._friendlyObstructions.delete(ref);
+			const tag = resolveNodeHandle(ref);
+			if (tag != null && tag !== entry.tag) {
+				remounted.push({ ref, purpose: entry.purpose, reason: entry.reason });
+			}
+		});
+		if (remounted.length > 0) {
+			this.registerFriendlyObstructions(remounted).catch((e) =>
+				console.warn('JWPlayer: re-registering friendly obstructions failed.', e)
 			);
+		}
 	}
 
 	setFullscreen(fullscreen) {
@@ -888,6 +979,9 @@ export default class JWPlayer extends Component {
 				ref={(player) => (this[this.ref_key] = player)}
 				key={this.ref_key}
 				{...this.props}
+				{...(Platform.OS === 'ios'
+					? { onFriendlyObstructionsPruned: this._onFriendlyObstructionsPruned }
+					: null)}
 			/>
 		);
 	}

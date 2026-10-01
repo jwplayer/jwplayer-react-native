@@ -37,12 +37,14 @@ const playerRef = useRef(null);
 const controlsRef = useRef(null);
 
 useEffect(() => {
-  playerRef.current?.registerFriendlyObstructions([
+  // Capture the player: React clears playerRef before this effect's cleanup runs.
+  const player = playerRef.current;
+  player?.registerFriendlyObstructions([
     { ref: controlsRef, purpose: 'mediaControls', reason: 'Custom player controls' },
   ]).then(({ failed }) => {
-    // failed: [{ index, reason: 'noRef' | 'notFound' | 'containsPlayer' | 'noPlayer' }]
+    // failed: [{ index, reason: 'noRef' | 'notFound' | 'containsPlayer' | 'visible' | 'duplicate' | 'noPlayer' }]
   });
-  return () => playerRef.current?.deregisterFriendlyObstructions([controlsRef]);
+  return () => player?.deregisterFriendlyObstructions([controlsRef]);
 }, []);
 
 return (
@@ -57,15 +59,15 @@ return (
 
 | Method | Notes |
 |---|---|
-| `registerFriendlyObstructions(obstructions)` | `obstructions`: `{ ref, purpose, reason? }[]`. Registering a ref again replaces its purpose and reason. Resolves `{ registered, failed }`. |
-| `deregisterFriendlyObstructions(refs)` | Call before the view unmounts. |
+| `registerFriendlyObstructions(obstructions)` | `obstructions`: `{ ref, purpose, reason? }[]`. Registering a ref again replaces its purpose and reason. If the same view is listed twice, the later entry is used and the earlier one fails with `duplicate`. Resolves `{ registered, failed }`; rejects only on an unexpected native error. |
+| `deregisterFriendlyObstructions(refs)` | Pass the same refs you registered. It works from an unmount cleanup, after React has cleared them. |
 | `deregisterAllFriendlyObstructions()` | Removes every view your app registered. The player's own controls stay registered. |
 
 **`purpose`** is one of:
 
 - `'mediaControls'`: playback controls.
 - `'closeAd'`: a close or skip button.
-- `'notVisible'`: only for a view that is really hidden while the ad plays. A visible view declared `notVisible` is ignored.
+- `'notVisible'`: only for a view that is really hidden while the ad plays. A visible view declared `notVisible` fails with `visible`, because OMID would treat the whole view as covering the ad.
 - `'other'`: anything else.
 
 **`reason`** is sent to the vendor. OMID accepts at most 50 letters, digits and spaces, so any other characters are stripped.
@@ -75,7 +77,8 @@ return (
 - **Give the view `collapsable={false}`.** On the New Architecture a `<View>` that only affects layout is flattened and has no native view. It then fails with `notFound`.
 - **Register the overlay itself, not a container that holds the player.** A view that contains the player would hide real obstructions from the vendor, so it fails with `containsPlayer`.
 - **Timing.** You can register before the player finishes setting up, and before or during an ad. Registered views also survive `recreatePlayerWithConfig` and switching configs.
-- **Deregister on unmount.** Views that unmount without being deregistered are dropped automatically when the next ad break starts, but deregistering yourself is more predictable.
+- **Deregister on unmount.** Views that unmount without being deregistered are dropped automatically at the next ad request or ad break, but deregistering yourself is more predictable.
+- **Re-created views.** If a registered ref ends up on a new native view (a `key` change, or the New Architecture re-creating the view), the new view is registered automatically the next time the old one is found stale (at registration, player creation, ad request or ad break).
 - **Android.** Android has the equivalent native API, but it isn't bridged yet. These methods do nothing on Android and resolve `{ registered: 0, failed: [] }`.
 
 ## Troubleshooting 0% viewability

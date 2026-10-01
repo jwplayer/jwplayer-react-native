@@ -17,25 +17,29 @@ class RNJWPlayerViewManager: RCTViewManager {
         return true
     }
     
+    /// Looks up a React-managed native view of the given type: the UIManager covers Fabric,
+    /// bridgeless and Paper, and the Paper view registry is the fallback for views it misses.
+    private func reactView<T: UIView>(forTag reactTag: NSNumber, as type: T.Type = T.self) -> T? {
+        guard let uiManager = self.bridge?.uiManager else { return nil }
+        if let view = uiManager.view(forReactTag: reactTag) as? T {
+            return view
+        }
+        if let viewRegistry = uiManager.value(forKey: "viewRegistry") as? [NSNumber: UIView] {
+            return viewRegistry[reactTag] as? T
+        }
+        return nil
+    }
+
     private func getPlayerView(reactTag: NSNumber, logFailure: Bool = true) -> RNJWPlayerView? {
-        guard let bridge = self.bridge else {
+        guard self.bridge != nil else {
             print("❌ RNJWPlayerViewManager: Bridge is nil")
             return nil
         }
-        
-        let uiManager = bridge.uiManager
-        
-        // ✅ Check Fabric first (New Architecture)
-        if let view = uiManager?.view(forReactTag: reactTag) as? RNJWPlayerView {
+
+        if let view = reactView(forTag: reactTag, as: RNJWPlayerView.self) {
             return view
         }
-        
-        // ✅ Check Legacy (Old Architecture) and add explicit type annotation
-        if let viewRegistry = uiManager?.value(forKey: "viewRegistry") as? [NSNumber: UIView],
-           let view = viewRegistry[reactTag] as? RNJWPlayerView {
-            return view
-        }
-        
+
         if logFailure {
             print("❌ Invalid view returned for tag \(reactTag)")
         }
@@ -44,27 +48,34 @@ class RNJWPlayerViewManager: RCTViewManager {
 
     private static let playerLookupAttempts = 20
 
-    /// A call made from an effect that runs when the player mounts can arrive before the
-    /// RNJWPlayerView exists: on the New Architecture the interop layer creates it a moment
-    /// after mount. Retry every 50ms (about 1s in total) before giving up.
-    private func withPlayerView(_ reactTag: NSNumber, attempt: Int = 0, _ body: @escaping (RNJWPlayerView) -> Void, onMissing: @escaping () -> Void) {
+    /// Runs `body` on the main queue with the RNJWPlayerView for `reactTag`, or with nil if it
+    /// never shows up. A call made from an effect that runs when the player mounts can arrive
+    /// before the view exists: on the New Architecture the interop layer creates it a moment
+    /// after mount. So the lookup is retried every 50ms (about 1s in total) before giving up.
+    private func withPlayerView(_ reactTag: NSNumber, _ body: @escaping (RNJWPlayerView?) -> Void) {
+        DispatchQueue.main.async {
+            self.lookUpPlayerView(reactTag, attempt: 0, body)
+        }
+    }
+
+    private func lookUpPlayerView(_ reactTag: NSNumber, attempt: Int, _ body: @escaping (RNJWPlayerView?) -> Void) {
         let isLastAttempt = attempt >= Self.playerLookupAttempts - 1
         if let view = getPlayerView(reactTag: reactTag, logFailure: isLastAttempt) {
             body(view)
             return
         }
         guard !isLastAttempt else {
-            onMissing()
+            body(nil)
             return
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            self.withPlayerView(reactTag, attempt: attempt + 1, body, onMissing: onMissing)
+            self.lookUpPlayerView(reactTag, attempt: attempt + 1, body)
         }
     }
     
     @objc func state(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 let error = NSError(domain: "", code: 0, userInfo: nil)
                 reject("no_player", "There is no playerViewController or playerView", error)
                 return
@@ -82,8 +93,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func pause(_ reactTag: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("❌ Failed to pause: RNJWPlayerView not found for tag \(reactTag)")
                 return
             }
@@ -98,8 +109,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func play(_ reactTag: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("❌ Failed to play: RNJWPlayerView not found for tag \(reactTag)")
                 return
             }
@@ -114,8 +125,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func stop(_ reactTag: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("❌ Failed to stop: RNJWPlayerView not found for tag \(reactTag)")
                 return
             }
@@ -130,8 +141,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func position(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no playerView"])
                 reject("no_player", "Invalid view returned from registry, expecting RNJWPlayerView", error)
                 return
@@ -149,8 +160,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func toggleSpeed(_ reactTag: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView.")
                 return
             }
@@ -172,8 +183,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setSpeed(_ reactTag: NSNumber, _ speed: Double) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -187,8 +198,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setPlaylistIndex(_ reactTag: NSNumber, _ index: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -202,8 +213,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func seekTo(_ reactTag: NSNumber, _ time: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -217,8 +228,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setVolume(_ reactTag: NSNumber, _ volume: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -232,8 +243,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func togglePIP(_ reactTag: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag), let pipController = view.playerView?.pictureInPictureController else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view, let pipController = view.playerView?.pictureInPictureController else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -292,8 +303,8 @@ class RNJWPlayerViewManager: RCTViewManager {
 
 #if USE_GOOGLE_CAST
     @objc func setUpCastController(_ reactTag: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -303,8 +314,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func presentCastDialog(_ reactTag: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -314,8 +325,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func connectedDevice(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no player"])
                 reject("no_player", "Invalid view returned from registry, expecting RNJWPlayerView", error)
                 return
@@ -340,8 +351,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func availableDevices(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no player"])
                 reject("no_player", "Invalid view returned from registry, expecting RNJWPlayerView", error)
                 return
@@ -371,8 +382,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func castState(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no player"])
                 reject("no_player", "Invalid view returned from registry, expecting RNJWPlayerView", error)
                 return
@@ -384,8 +395,8 @@ class RNJWPlayerViewManager: RCTViewManager {
 #endif
     
     @objc func getAudioTracks(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no player"])
                 reject("no_player", "Invalid view returned from registry, expecting RNJWPlayerView", error)
                 return
@@ -416,8 +427,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func getCurrentAudioTrack(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no player"])
                 reject("no_player", "Invalid view returned from registry, expecting RNJWPlayerView", error)
                 return
@@ -435,8 +446,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setCurrentAudioTrack(_ reactTag: NSNumber, _ index: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -450,8 +461,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setControls(_ reactTag: NSNumber, _ show: Bool) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -463,8 +474,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setVisibility(_ reactTag: NSNumber, _ visibility: Bool, _ controls: [String]) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -476,8 +487,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setLockScreenControls(_ reactTag: NSNumber, _ show: Bool) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -489,8 +500,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setCurrentCaptions(_ reactTag: NSNumber, _ index: NSNumber) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -508,8 +519,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func getCurrentCaptions(_ reactTag: NSNumber, _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "There is no player"])
                 reject("no_player", "Invalid view returned from registry, expecting RNJWPlayerView", error)
                 return
@@ -527,8 +538,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setLicenseKey(_ reactTag: NSNumber, _ license: String) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -571,8 +582,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
 
     @objc func loadPlaylist(_ reactTag: NSNumber, _ playlist: Any) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -609,8 +620,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
 
     @objc func loadPlaylistWithUrl(_ reactTag: NSNumber, _ playlistString: String) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -626,8 +637,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     }
     
     @objc func setFullscreen(_ reactTag: NSNumber, _ fullscreen: Bool) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -649,8 +660,8 @@ class RNJWPlayerViewManager: RCTViewManager {
     // the Control Center via LockScreenControlsHandler when updateItemMetadata is called,
     // so this flag is accepted and ignored here.
     @objc func setPlaylistItemMetadata(_ reactTag: NSNumber, _ title: String?, _ description: String?, _ image: String?, _ refreshNotification: Bool) {
-        DispatchQueue.main.async {
-            guard let view = self.getPlayerView(reactTag: reactTag) else {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("Invalid view returned from registry, expecting RNJWPlayerView")
                 return
             }
@@ -686,56 +697,62 @@ class RNJWPlayerViewManager: RCTViewManager {
     /// Resolves each React tag to its native view and registers it as a friendly obstruction.
     /// Resolves with `{ failed: [{ tag, reason }] }` so JS can say which refs could not be used.
     @objc func registerFriendlyObstructions(_ reactTag: NSNumber, _ obstructions: [[String: Any]], _ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async {
-            self.withPlayerView(reactTag, { view in
-                var resolved: [NSNumber: RNJWPlayerView.AppFriendlyObstruction] = [:]
-                var failed: [[String: Any]] = []
-                for entry in obstructions {
-                    guard let tag = entry["tag"] as? NSNumber else { continue }
-                    // Covers Fabric (component view registry), bridgeless and Paper. A layout-only
-                    // Fabric <View> is flattened away and has no native view: use collapsable={false}.
-                    guard let target = self.bridge?.uiManager?.view(forReactTag: tag) else {
-                        failed.append(["tag": tag, "reason": "notFound"])
-                        continue
-                    }
-                    // Declaring the player (or anything containing it) friendly would hide real
-                    // obstructions from the viewability vendor. Overlays rendered as children of
-                    // the player are fine: they sit beside the ad surface like the SDK's own controls.
-                    if view.isDescendant(of: target) {
-                        failed.append(["tag": tag, "reason": "containsPlayer"])
-                        continue
-                    }
-                    let purpose = RNJWPlayerAds.mapStringToJWFriendlyObstructionPurpose(entry["purpose"] as? String)
-                    let reason = RNJWPlayerView.sanitizedObstructionReason(entry["reason"] as? String)
-                    let obstruction = JWFriendlyObstruction(view: target, purpose: purpose, reason: reason)
-                    resolved[tag] = RNJWPlayerView.AppFriendlyObstruction(obstruction: obstruction, view: target)
-                }
-
-                view.registerFriendlyObstructions(resolved)
-                resolve(["failed": failed])
-            }, onMissing: {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 reject("no_player", "RNJWPlayerView not found for tag \(reactTag)", nil)
-            })
+                return
+            }
+
+            var resolved: [NSNumber: RNJWPlayerView.AppFriendlyObstruction] = [:]
+            var failed: [[String: Any]] = []
+            for entry in obstructions {
+                guard let tag = entry["tag"] as? NSNumber else { continue }
+                // A layout-only Fabric <View> is flattened away and has no native view: use collapsable={false}.
+                guard let target = self.reactView(forTag: tag, as: UIView.self) else {
+                    failed.append(["tag": tag, "reason": "notFound"])
+                    continue
+                }
+                // Declaring the player (or anything containing it) friendly would hide real
+                // obstructions from the viewability vendor. Overlays rendered as children of
+                // the player are fine: they sit beside the ad surface like the SDK's own controls.
+                if view.isDescendant(of: target) {
+                    failed.append(["tag": tag, "reason": "containsPlayer"])
+                    continue
+                }
+                let purpose = RCTConvert.JWFriendlyObstructionPurpose(entry["purpose"] as? String)
+                // The SDK silently drops a `.notVisible` obstruction whose view is on screen, since
+                // OMID would then treat the whole view as covering the ad. Report it instead.
+                if purpose == .notVisible, !(target.isHidden || target.alpha <= 0) {
+                    failed.append(["tag": tag, "reason": "visible"])
+                    continue
+                }
+                let reason = RNJWPlayerView.sanitizedObstructionReason(entry["reason"] as? String)
+                let obstruction = JWFriendlyObstruction(view: target, purpose: purpose, reason: reason)
+                resolved[tag] = RNJWPlayerView.AppFriendlyObstruction(obstruction: obstruction, view: target)
+            }
+
+            view.registerFriendlyObstructions(resolved)
+            resolve(["failed": failed])
         }
     }
 
     @objc func deregisterFriendlyObstructions(_ reactTag: NSNumber, _ tags: [NSNumber]) {
-        DispatchQueue.main.async {
-            self.withPlayerView(reactTag, { view in
-                view.deregisterFriendlyObstructions(tags: tags)
-            }, onMissing: {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("❌ Failed to deregister friendly obstructions: RNJWPlayerView not found for tag \(reactTag)")
-            })
+                return
+            }
+            view.deregisterFriendlyObstructions(tags: tags)
         }
     }
 
     @objc func deregisterAllFriendlyObstructions(_ reactTag: NSNumber) {
-        DispatchQueue.main.async {
-            self.withPlayerView(reactTag, { view in
-                view.deregisterAllFriendlyObstructions()
-            }, onMissing: {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
                 print("❌ Failed to deregister friendly obstructions: RNJWPlayerView not found for tag \(reactTag)")
-            })
+                return
+            }
+            view.deregisterAllFriendlyObstructions()
         }
     }
 

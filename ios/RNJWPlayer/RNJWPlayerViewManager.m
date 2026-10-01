@@ -48,6 +48,7 @@ RCT_EXPORT_VIEW_PROPERTY(onPlayerAdWarning, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPlayerAdError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAdEvent, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAdTime, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onFriendlyObstructionsPruned, RCTDirectEventBlock);
 
 /* jwplayer view controller events */
 RCT_EXPORT_VIEW_PROPERTY(onControlBarVisible, RCTDirectEventBlock);

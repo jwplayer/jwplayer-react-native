@@ -265,8 +265,8 @@ declare module "@jwplayer/jwplayer-react-native" {
      */
     ref: FriendlyObstructionTarget;
     /**
-     * Only use `notVisible` for a view that is really hidden while the ad plays; the SDK
-     * ignores a visible view declared `notVisible`.
+     * Only use `notVisible` for a view that is really hidden while the ad plays; a visible
+     * view declared `notVisible` fails with `visible`.
      */
     purpose: FriendlyObstructionPurpose;
     /**
@@ -280,10 +280,15 @@ declare module "@jwplayer/jwplayer-react-native" {
     /**
      * `index` points into the array passed in. `noRef`: the ref was not attached yet.
      * `notFound`: no native view (usually flattened). `containsPlayer`: the view contains the
-     * player, which would hide real obstructions from the vendor. `noPlayer`: the native player
-     * view was not available (for example, the player unmounted).
+     * player, which would hide real obstructions from the vendor. `visible`: `notVisible` was
+     * used for a view that is on screen. `duplicate`: the same view appears again later in the
+     * array, and the later entry was used. `noPlayer`: the native player view was not available
+     * (for example, the player unmounted). Other native errors reject the promise.
      */
-    failed: { index: number; reason: 'noRef' | 'notFound' | 'containsPlayer' | 'noPlayer' }[];
+    failed: {
+      index: number;
+      reason: 'noRef' | 'notFound' | 'containsPlayer' | 'visible' | 'duplicate' | 'noPlayer';
+    }[];
   }
   type ClientTypes = "vast" | "ima" | "ima_dai";
   interface VASTAdvertising {
@@ -867,7 +872,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     /**
      * Declares app views drawn over the player as OMID friendly obstructions so they don't
      * lower ad viewability. Registering a ref again replaces its purpose and reason. The
-     * obstructions survive player re-creation; deregister a view before it unmounts.
+     * obstructions survive player re-creation, and a ref whose view is re-created is
+     * registered again automatically. Deregister a view when it unmounts.
      * @platform ios (no-op on Android, resolves `{ registered: 0, failed: [] }`)
      */
     registerFriendlyObstructions(obstructions: FriendlyObstruction[]): Promise<FriendlyObstructionsResult>;

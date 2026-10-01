@@ -37,6 +37,19 @@ extension RCTConvert {
         }
     }
 
+    static func JWFriendlyObstructionPurpose(_ value: String?) -> JWFriendlyObstructionPurpose {
+        switch value {
+        case "mediaControls":
+            return .mediaControls
+        case "closeAd":
+            return .closeAd
+        case "notVisible":
+            return .notVisible
+        default:
+            return .other
+        }
+    }
+
     static func JWCaptionEdgeStyle(_ value: String) -> JWCaptionEdgeStyle {
         switch value {
         case "none":

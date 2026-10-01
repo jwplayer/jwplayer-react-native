@@ -74,7 +74,7 @@ return (
 
 ### Things to know
 
-- **Give the view `collapsable={false}`.** On the New Architecture a `<View>` that only affects layout is flattened and has no native view. It then fails with `notFound`.
+- **Give the view `collapsable={false}`.** On the New Architecture a `<View>` that only affects layout is flattened and has no native view. It then fails with `notFound`, reported after about a second (a view that has only just mounted gets that long to appear).
 - **Register the overlay itself, not a container that holds the player.** A view that contains the player would hide real obstructions from the vendor, so it fails with `containsPlayer`.
 - **Timing.** You can register before the player finishes setting up, and before or during an ad. Registered views also survive `recreatePlayerWithConfig` and switching configs.
 - **Deregister on unmount.** Views that unmount without being deregistered are dropped automatically at the next ad request or ad break, but deregistering yourself is more predictable.

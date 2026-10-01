@@ -56,6 +56,27 @@ class RNJWPlayerAds {
         return try? adConfigBuilder.build()
     }
 
+    // Mirrors JWJSONParser.parseAdTracker so the legacy (forceLegacyConfig) path enables
+    // OMID the same way the default JSON path does: an `allowedOmidVendors` list alone
+    // enables it, otherwise `omidSupport` must be "auto" or "enabled". The SDK only attaches
+    // this tracker to the JW VAST client; IMA runs its own OMID session.
+    static func configureOMID(with ads: [String: Any]) -> JWOMIDConfig? {
+        let allowedVendors = ads["allowedOmidVendors"] as? [String]
+        let enabled: Bool
+        if let omidSupport = ads["omidSupport"] as? String {
+            enabled = omidSupport == "auto" || omidSupport == "enabled"
+        } else {
+            enabled = allowedVendors != nil
+        }
+        guard enabled else { return nil }
+
+        let omidBuilder = JWOMIDConfigBuilder()
+        if let allowedVendors = allowedVendors {
+            omidBuilder.allowedVendors(allowedVendors)
+        }
+        return try? omidBuilder.build()
+    }
+
     // Convert configureIMAWithAds function
     static func configureIMA(with ads: [String: Any]) -> JWAdvertisingConfig? {
         // Ensure Google IMA SDK is available
@@ -221,36 +242,6 @@ class RNJWPlayerAds {
 //    static func findView(withId viewId: String) -> UIView? {
 //        // Implementation needed to find and return the view with the given id
 //        return nil
-//    }
-//
-//    static func createFriendlyObstructions(fromArray obstructionsArray: [[String: Any]]) -> [JWFriendlyObstruction] {
-//        var obstructions: [JWFriendlyObstruction] = []
-//
-//        for obstructionDict in obstructionsArray {
-//            if let viewId = obstructionDict["viewId"] as? String,
-//               let view = findView(withId: viewId),
-//               let purposeString = obstructionDict["purpose"] as? String,
-//               let reason = obstructionDict["reason"] as? String {
-//                let purpose = mapStringToJWFriendlyObstructionPurpose(purposeString)
-//                let obstruction = JWFriendlyObstruction(view: view, purpose: purpose, reason: reason)
-//                obstructions.append(obstruction)
-//            }
-//        }
-//
-//        return obstructions
-//    }
-//
-//    static func mapStringToJWFriendlyObstructionPurpose(_ purposeString: String) -> JWFriendlyObstructionPurpose {
-//        switch purposeString {
-//        case "mediaControls":
-//            return .mediaControls
-//        case "closeAd":
-//            return .closeAd
-//        case "notVisible":
-//            return .notVisible
-//        default:
-//            return .other
-//        }
 //    }
 //
 //    static func createCompanionAdSlot(fromDictionary companionAdSlotDict: [String: Any]) -> JWCompanionAdSlot? {

@@ -579,6 +579,9 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 
     override func jwplayer(_ player: JWPlayer, adEvent event: JWAdEvent) {
         super.jwplayer(player, adEvent:event)
+        if event.type == .adBreakStart || event.type == .request {
+            parentView?.refreshFriendlyObstructionsForAd()
+        }
         parentView?.onAdEvent?(["client": event.client.rawValue, "type": event.type.rawValue])
     }
 

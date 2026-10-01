@@ -48,6 +48,7 @@ RCT_EXPORT_VIEW_PROPERTY(onPlayerAdWarning, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPlayerAdError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAdEvent, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAdTime, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onFriendlyObstructionsPruned, RCTDirectEventBlock);
 
 /* jwplayer view controller events */
 RCT_EXPORT_VIEW_PROPERTY(onControlBarVisible, RCTDirectEventBlock);
@@ -144,5 +145,11 @@ RCT_EXTERN_METHOD(loadPlaylistWithUrl: (nonnull NSNumber *)reactTag: (nonnull NS
 RCT_EXTERN_METHOD(setFullscreen: (nonnull NSNumber *)reactTag: (BOOL)fullscreen)
 
 RCT_EXTERN_METHOD(setPlaylistItemMetadata: (nonnull NSNumber *)reactTag : (NSString *)title : (NSString *)description : (NSString *)image : (BOOL)refreshNotification)
+
+RCT_EXTERN_METHOD(registerFriendlyObstructions: (nonnull NSNumber *)reactTag : (nonnull NSArray *)obstructions : (RCTPromiseResolveBlock)resolve : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(deregisterFriendlyObstructions: (nonnull NSNumber *)reactTag : (nonnull NSArray *)tags)
+
+RCT_EXTERN_METHOD(deregisterAllFriendlyObstructions: (nonnull NSNumber *)reactTag)
 
 @end

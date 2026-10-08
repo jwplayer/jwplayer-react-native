@@ -322,10 +322,10 @@ Both platforms can report a `reason` field on `onFullScreenExit` describing why 
 | `metadataType` | iOS | Android | Notes |
 |----------------|:---:|:-------:|-------|
 | `id3` | `onMeta` | `onMeta`, `onMetadataCueParsed` | iOS reports `metadataTime`; Android does not know the cue time for ID3. |
-| `date-range` | both | both | SCTE-35 markers arrive as attributes. iOS re-encodes binary attributes as `0x…` hex and formats date attribute strings in local time (use `startDate` / `endDate`); Android passes manifest strings, sorted by name, and adds `content`. |
+| `date-range` | both | both | SCTE-35 markers arrive as attributes. iOS re-encodes binary attributes as `0x…` hex and, from JWPlayerKit 4.28.1, formats date attribute strings in UTC to the second (prefer `startDate` / `endDate` for millisecond precision); Android passes manifest strings, sorted by name, and adds `content`. |
 | `program-date-time` | both | both | Android adds `content` (raw tag). |
 | `emsg` | ❌ | both | The iOS SDK does not expose DASH event messages. |
-| `external` | `onMetadataCueParsed` (see note) | `onMeta` only | iOS reads `identifier`, Android reads the integer `id`; the wrapper derives each from the other, so an integer-string `identifier` is enough. JWPlayerKit 4.28.0 did not dispatch the playback-time event in our testing (SDK-12315); the wrapper forwards it as soon as the SDK does. |
+| `external` | both | `onMeta` only | iOS reads `identifier`, Android reads the integer `id`; the wrapper derives each from the other, so an integer-string `identifier` is enough. The playback-time event on iOS needs JWPlayerKit 4.28.1+ (4.28.0 did not dispatch it, SDK 12315). |
 | `media` | `onMeta` | `onMeta` | iOS: `duration`, `seekRange`, `drm`. Android: track-format details under `metadata`, fires on every format change. |
 | `access-log` | `onMeta` | ❌ | Periodic bitrate / dropped-frame samples from `AVPlayer`. |
 | `unknown` | ❌ | both | Reserved fallback for future Android cue types; does not fire with the current SDK. |

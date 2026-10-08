@@ -65,14 +65,14 @@ The **Metadata Events** screen in the [Example app](../Example/app/jsx/screens/M
 | `date-range` | `#EXT-X-DATERANGE` (including SCTE-35 attributes) | iOS, Android | iOS, Android |
 | `program-date-time` | `#EXT-X-PROGRAM-DATE-TIME` | iOS, Android | iOS, Android |
 | `emsg` | DASH event message boxes | Android | Android |
-| `external` | `externalMetadata` cue points from your config | iOS | iOS†, Android |
+| `external` | `externalMetadata` cue points from your config | iOS | iOS, Android |
 | `media` | Media / track information | – | iOS, Android |
 | `access-log` | `AVPlayer` access-log samples | – | iOS |
 | `unknown` | Forward-compatibility fallback for Android cue types this wrapper does not classify yet (none with the current SDK) | Android | Android |
 
 The web player also emits `scte-35` (for `#EXT-X-CUE-OUT` / `#EXT-X-CUE-IN` tags) and `discontinuity`. Neither native SDK exposes those, so they are not part of this API. SCTE-35 markers carried in `#EXT-X-DATERANGE` attributes **are** delivered, inside `date-range` events.
 
-† **Known iOS SDK limitation (JWPlayerKit 4.28.0):** the wrapper forwards the playback-time `external` event as soon as the SDK dispatches it, but in our device testing the SDK only dispatched the parse-time event (`onMetadataCueParsed`) and never the playback-time one, for MP4 and HLS content alike. Tracked as SDK-12315. Until the SDK fix lands, drive playback-time logic for external cues on iOS from `onMetadataCueParsed` plus `onTime`. Android fires `onMeta` for external cues as expected.
+JWPlayerKit 4.28.0 did not dispatch the playback-time `external` event on iOS (SDK 12315). From 4.28.1, which this wrapper pins, it fires on both platforms, and `onMetadataCueParsed` fires once per item on iOS.
 
 ---
 
@@ -131,8 +131,8 @@ ID3 frames embedded in the stream, flattened into a `{ frameId: value }` map exa
 - `attributes` is an array of `{ name, value }` (the web player's shape), so arbitrary `X-` attributes are preserved. iOS keeps manifest order and repeated names; Android receives the attributes from its SDK as a map, so they arrive sorted by name and a repeated name keeps only its last value.
 - `startDate` and `endDate` are re-emitted as UTC ISO 8601 on both platforms, whatever offset the manifest used.
 - `id`, `startDate`, `endDate` are lifted out of the attributes for convenience. On both platforms `duration` is `PLANNED-DURATION` when present, otherwise the `DURATION` attribute, otherwise `end - start`.
-- **iOS** re-encodes binary attributes such as `SCTE35-OUT` / `SCTE35-IN` / `SCTE35-CMD` as `0x…` hex strings, matching how they appear in the manifest. Numeric attributes arrive as numbers. The iOS SDK formats the `START-DATE` / `END-DATE` *attribute strings* in the device's local time zone while still appending `Z`, so read dates from `metadata.startDate` / `metadata.endDate` (correct UTC) rather than from the attributes (SDK-12315).
-- **iOS** computes `start` / `end` relative to the content start date of the variant playlist AVPlayer selected. If the variants of a stream disagree on their first `EXT-X-PROGRAM-DATE-TIME`, the reported `start` shifts accordingly and `onMeta` fires when that shifted position is reached.
+- **iOS** re-encodes binary attributes such as `SCTE35-OUT` / `SCTE35-IN` / `SCTE35-CMD` as `0x…` hex strings, matching how they appear in the manifest. Numeric attributes arrive as numbers. From JWPlayerKit 4.28.1 the iOS SDK formats the `START-DATE` / `END-DATE` *attribute strings* in UTC, to the second (4.28.0 rendered them in the device's local time zone while still appending `Z`, SDK 12315). `metadata.startDate` / `metadata.endDate` keep the milliseconds, so prefer them.
+- **iOS** computes `start` / `end` relative to the content start date of the variant playlist AVPlayer selected. If the variants of a stream disagree on their first `EXT-X-PROGRAM-DATE-TIME`, the reported `start` shifts accordingly and `onMeta` fires when that shifted position is reached. From JWPlayerKit 4.28.1 date ranges parsed before the content start date is known are held and surfaced once it is, instead of being dropped.
 - **Android** passes every attribute as the string from the manifest and adds `content`, the raw tag text.
 
 ### `program-date-time`

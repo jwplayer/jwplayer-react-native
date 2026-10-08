@@ -71,8 +71,8 @@ enum RNJWPlayerMetadata {
             }
         }
 
-        // The SDK only derives `duration` from PLANNED-DURATION (with END-DATE it reports the
-        // cue's end position instead). Mirror the Android side and the web player: PLANNED-DURATION,
+        // The SDK derives `duration` from PLANNED-DURATION or END-DATE and ignores the DURATION
+        // attribute. Apply it here for parity with the Android side and the web player: PLANNED-DURATION,
         // then the DURATION attribute, then the cue's own span.
         var duration = metadata.duration
         if numeric(attributeNamed("PLANNED-DURATION", in: attributes)) == nil {

@@ -698,7 +698,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     name: string;
     /**
      * Strings from the manifest; iOS reports numeric attributes as numbers and binary ones as `0x…` hex.
-     * The iOS SDK formats `START-DATE` / `END-DATE` strings in local time; prefer `metadata.startDate` / `endDate`.
+     * From JWPlayerKit 4.28.1 iOS formats `START-DATE` / `END-DATE` strings in UTC to the second; prefer
+     * `metadata.startDate` / `endDate` for full precision.
      */
     value: string | number | null;
   }
@@ -754,8 +755,8 @@ declare module "@jwplayer/jwplayer-react-native" {
 
   /**
    * Cue points supplied through `externalMetadata` on the playlist item (or config on iOS).
-   * On iOS, JWPlayerKit 4.28.0 delivers these through `onMetadataCueParsed` only (SDK-12315);
-   * the playback-time `onMeta` event is forwarded as soon as the SDK dispatches it.
+   * Delivered through `onMeta` when playback enters the cue on both platforms (iOS needs JWPlayerKit
+   * 4.28.1+; 4.28.0 did not dispatch it, SDK 12315), and on iOS also through `onMetadataCueParsed` once per item.
    */
   interface ExternalMetadataEventProps extends MetadataEventBase {
     metadataType: 'external';

@@ -31,7 +31,7 @@ const STREAMS = [
     key: 'daterange',
     label: 'DATERANGE + PDT',
     hint:
-      'VOD with EXT-X-PROGRAM-DATE-TIME and EXT-X-DATERANGE tags, plus an ID3 TXXX frame every 5s. Expect `program-date-time` and `date-range` when parsed and again as playback reaches each cue, and `id3` throughout. On iOS the date ranges arrive once the SDK knows the content start date, and this asset\'s variants disagree on it, so they can come late with large `start` values.',
+      'VOD with EXT-X-PROGRAM-DATE-TIME and EXT-X-DATERANGE tags, plus an ID3 TXXX frame every 5s. Expect `program-date-time` and `date-range` when parsed and again as playback reaches each cue, and `id3` throughout. On iOS `start` / `end` are relative to the content start date of the selected variant, and this asset\'s variants disagree on their first PROGRAM-DATE-TIME, so the reported `start` values can be offset.',
     playlist: [
       {
         title: 'Date range metadata',

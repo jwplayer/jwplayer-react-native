@@ -84,4 +84,4 @@ return (
 ## Troubleshooting 0% viewability
 
 - **Vendor reports "not measurable" (no OMID session).** Check `omidSupport` / `allowedOmidVendors`, confirm the VAST response has `<AdVerifications>`, and check that an allow-list isn't filtering out the vendor.
-- **Measurable but 0% viewable.** Something undeclared covers the ad. Register your overlays. Also check the iOS SDK version: JWPlayerKit 4.26.2 through 4.28.0 don't declare the player's own full-frame controls, which reads as fully obstructed (fixed in iOS SDK SDK-12221).
+- **Measurable but 0% viewable.** Something undeclared covers the ad. Register your overlays. Also check the iOS SDK version: JWPlayerKit 4.26.2 through 4.28.0 don't declare the player's own full-frame controls, which reads as fully obstructed. This is fixed in JWPlayerKit 4.28.1, which this version of the wrapper uses; check that your app isn't overriding the pod version.

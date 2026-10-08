@@ -1704,10 +1704,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     /// Called on each ad break and ad request. The SDK registers its own controls on `.request`,
-    /// after anything registered at player creation. OMIDPlugin adds the list in order in a
-    /// throwing loop, so the app's entries are moved behind the SDK's: an app view that goes bad
-    /// before the OMID session starts can then only cost the app entries after it, not the
-    /// player's controls.
+    /// after anything registered at player creation. Before JWPlayerKit 4.28.1 (SDK-12675),
+    /// OMIDPlugin added the list in order in a throwing loop, so the app's entries are moved
+    /// behind the SDK's: an app view that goes bad before the OMID session starts can then only
+    /// cost the app entries after it, not the player's controls.
     func refreshFriendlyObstructionsForAd() {
         pruneStaleFriendlyObstructions()
         guard let player = activePlayer, !appFriendlyObstructions.isEmpty else { return }
@@ -1716,12 +1716,13 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         player.friendlyObstructions.register(obstructions)
     }
 
-    /// Drops entries whose React view unmounted without being deregistered. OMIDPlugin adds
-    /// obstructions in a throwing loop, so a nil view would abort registration of every
-    /// obstruction after it (including the player's own controls). On Fabric an unmounted view
-    /// is recycled rather than freed: its `tag` is reset to 0 and it may later back a different
-    /// component, so identity is checked by tag, not just by liveness. JS is told which tags were
-    /// dropped so it can re-register a ref that now points at a new native view.
+    /// Drops entries whose React view unmounted without being deregistered. Before JWPlayerKit
+    /// 4.28.1, OMIDPlugin added obstructions in a throwing loop, so a nil view aborted
+    /// registration of every obstruction after it (including the player's own controls); 4.28.1
+    /// skips the bad entry instead, but a stale entry still measures nothing. On Fabric an
+    /// unmounted view is recycled rather than freed: its `tag` is reset to 0 and it may later back
+    /// a different component, so identity is checked by tag, not just by liveness. JS is told which
+    /// tags were dropped so it can re-register a ref that now points at a new native view.
     func pruneStaleFriendlyObstructions() {
         let stale = appFriendlyObstructions.filter { tag, entry in
             guard let view = entry.view else { return true }

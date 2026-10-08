@@ -9,6 +9,7 @@ import com.facebook.react.bridge.WritableMap;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -104,31 +105,44 @@ public class MapUtil {
     return map;
   }
 
+  /**
+   * Converts a JSON-like map into a {@link WritableMap} for the bridge. Nested maps, {@link List}s
+   * and object arrays recurse; every {@link Number} is supported (non-finite doubles become null
+   * because the bridge rejects NaN / infinity); anything else is stringified. The input is left
+   * untouched.
+   */
+  @SuppressWarnings("unchecked")
   public static WritableMap toWritableMap(Map<String, Object> map) {
     WritableMap writableMap = Arguments.createMap();
-    Iterator iterator = map.entrySet().iterator();
 
-    while (iterator.hasNext()) {
-      Map.Entry pair = (Map.Entry)iterator.next();
-      Object value = pair.getValue();
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
 
       if (value == null) {
-        writableMap.putNull((String) pair.getKey());
+        writableMap.putNull(key);
       } else if (value instanceof Boolean) {
-        writableMap.putBoolean((String) pair.getKey(), (Boolean) value);
-      } else if (value instanceof Double) {
-        writableMap.putDouble((String) pair.getKey(), (Double) value);
+        writableMap.putBoolean(key, (Boolean) value);
       } else if (value instanceof Integer) {
-        writableMap.putInt((String) pair.getKey(), (Integer) value);
+        writableMap.putInt(key, (Integer) value);
+      } else if (value instanceof Number) {
+        double number = ((Number) value).doubleValue();
+        if (Double.isNaN(number) || Double.isInfinite(number)) {
+          writableMap.putNull(key);
+        } else {
+          writableMap.putDouble(key, number);
+        }
       } else if (value instanceof String) {
-        writableMap.putString((String) pair.getKey(), (String) value);
+        writableMap.putString(key, (String) value);
       } else if (value instanceof Map) {
-        writableMap.putMap((String) pair.getKey(), MapUtil.toWritableMap((Map<String, Object>) value));
-      } else if (value.getClass() != null && value.getClass().isArray()) {
-        writableMap.putArray((String) pair.getKey(), ArrayUtil.toWritableArray((Object[]) value));
+        writableMap.putMap(key, MapUtil.toWritableMap((Map<String, Object>) value));
+      } else if (value instanceof List) {
+        writableMap.putArray(key, ArrayUtil.toWritableArray((List<Object>) value));
+      } else if (value instanceof Object[]) {
+        writableMap.putArray(key, ArrayUtil.toWritableArray((Object[]) value));
+      } else {
+        writableMap.putString(key, String.valueOf(value));
       }
-
-      iterator.remove();
     }
 
     return writableMap;

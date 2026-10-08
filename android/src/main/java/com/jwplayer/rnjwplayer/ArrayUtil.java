@@ -5,6 +5,8 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
@@ -96,31 +98,38 @@ public class ArrayUtil {
   }
 
   public static WritableArray toWritableArray(Object[] array) {
+    return toWritableArray(Arrays.asList(array));
+  }
+
+  /** List counterpart of {@link #toWritableArray(Object[])}; same value handling as {@link MapUtil#toWritableMap}. */
+  @SuppressWarnings("unchecked")
+  public static WritableArray toWritableArray(List<Object> list) {
     WritableArray writableArray = Arguments.createArray();
 
-    for (int i = 0; i < array.length; i++) {
-      Object value = array[i];
-
+    for (Object value : list) {
       if (value == null) {
         writableArray.pushNull();
-      }
-      if (value instanceof Boolean) {
+      } else if (value instanceof Boolean) {
         writableArray.pushBoolean((Boolean) value);
-      }
-      if (value instanceof Double) {
-        writableArray.pushDouble((Double) value);
-      }
-      if (value instanceof Integer) {
+      } else if (value instanceof Integer) {
         writableArray.pushInt((Integer) value);
-      }
-      if (value instanceof String) {
+      } else if (value instanceof Number) {
+        double number = ((Number) value).doubleValue();
+        if (Double.isNaN(number) || Double.isInfinite(number)) {
+          writableArray.pushNull();
+        } else {
+          writableArray.pushDouble(number);
+        }
+      } else if (value instanceof String) {
         writableArray.pushString((String) value);
-      }
-      if (value instanceof Map) {
+      } else if (value instanceof Map) {
         writableArray.pushMap(MapUtil.toWritableMap((Map<String, Object>) value));
-      }
-      if (value.getClass().isArray()) {
-        writableArray.pushArray(ArrayUtil.toWritableArray((Object[]) value));
+      } else if (value instanceof List) {
+        writableArray.pushArray(toWritableArray((List<Object>) value));
+      } else if (value instanceof Object[]) {
+        writableArray.pushArray(toWritableArray((Object[]) value));
+      } else {
+        writableArray.pushString(String.valueOf(value));
       }
     }
 

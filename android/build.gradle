@@ -135,6 +135,8 @@ dependencies {
 
     // ExoPlayer dependencies
     implementation "androidx.media3:media3-common:${safeExtGet('media3ExoVersion', media3ExoVersion)}"
+    // ID3 frame / emsg model classes surfaced through onMeta / onMetadataCueParsed
+    implementation "androidx.media3:media3-extractor:${safeExtGet('media3ExoVersion', media3ExoVersion)}"
     implementation "androidx.media3:media3-exoplayer:${safeExtGet('media3ExoVersion', media3ExoVersion)}"
     implementation "androidx.media3:media3-exoplayer-dash:${safeExtGet('media3ExoVersion', media3ExoVersion)}"
     implementation "androidx.media3:media3-exoplayer-hls:${safeExtGet('media3ExoVersion', media3ExoVersion)}"

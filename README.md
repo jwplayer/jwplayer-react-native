@@ -276,6 +276,7 @@ The library now features a **unified configuration system** that provides consis
 - **[Migration Guide](./docs/MIGRATION-GUIDE.md)** - Guide for upgrading to the unified type system
 - **[Props Documentation](./docs/props.md)** - Component props reference
 - **[Metadata Events](./docs/METADATA-EVENTS.md)** - `onMeta` / `onMetadataCueParsed` payload reference (ID3, SCTE-35 date ranges, program date time, emsg, external cue points)
+- **[OMID Viewability](./docs/OMID-VIEWABILITY.md)** - Enabling OMID for VAST ads and declaring app overlays as friendly obstructions
 
 ### Quick Example
 

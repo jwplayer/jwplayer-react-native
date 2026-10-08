@@ -20,6 +20,7 @@ import PlayerInModal from './screens/PlayerInModal';
 import GlobalPlayerExample from './screens/GlobalPlayerExample';
 import PlaylistItemMetadataExample from './screens/PlaylistItemMetadataExample';
 import BottomTabOverlapExample from './screens/BottomTabOverlapExample';
+import OmidViewabilityExample from './screens/OmidViewabilityExample';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +48,7 @@ export default class App extends Component {
             <Stack.Screen name="Youtube" component={YoutubeExample} />
             <Stack.Screen name="Global Player" component={GlobalPlayerExample} />
             <Stack.Screen name="Item Metadata" component={PlaylistItemMetadataExample} />
+            <Stack.Screen name="OMID Viewability" component={OmidViewabilityExample} />
             <Stack.Screen name="TypeScript Example" component={TypeScriptExample} />
             <Stack.Screen name="Bottom Tab Overlap (Issue #93)" component={BottomTabOverlapExample} />
           </Stack.Navigator>

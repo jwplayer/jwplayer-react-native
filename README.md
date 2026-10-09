@@ -263,6 +263,17 @@ Follow these steps to run the example project:
 
 ℹ️ You can also build and run the app with specific `react-native` commands.
 
+ℹ️ With Xcode 27, `yarn ios` fails because the React Native CLI tries to open `Simulator.app` from inside Xcode.app, where it no longer ships. Build and launch with Xcode directly, or from **Example/ios**:
+
+```
+xcrun simctl boot <SIMULATOR_UDID>
+xcodebuild -workspace RNJWPlayer.xcworkspace -scheme RNJWPlayer -configuration Debug -destination id=<SIMULATOR_UDID> build
+xcrun simctl install <SIMULATOR_UDID> ~/Library/Developer/Xcode/DerivedData/RNJWPlayer-*/Build/Products/Debug-iphonesimulator/RNJWPlayer.app
+xcrun simctl launch <SIMULATOR_UDID> com.jwplayer.RNJWPlayer
+```
+
+Start Metro first with `yarn start` from **Example**.
+
 <br /><br />
 
 ## Configuration

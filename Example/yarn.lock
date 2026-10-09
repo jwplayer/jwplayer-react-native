@@ -1584,7 +1584,7 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@jwplayer/jwplayer-react-native@link:../../jwplayer-react-native":
+"@jwplayer/jwplayer-react-native@link:..":
   version "0.0.0"
   uid ""
 

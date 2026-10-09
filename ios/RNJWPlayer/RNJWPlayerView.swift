@@ -1220,8 +1220,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         // TODO this was broken when using `.playlist(string)`
         do {
             let skinStyling = try skinStylingBuilder.build()
-            DispatchQueue.main.async { [self] in
-                playerViewController.styling = skinStyling
+            DispatchQueue.main.async { [weak self] in
+                // The view may have been torn down before this block runs.
+                guard let self = self, let pvc = self.playerViewController else { return }
+                pvc.styling = skinStyling
             }
         } catch {
             print(error)
@@ -1466,12 +1468,14 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             playerViewController = RNJWPlayerViewController()
             playerViewController.parentView = self
             
-            DispatchQueue.main.async { [self] in
+            DispatchQueue.main.async { [weak self] in
+                // The view may have been torn down before this block runs.
+                guard let self = self, let pvc = self.playerViewController else { return }
                 if self.reactViewController() != nil {
-                    self.reactViewController()!.addChild(self.playerViewController)
-                    self.playerViewController.didMove(toParent: self.reactViewController())
+                    self.reactViewController()!.addChild(pvc)
+                    pvc.didMove(toParent: self.reactViewController())
                 } else {
-                    self.reactAddController(toClosestParent: self.playerViewController)
+                    self.reactAddController(toClosestParent: pvc)
                 }
             }
             

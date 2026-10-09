@@ -58,10 +58,13 @@ target 'RNJWPlayer' do
     fmt_base = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'base.h')
     if File.exist?(fmt_base)
       contents = File.read(fmt_base)
-      patched = contents.gsub('#  define FMT_USE_CONSTEVAL 1', '#  define FMT_USE_CONSTEVAL 0')
+      patched = contents.gsub(/^(#\s*define\s+FMT_USE_CONSTEVAL\s+)1\b/, '\10')
       if patched != contents
         File.chmod(0644, fmt_base)
         File.write(fmt_base, patched)
+      elsif contents !~ /^#\s*define\s+FMT_USE_CONSTEVAL\s+0\b/
+        Pod::UI.warn 'fmt workaround did not apply: FMT_USE_CONSTEVAL not found in fmt/base.h. ' \
+                     'If the build fails with a consteval error, update the patch in the Podfile.'
       end
     end
   end

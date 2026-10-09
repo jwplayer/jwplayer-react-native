@@ -5,7 +5,9 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, min_ios_version_supported
+# RNJWPlayer.podspec requires iOS 15.6, above React Native's default minimum.
+$min_ios_version = '15.6'
+platform :ios, $min_ios_version
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
@@ -37,5 +39,30 @@ target 'RNJWPlayer' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        # Xcode 27 rejects deployment targets below its floor (Protobuf,
+        # google-cast-sdk, resource bundles). Raise them to the app minimum.
+        current = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if current.nil? || Gem::Version.new(current) < Gem::Version.new($min_ios_version)
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = $min_ios_version
+        end
+      end
+    end
+
+    # fmt 11.0.2 (pulled in by React Native) turns on consteval format strings,
+    # which Clang in Xcode 26.6+ rejects ("call to consteval function ... is not
+    # a constant expression"). fmt ignores a predefined FMT_USE_CONSTEVAL, so
+    # patch the downloaded header on every install to force it off.
+    fmt_base = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      contents = File.read(fmt_base)
+      patched = contents.gsub('#  define FMT_USE_CONSTEVAL 1', '#  define FMT_USE_CONSTEVAL 0')
+      if patched != contents
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, patched)
+      end
+    end
   end
 end

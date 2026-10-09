@@ -709,9 +709,9 @@ declare module "@jwplayer/jwplayer-react-native" {
       tag: 'EXT-X-DATERANGE';
       /** The `ID` attribute, when present. */
       id?: string;
-      start: number;
-      end: number;
-      duration: number;
+      start: number | null;
+      end: number | null;
+      duration: number | null;
       /** ISO 8601 */
       startDate?: string;
       /** ISO 8601 */
@@ -732,8 +732,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     programDateTime: string | null;
     metadata: {
       programDateTime: string | null;
-      start: number;
-      end: number;
+      start: number | null;
+      end: number | null;
       /** Raw tag text. @platform android */
       content?: string;
     };
@@ -765,8 +765,8 @@ declare module "@jwplayer/jwplayer-react-native" {
       identifier: string;
       /** Present when the identifier is an integer (always on Android). */
       id?: number;
-      start: number;
-      end: number;
+      start: number | null;
+      end: number | null;
     };
   }
 
@@ -779,9 +779,9 @@ declare module "@jwplayer/jwplayer-react-native" {
     metadataType: 'media';
     /** `null` for a non-finite (live) duration. @platform ios */
     duration?: number | null;
-    height?: number;
-    width?: number;
-    frameRate?: number;
+    height?: number | null;
+    width?: number | null;
+    frameRate?: number | null;
     /** @platform ios */
     seekRange?: { start: number | null; end: number | null };
     /** @platform ios */

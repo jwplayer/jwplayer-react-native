@@ -72,7 +72,7 @@ The **Metadata Events** screen in the [Example app](../Example/app/jsx/screens/M
 
 The web player also emits `scte-35` (for `#EXT-X-CUE-OUT` / `#EXT-X-CUE-IN` tags) and `discontinuity`. Neither native SDK exposes those, so they are not part of this API. SCTE-35 markers carried in `#EXT-X-DATERANGE` attributes **are** delivered, inside `date-range` events.
 
-JWPlayerKit 4.28.0 did not dispatch the playback-time `external` event on iOS (SDK 12315). From 4.28.1, which this wrapper pins, it fires on both platforms, and `onMetadataCueParsed` fires once per item on iOS.
+JWPlayerKit 4.28.0 did not dispatch the playback-time `external` event on iOS (SDK 12315). From 4.28.1 (this wrapper uses 4.28.2) it fires on both platforms, and `onMetadataCueParsed` fires once per item on iOS.
 
 ---
 

@@ -32,8 +32,8 @@ let package = Package(
         .package(name: "ReactNative", path: "../../../../xcframeworks"),
         .package(name: "React-GeneratedCode", path: "../../../ios"),
         .package(url: "https://github.com/jwplayer/JWPlayerKit-package.git", exact: "4.28.2"),
-        .package(url: "https://github.com/googleads/swift-package-manager-google-interactive-media-ads-ios.git", exact: "3.32.0"),
-        .package(url: "https://github.com/googlecast/google-cast-ios-sdk.git", exact: "4.8.6"),
+        .package(url: "https://github.com/googleads/swift-package-manager-google-interactive-media-ads-ios.git", .upToNextMinor(from: "3.32.0")),
+        .package(url: "https://github.com/googlecast/google-cast-ios-sdk.git", .upToNextMinor(from: "4.8.6")),
     ],
     targets: [
         .target(
@@ -44,7 +44,7 @@ let package = Package(
                 .product(name: "GoogleCastStatic", package: "google-cast-ios-sdk"),
             ],
             path: "RNJWPlayer",
-            exclude: ["RNJWPlayerViewManager.m", "RNJWPlayer-Bridging-Header.h"],
+            exclude: ["RNJWPlayer-Bridging-Header.h"],
             swiftSettings: [
                 .define("USE_GOOGLE_IMA"),
                 .define("USE_GOOGLE_CAST"),

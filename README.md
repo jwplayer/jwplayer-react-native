@@ -100,6 +100,16 @@ Follow these steps to add the library to your iOS project:
 > [!NOTE]
 > This version of the wrapper uses JWPlayerKit 4.28.2, the final iOS SDK version published to CocoaPods. Later iOS SDK versions are distributed through Swift Package Manager only.
 
+#### Swift Package Manager (React Native 0.88+, experimental)
+
+React Native 0.88 can build iOS apps with Swift Package Manager instead of CocoaPods. The wrapper ships an `ios/Package.swift` for React Native's SPM autolinking, and the Example app in this repo builds this way. To try it in your app:
+
+1. Run `npx react-native spm --deintegrate` in your `ios/` folder (React Native's migration command), then build from the `.xcodeproj`.
+2. Keep the stub `ios/Podfile` the migration leaves behind; the React Native CLI uses it to find the iOS project.
+3. Community libraries that don't ship a `Package.swift` need one generated with `npx react-native spm scaffold` and kept with `patch-package` (see `Example/patches`).
+
+On this path Google IMA and Google Cast are always included, and the minimum iOS version is 16.0 (Google Cast's SPM package requires it). React Native's SPM support is still experimental; CocoaPods remains the supported path for this release.
+
 For more details and guidance regarding configuration and requirements, see the [JWX iOS SDK documentation](https://docs.jwplayer.com/players/docs/ios-overview#requirements).
 
 <br /><br />

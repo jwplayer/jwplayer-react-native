@@ -26,6 +26,11 @@ android {
     compileSdkVersion safeExtGet('compileSdkVersion', 28)
     buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
 
+    buildFeatures {
+        // AGP 9 (React Native 0.88+) rejects buildConfigField unless this is on.
+        buildConfig true
+    }
+
     defaultConfig {
         minSdkVersion safeExtGet('minSdkVersion', 16)
         targetSdkVersion safeExtGet('targetSdkVersion', 28)

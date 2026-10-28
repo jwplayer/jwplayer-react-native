@@ -41,5 +41,8 @@
   },
   "dependencies": {
     "lodash.isequalwith": "^4.4.0"
+  },
+  "swiftpmConfig": {
+    "name": "RNJWPlayer"
   }
 }

@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.homepage     = package['homepage']
   s.platform     = :ios, "15.6"
   s.source       = { :git => "https://github.com/jwplayer/jwplayer-react-native.git", :tag => "v#{s.version}" }
-  s.source_files  = "ios/RNJWPlayer/*.{h,m,swift}"
+  s.source_files  = "ios/RNJWPlayer/*.{h,m,swift}", "ios/RNJWPlayerObjC/*.m"
   if defined?($RNJWPlayerUseLocalSDK)
     Pod::UI.puts "RNJWPlayer: using local JWPlayerKit.xcframework"
     s.vendored_frameworks = 'ios/frameworks/JWPlayerKit.xcframework'

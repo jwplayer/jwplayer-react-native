@@ -747,6 +747,14 @@ code as informational rather than as a failed ad request:
 />
 ```
 
+### 7. Stalled IMA Ads End and Content Resumes (iOS)
+
+On iOS before 26.6, WebKit can terminate the web content process running an IMA
+ad session, which used to leave the player stuck on the ad. Starting with
+JWPlayerKit 4.28.2 the player ends that ad, resumes content, and reports
+`onPlayerAdWarning` with `code: 70014`. Like `70013`, treat it as informational:
+the ad did not complete, but playback recovered on its own.
+
 ---
 
 ## Summary Table

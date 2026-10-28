@@ -97,6 +97,9 @@ Follow these steps to add the library to your iOS project:
    pod install
    ```
 
+> [!NOTE]
+> This version of the wrapper uses JWPlayerKit 4.28.2, the final iOS SDK version published to CocoaPods. Later iOS SDK versions are distributed through Swift Package Manager only.
+
 For more details and guidance regarding configuration and requirements, see the [JWX iOS SDK documentation](https://docs.jwplayer.com/players/docs/ios-overview#requirements).
 
 <br /><br />

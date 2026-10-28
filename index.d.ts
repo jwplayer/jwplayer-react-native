@@ -617,6 +617,9 @@ declare module "@jwplayer/jwplayer-react-native" {
      * Native SDK warning code. Notable ad-warning codes on iOS:
      * - `70013` (JWPlayerKit 4.28.0+): an IMA ad break was skipped because a
      *   Chromecast session is active. Informational; there is no opt-out.
+     * - `70014` (JWPlayerKit 4.28.2+): an IMA ad stopped responding (iOS before
+     *   26.6 can terminate the ad's WebKit process), so the player ended the ad
+     *   and resumed content. Informational.
      */
     code?: number;
     warning?: string;

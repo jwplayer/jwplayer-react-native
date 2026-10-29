@@ -27,7 +27,7 @@ android {
     buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
 
     buildFeatures {
-        // AGP 9 (React Native 0.88+) rejects buildConfigField unless this is on.
+        // AGP 8+ turns BuildConfig generation off by default; buildConfigField needs it on.
         buildConfig true
     }
 

@@ -1,6 +1,6 @@
 // swift-tools-version: 6.0
 // Swift Package Manager manifest for React Native's SPM autolinking (React Native 0.88+).
-// CocoaPods apps keep using RNJWPlayer.podspec.
+// CocoaPods apps use RNJWPlayer.podspec, which stays on JWPlayerKit 4.28.2 (the final CocoaPods release).
 //
 // The ReactNative and React-GeneratedCode paths follow React Native's autolinking layout:
 // the app references this package (the wrapper's ios/ directory) through

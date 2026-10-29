@@ -102,14 +102,14 @@ Follow these steps to add the library to your iOS project:
 
 #### Migrating to Swift Package Manager (React Native 0.88+)
 
-React Native 0.88 can build iOS apps with Swift Package Manager instead of CocoaPods. The wrapper ships an `ios/Package.swift` for React Native's SPM autolinking, and the Example app in this repo is built this way as a reference.
+React Native 0.88 can build iOS apps with Swift Package Manager instead of CocoaPods. Starting with the first wrapper release after 1.9.1, the wrapper ships an `ios/Package.swift` for React Native's SPM autolinking. Until that release, use this repo's `master` branch and the Example app (which is built this way) as the reference.
 
 1. Upgrade your app to React Native 0.88 or later.
 2. In your `ios/` folder, run `npx react-native spm --deintegrate` (React Native's migration command), then build from the `.xcodeproj`.
 3. Keep the stub `ios/Podfile` the migration leaves behind; the React Native CLI uses it to find the iOS project.
 4. Community libraries that don't ship a `Package.swift` need one generated with `npx react-native spm scaffold` and kept with `patch-package` (see `Example/patches`).
 
-On this path Google IMA and Google Cast are always included, and the minimum iOS version is 16.0 (Google Cast's Swift package requires it). React Native's Swift Package Manager support is still marked experimental by React Native.
+On this path Google IMA and Google Cast are always included, which adds to your app's size, and the minimum iOS version is 16.0 (Google Cast's Swift package requires it). Because Cast is always linked, add the `Info.plist` values listed under [iOS Casting](#ios-casting). React Native's Swift Package Manager support is still marked experimental by React Native.
 
 For more details and guidance regarding configuration and requirements, see the [JWX iOS SDK documentation](https://docs.jwplayer.com/players/docs/ios-overview#requirements).
 

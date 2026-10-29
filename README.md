@@ -97,8 +97,19 @@ Follow these steps to add the library to your iOS project:
    pod install
    ```
 
-> [!NOTE]
-> This version of the wrapper uses JWPlayerKit 4.28.2, the final iOS SDK version published to CocoaPods. Later iOS SDK versions are distributed through Swift Package Manager only.
+> [!IMPORTANT]
+> **iOS is moving from CocoaPods to Swift Package Manager.** JWPlayerKit 4.28.2 is the final iOS SDK version published to CocoaPods, and wrapper 1.9.1 is the last release that installs it through CocoaPods. Later iOS SDK versions are published only through Swift Package Manager, and future wrapper releases will require it. If your iOS app still uses CocoaPods for this wrapper, plan to migrate to Swift Package Manager before taking a wrapper release after 1.9.1.
+
+#### Migrating to Swift Package Manager (React Native 0.88+)
+
+React Native 0.88 can build iOS apps with Swift Package Manager instead of CocoaPods. Starting with the first wrapper release after 1.9.1, the wrapper ships an `ios/Package.swift` for React Native's SPM autolinking. Until that release, use this repo's `master` branch and the Example app (which is built this way) as the reference.
+
+1. Upgrade your app to React Native 0.88 or later.
+2. In your `ios/` folder, run `npx react-native spm --deintegrate` (React Native's migration command), then build from the `.xcodeproj`.
+3. Keep the stub `ios/Podfile` the migration leaves behind; the React Native CLI uses it to find the iOS project.
+4. Community libraries that don't ship a `Package.swift` need one generated with `npx react-native spm scaffold` and kept with `patch-package` (see `Example/patches`).
+
+On this path Google IMA and Google Cast are always included, which adds to your app's size, and the minimum iOS version is 16.0 (Google Cast's Swift package requires it). Because Cast is always linked, add the `Info.plist` values listed under [iOS Casting](#ios-casting). React Native's Swift Package Manager support is still marked experimental by React Native.
 
 For more details and guidance regarding configuration and requirements, see the [JWX iOS SDK documentation](https://docs.jwplayer.com/players/docs/ios-overview#requirements).
 

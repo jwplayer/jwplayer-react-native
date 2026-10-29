@@ -34,7 +34,7 @@
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libRNJWPlayer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNJWPlayer.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A9166FD21064DE100152DD3 /* JWPlayer_iOS_SDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JWPlayer_iOS_SDK.framework; path = "../../../ios/Pods/JWPlayer-SDK/JWPlayer_iOS_SDK.framework"; sourceTree = "<group>"; };
-		2AA52BE226C144B200AD26AE /* RNJWPlayerViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RNJWPlayerViewManager.m; path = RNJWPlayer/RNJWPlayerViewManager.m; sourceTree = "<group>"; };
+		2AA52BE226C144B200AD26AE /* RNJWPlayerViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RNJWPlayerViewManager.m; path = RNJWPlayerObjC/RNJWPlayerViewManager.m; sourceTree = "<group>"; };
 		3BC75FCB1E43B1DB0011FBAA /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		3BC75FD01E43B3090011FBAA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		860F49F92B38AD1D00D0FCC4 /* RNJWPlayerAds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RNJWPlayerAds.swift; path = RNJWPlayer/RNJWPlayerAds.swift; sourceTree = "<group>"; };

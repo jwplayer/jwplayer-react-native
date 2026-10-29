@@ -6,7 +6,7 @@
 
 #import <JWPlayerKit/JWPlayerKit-Swift.h>
 
-#import "RCTUIManager.h"
+#import <React/RCTUIManager.h>
 
 @interface RCT_EXTERN_MODULE(RNJWPlayerViewManager, RCTViewManager)
 

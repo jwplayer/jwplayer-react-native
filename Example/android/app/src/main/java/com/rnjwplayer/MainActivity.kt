@@ -41,7 +41,7 @@ class MainActivity : ReactActivity() {
         fabricEnabled: Boolean
     ) :
         DefaultReactActivityDelegate(activity, mainComponentName, fabricEnabled) {
-        override fun loadApp(appKey: String) {
+        override fun loadApp(appKey: String?) {
             RNBootSplash.init(plainActivity, R.style.BootTheme)
             super.loadApp(appKey)
         }

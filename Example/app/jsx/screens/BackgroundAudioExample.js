@@ -65,7 +65,10 @@ export default () => {
       <Text style={styles.label}>Liked: {liked ? 'yes' : 'no'}</Text>
       <Pressable
         style={styles.button}
-        onPress={() => playerRef.current?.setNotificationButtons([])}>
+        onPress={() => {
+          playerRef.current?.setNotificationButtons([]);
+          setLiked(false);
+        }}>
         <Text style={styles.buttonText}>Remove notification buttons</Text>
       </Pressable>
       {log.map((line, i) => (

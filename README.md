@@ -449,9 +449,13 @@ Follow these steps to enable background audio sessions:
 On Android, the media notification and lock-screen controls update automatically when you call `setPlaylistItemMetadata`. The `refreshNotification` option of `setPlaylistItemMetadata` is **deprecated**: it is no longer needed, is ignored, and is slated for removal.
 
 #### Android: Custom Notification Buttons
-Add your own buttons (for example Like or Bookmark) to the background-audio notification and lock-screen controls with `notificationButtons`. Each button needs an `id`, a `title`, and an `icon`: the name of a drawable resource in your Android app (for example `ic_like` for `android/app/src/main/res/drawable/ic_like.xml`). Taps arrive on `onNotificationButtonClick` with the button's `id`. Change the buttons at any time, for example to show a "liked" state, with `setNotificationButtons`; pass `[]` to remove them.
+Add your own buttons (for example Like or Bookmark) to the background-audio notification and lock-screen controls with `notificationButtons`. Each button needs an `id`, a `title`, and an `icon`: the name of a drawable resource in your Android app (for example `ic_like` for `android/app/src/main/res/drawable/ic_like.xml`). Taps arrive on `onNotificationButtonClick` with the button's `id`. Change the buttons at any time, for example to show a "liked" state, with `setNotificationButtons`; pass `[]` to remove them. Omitting `notificationButtons` from a later config keeps the current buttons; to clear them, pass `[]` (in the config or to `setNotificationButtons`).
+
+The buttons belong to the background-audio service, which is shared by every player in the app: they apply to the first player that starts the service, and other players share that service (and its buttons) rather than adding their own.
 
 ```javascript
+const [liked, setLiked] = useState(false);
+
 const buttons = liked => [
   { id: 'like', icon: 'ic_like', title: liked ? 'Unlike' : 'Like', inCompactView: true },
   { id: 'bookmark', icon: 'ic_bookmark', title: 'Bookmark' },
@@ -462,18 +466,20 @@ const buttons = liked => [
   config={{ ...config, backgroundAudioEnabled: true, notificationButtons: buttons(false) }}
   onNotificationButtonClick={({ nativeEvent }) => {
     if (nativeEvent.id === 'like') {
-      playerRef.current.setNotificationButtons(buttons(true));
+      const next = !liked;
+      setLiked(next);
+      playerRef.current.setNotificationButtons(buttons(next));
     }
   }}
 />
 ```
 
-Optional per button: `enabled` (default `true`), `inCompactView` (show in the collapsed notification, Android 12 and below) and `placement` (`"overflow"`, `"back"` or `"forward"`, a hint for the system media controls). The system decides how many buttons it shows, usually 3 to 5 including play/pause: put the important ones first. Android 13 and later hide disabled buttons and ignore `inCompactView`. Buttons whose icon cannot be found are skipped with a logcat warning. Keep the `config` object stable between renders (for example with `useMemo`); change buttons with `setNotificationButtons` rather than by rebuilding the config.
+Optional per button: `enabled` (default `true`; a disabled button keeps its place but does nothing when tapped), `inCompactView` (show in the collapsed notification, Android 12 and below) and `placement` (`"overflow"`, `"back"` or `"forward"`, a hint for the system media controls). The system decides how many buttons it shows, usually 3 to 5 including play/pause: put the important ones first. Android 13 and later hide disabled buttons and ignore `inCompactView`. Buttons whose icon cannot be found are skipped with a logcat warning. Keep the `config` object stable between renders (for example with `useMemo`); change buttons with `setNotificationButtons` rather than by rebuilding the config, and call it only when the buttons change (memoize the array with `useMemo` if you build it during render).
 
 This is Android-only; on iOS these options are ignored.
 
 #### Android: Audio Focus
-By default this library handles audio focus itself when `backgroundAudioEnabled` is `true`, as in earlier versions. Set `audioFocusHandling: "sdk"` to let the JW Android SDK manage it instead: it requests focus whenever content or an ad plays (with or without background audio), pauses when another app takes focus permanently, pauses and resumes for short interruptions such as a voice assistant prompt or a call, and lets the system lower the volume for navigation prompts. Focus changes are reported on `onAudioFocusChange` (`gained`, `lost`, `lostTransient`, `duck`). The two modes never run together.
+By default this library handles audio focus itself when `backgroundAudioEnabled` is `true`, as in earlier versions. Set `audioFocusHandling: "sdk"` to let the JW Android SDK manage it instead: it requests focus whenever content or an ad plays (with or without background audio), pauses when another app takes focus permanently, pauses and resumes for short interruptions such as a voice assistant prompt or a call, and lets the system lower the volume for navigation prompts (below Android 8.0 the SDK pauses and resumes for those instead). Omitting `audioFocusHandling` from a later config switches back to the default handling. Focus changes are reported on `onAudioFocusChange` (`gained`, `lost`, `lostTransient`, `duck`). The two modes never run together.
 
 ```javascript
 <JWPlayer

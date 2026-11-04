@@ -33,7 +33,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     /**
      * **Android only.** Extra buttons for the background-audio notification and lock-screen
      * controls (needs `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
-     * Change them later with `setNotificationButtons`.
+     * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
+     * current buttons; pass `[]` to clear them. The buttons belong to the background-audio
+     * service, which is shared: they apply to the first player that starts it, and other players
+     * share that service and its buttons.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -42,9 +45,12 @@ declare module "@jwplayer/jwplayer-react-native" {
      *   when `backgroundAudioEnabled` is `true`.
      * - `"sdk"`: the JW Android SDK requests focus whenever content or an ad plays, pauses on
      *   a permanent loss, pauses and resumes on a transient loss (assistant prompt, call), and
-     *   lets the system duck the volume for navigation prompts. Changes are reported on
+     *   lets the system duck the volume for navigation prompts (below Android 8.0 a `duck` request
+     *   pauses and resumes like a transient loss instead). Changes are reported on
      *   `onAudioFocusChange`; pauses it makes have `reason: "audio-interruption"`. The bridge's
      *   own handling is switched off, so the two never react to the same change.
+     *
+     * Omitting this in a later config resets it to `"bridge"`.
      *
      * Independent of this setting, the Android player always pauses when headphones or a
      * Bluetooth audio device disconnect.
@@ -505,7 +511,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     /**
      * **Android only.** Extra buttons for the background-audio notification and lock-screen
      * controls (needs `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
-     * Change them later with `setNotificationButtons`.
+     * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
+     * current buttons; pass `[]` to clear them. The buttons belong to the background-audio
+     * service, which is shared: they apply to the first player that starts it, and other players
+     * share that service and its buttons.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -514,9 +523,12 @@ declare module "@jwplayer/jwplayer-react-native" {
      *   when `backgroundAudioEnabled` is `true`.
      * - `"sdk"`: the JW Android SDK requests focus whenever content or an ad plays, pauses on
      *   a permanent loss, pauses and resumes on a transient loss (assistant prompt, call), and
-     *   lets the system duck the volume for navigation prompts. Changes are reported on
+     *   lets the system duck the volume for navigation prompts (below Android 8.0 a `duck` request
+     *   pauses and resumes like a transient loss instead). Changes are reported on
      *   `onAudioFocusChange`; pauses it makes have `reason: "audio-interruption"`. The bridge's
      *   own handling is switched off, so the two never react to the same change.
+     *
+     * Omitting this in a later config resets it to `"bridge"`.
      *
      * Independent of this setting, the Android player always pauses when headphones or a
      * Bluetooth audio device disconnect.
@@ -664,7 +676,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     icon: string;
     /** Accessibility label and text shown where the system shows text. */
     title: string;
-    /** Default `true`. A disabled button is shown greyed out (Android 12 and below) or hidden. */
+    /**
+     * Default `true`. A disabled button keeps its place in the notification but does nothing when
+     * tapped. Android 13+ system media controls don't show it.
+     */
     enabled?: boolean;
     /** Show in the collapsed notification (Android 12 and below). Default `false`. */
     inCompactView?: boolean;
@@ -672,7 +687,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     placement?: "overflow" | "back" | "forward";
   }
   interface AudioFocusChangeEventProps {
-    /** `lostTransient`: e.g. an assistant prompt or a call. `duck` is only reported below Android 8.0. */
+    /**
+     * `lostTransient`: e.g. an assistant prompt or a call. `duck` is only reported below
+     * Android 8.0, where the player pauses and resumes as for `lostTransient`.
+     */
     change: "gained" | "lost" | "lostTransient" | "duck";
   }
   interface NotificationButtonClickEventProps {
@@ -1155,12 +1173,6 @@ declare module "@jwplayer/jwplayer-react-native" {
      *   that restarted the background-audio service so the notification showed new metadata.
      *   The SDK now refreshes the notification itself. Safe to remove from call sites.
      */
-    /**
-     * **Android only; no-op on iOS.** Replaces the custom background-audio notification buttons
-     * (see `notificationButtons` in the config). Takes effect immediately while background audio
-     * is running. Pass `[]` to remove them.
-     */
-    setNotificationButtons(buttons: NotificationButtonConfig[]): void;
     setPlaylistItemMetadata(metadata: {
         title?: string | null;
         description?: string | null;
@@ -1168,6 +1180,16 @@ declare module "@jwplayer/jwplayer-react-native" {
         /** @deprecated Ignored and slated for removal. The notification refreshes automatically on Android. */
         refreshNotification?: boolean;
     }): void;
+    /**
+     * **Android only; no-op on iOS.** Replaces the custom background-audio notification buttons
+     * (see `notificationButtons` in the config). Takes effect immediately while background audio
+     * is running. Pass `[]` to remove them.
+     *
+     * Each call rebuilds the notification, so call it when the buttons actually change (e.g. in
+     * a click handler), not on every render; if you derive the array in render, memoize it with
+     * `useMemo` and only pass a new array when its contents change.
+     */
+    setNotificationButtons(buttons: NotificationButtonConfig[]): void;
     setFullscreen(fullScreen: boolean): void;
     /**
      * Declares app views drawn over the player as OMID friendly obstructions so they don't

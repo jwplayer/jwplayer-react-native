@@ -587,6 +587,25 @@ declare module "@jwplayer/jwplayer-react-native" {
     | "external";
   /** @deprecated Use {@link FullScreenExitReasonIOS} or {@link FullScreenExitReasonAndroid} directly. This alias now covers both platforms' wire formats — it widened when Android started reporting a reason too, so existing code typed against the old iOS-only union should narrow by platform rather than relying on this alias remaining iOS-only. */
   type FullScreenExitReason = FullScreenExitReasonIOS | FullScreenExitReasonAndroid;
+  /**
+   * Why playback paused (`onPause` event `reason`). Both platforms use these values.
+   * `audio-interruption` is Android-only: headphones or a Bluetooth audio device disconnected,
+   * or (when the SDK manages audio focus) another app took audio focus. iOS reports such
+   * pauses as `external` or `unknown`. Unrecognized values may be added by future SDKs.
+   */
+  type PauseReason =
+    | "external"
+    | "interaction"
+    | "clickthrough"
+    | "viewable"
+    | "settingsInteraction"
+    | "related-interaction"
+    | "autostart"
+    | "audio-interruption"
+    | "unknown";
+  interface PauseEventProps {
+    reason?: PauseReason;
+  }
   interface FullScreenExitEventProps {
     /**
      * Reason fullscreen was exited. Present on iOS (SDK 4.28.0+) and Android;
@@ -902,7 +921,7 @@ declare module "@jwplayer/jwplayer-react-native" {
     onBeforeComplete?: () => void;
     onComplete?: () => void;
     onPlay?: () => void;
-    onPause?: () => void;
+    onPause?: (event?: BaseEvent<PauseEventProps>) => void;
     onSeek?: (event: BaseEvent<SeekEventProps>) => void;
     onSeeked?: (event?: BaseEvent<SeekedEventProps>) => void;
     onRateChanged?: (event?: BaseEvent<RateChangedEventProps>) => void;

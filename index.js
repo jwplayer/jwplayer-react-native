@@ -683,6 +683,11 @@ export default class JWPlayer extends Component {
 			RNJWPlayerManager.loadPlaylistWithUrl(this.getRNJWPlayerBridgeHandle(), playlistUrl);
 	}
 
+	/**
+	 * Updates the current playlist item's title / description / image.
+	 * `metadata.refreshNotification` is deprecated and ignored: on Android the background-audio
+	 * notification refreshes automatically.
+	 */
 	setPlaylistItemMetadata(metadata) {
 		if (!RNJWPlayerManager) return;
 		const {

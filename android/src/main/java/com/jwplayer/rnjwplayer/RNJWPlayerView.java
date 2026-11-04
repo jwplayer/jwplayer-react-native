@@ -2078,6 +2078,10 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onPause(PauseEvent pauseEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onPause");
+        // Same wire values as iOS (see PauseReason in index.d.ts), e.g. "interaction",
+        // "external", "audio-interruption".
+        event.putString("reason", pauseEvent.getPauseReason() != null
+                ? pauseEvent.getPauseReason().toString() : "unknown");
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPause", event);
 
         updateWakeLock(false);

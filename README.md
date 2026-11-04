@@ -442,44 +442,28 @@ Follow these steps to enable background audio sessions:
 
 1. Set `backgroundAudioEnabled` to `true` in the `config`.
 2. Ensure that background audio is set for [Android](https://docs.jwplayer.com/players/docs/android-enable-background-audio) or [iOS](https://docs.jwplayer.com/players/docs/ios-player-backgrounding-reference#configure-audio-playback).
-3. **Android 13 (API 33) and later:** declare `android.permission.POST_NOTIFICATIONS` in your app's manifest and request it at runtime (for example with `PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS)`). Without it, background playback still works, but the media notification and lock-screen controls are not shown. This library already declares `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_MEDIA_PLAYBACK` for you.
+3. **Android 13 (API 33) and later:** declare `android.permission.POST_NOTIFICATIONS` in your app's manifest and request it at runtime (for example with `PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS)`). Without it, background playback still works, but the media notification and lock-screen controls are not shown. This library already declares `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_MEDIA_PLAYBACK` for you. If background audio does not start, check logcat: the SDK's `MediaService` logs an error naming any missing permission.
 
 On Android, the media notification and lock-screen controls update automatically when you call `setPlaylistItemMetadata`. The old `refreshNotification` option is no longer needed and is ignored.
 
 #### Android Opt-Out Information
-Suppose you are **not** using the background audio service on Android. In that case, you will need to modify the [manifest](https://github.com/jwplayer/jwplayer-react-native/blob/master/android/src/main/AndroidManifest.xml) from our library (either in the node_modules, or in your fork before compilation) so as not to register a service that you will never use. Google can and will reject your Play Store submission if this is skipped. See the modified manifest below, which shows what to remove (commented-out permissions and services). Additionally, once this is done, you can never set `backgroundAudioEnabled` to true on Android, or you will run into a fatal crash.
+If you do **not** use background audio on Android, remove the background-audio permissions and service from your app. Google can and will reject your Play Store submission if an app declares the foreground-service media-playback permission without using it.
 
-Since JW Android SDK 4.28.0 (this library's Android dependency), the SDK's own manifest also declares the `MediaService`, so commenting it out here does not remove it from your merged manifest. What matters for Play Store review is the two foreground-service permissions above. To remove the service from your app entirely, add a `tools:node="remove"` entry for `com.jwplayer.pub.api.background.MediaService` in your app's manifest.
+Since JW Android SDK 4.28.0 (this library's Android dependency), the `MediaService` is declared by both this library's manifest and the SDK's own manifest, so editing this library's manifest is not enough. Remove them in **your app's** `AndroidManifest.xml` with `tools:node="remove"`:
 
 ```xml
-
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.jwplayer.rnjwplayer">
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> -->
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <!-- <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" /> -->
-    <!--    READ_MEDIA_IMAGES, READ_MEDIA_VIDEO or READ_MEDIA_AUDIO.-->
+          xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" tools:node="remove" />
 
     <application>
-        <!-- <service
-            android:name="com.jwplayer.pub.api.background.MediaService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
-            </intent-filter>
-        </service> -->
+        <service android:name="com.jwplayer.pub.api.background.MediaService" tools:node="remove" />
     </application>
-
 </manifest>
-  
 ```
+
+After doing this, do not set `backgroundAudioEnabled` to `true` on Android: the player cannot bind the removed service, so background playback and its notification will not work (the SDK logs a "Could not bind ... MediaService" warning).
 
 <br /><br />
 

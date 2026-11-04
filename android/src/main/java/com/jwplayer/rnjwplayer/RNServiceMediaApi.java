@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableType;
 import com.jwplayer.pub.api.JWPlayer;
 import com.jwplayer.pub.api.background.NotificationButton;
 import com.jwplayer.pub.api.background.ServiceMediaApi;
@@ -105,8 +106,9 @@ class RNServiceMediaApi extends ServiceMediaApi {
     }
 
     /**
-     * Parses the JS button list. Entries without an id, title or icon are dropped with a
-     * warning; duplicate ids keep the first entry.
+     * Parses the JS button list. Never throws: entries that aren't objects, or lack a string
+     * id, title or icon, are dropped with a warning; optional fields of the wrong type fall back
+     * to their defaults; duplicate ids keep the first entry.
      */
     @NonNull
     static List<ButtonSpec> parse(@Nullable ReadableArray array) {
@@ -116,36 +118,65 @@ class RNServiceMediaApi extends ServiceMediaApi {
         List<ButtonSpec> specs = new ArrayList<>();
         List<String> seen = new ArrayList<>();
         for (int i = 0; i < array.size(); i++) {
-            ReadableMap m = array.getMap(i);
-            if (m == null) {
-                continue;
-            }
-            String id = m.hasKey("id") ? m.getString("id") : null;
-            String icon = m.hasKey("icon") ? m.getString("icon") : null;
-            String title = m.hasKey("title") ? m.getString("title") : null;
-            if (id == null || id.isEmpty() || icon == null || title == null) {
-                Log.w(TAG, "Notification button at index " + i
-                        + " skipped: id, icon and title are required");
-                continue;
-            }
-            if (seen.contains(id)) {
-                Log.w(TAG, "Notification button '" + id + "' skipped: duplicate id");
-                continue;
-            }
-            seen.add(id);
-            boolean enabled = !m.hasKey("enabled") || m.getBoolean("enabled");
-            boolean inCompactView = m.hasKey("inCompactView") && m.getBoolean("inCompactView");
-            int placement = NotificationButton.PLACEMENT_OVERFLOW;
-            if (m.hasKey("placement")) {
-                String p = m.getString("placement");
+            try {
+                if (array.getType(i) != ReadableType.Map) {
+                    Log.w(TAG, "Notification button at index " + i + " skipped: not an object");
+                    continue;
+                }
+                ReadableMap m = array.getMap(i);
+                if (m == null) {
+                    continue;
+                }
+                String id = optString(m, "id");
+                String icon = optString(m, "icon");
+                String title = optString(m, "title");
+                if (id == null || id.isEmpty() || icon == null || title == null) {
+                    Log.w(TAG, "Notification button at index " + i
+                            + " skipped: id, icon and title are required strings");
+                    continue;
+                }
+                if (seen.contains(id)) {
+                    Log.w(TAG, "Notification button '" + id + "' skipped: duplicate id");
+                    continue;
+                }
+                seen.add(id);
+                boolean enabled = optBoolean(m, "enabled", true);
+                boolean inCompactView = optBoolean(m, "inCompactView", false);
+                int placement = NotificationButton.PLACEMENT_OVERFLOW;
+                String p = optString(m, "placement");
                 if ("back".equals(p)) {
                     placement = NotificationButton.PLACEMENT_BACK;
                 } else if ("forward".equals(p)) {
                     placement = NotificationButton.PLACEMENT_FORWARD;
                 }
+                specs.add(new ButtonSpec(id, icon, title, enabled, inCompactView, placement));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "Notification button at index " + i + " skipped: " + e.getMessage());
             }
-            specs.add(new ButtonSpec(id, icon, title, enabled, inCompactView, placement));
         }
         return specs;
+    }
+
+    /** The string at {@code key}, or null when it is missing, null or not a string. */
+    @Nullable
+    private static String optString(@NonNull ReadableMap m, @NonNull String key) {
+        if (!m.hasKey(key) || m.getType(key) != ReadableType.String) {
+            if (m.hasKey(key) && m.getType(key) != ReadableType.Null) {
+                Log.w(TAG, "Notification button field '" + key + "' ignored: expected a string");
+            }
+            return null;
+        }
+        return m.getString(key);
+    }
+
+    /** The boolean at {@code key}, or {@code fallback} when it is missing, null or not a boolean. */
+    private static boolean optBoolean(@NonNull ReadableMap m, @NonNull String key, boolean fallback) {
+        if (!m.hasKey(key) || m.getType(key) != ReadableType.Boolean) {
+            if (m.hasKey(key) && m.getType(key) != ReadableType.Null) {
+                Log.w(TAG, "Notification button field '" + key + "' ignored: expected a boolean");
+            }
+            return fallback;
+        }
+        return m.getBoolean(key);
     }
 }

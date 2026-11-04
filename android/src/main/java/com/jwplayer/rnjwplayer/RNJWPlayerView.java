@@ -314,6 +314,9 @@ public class RNJWPlayerView extends RelativeLayout implements
             mMediaServiceController.unbindService();
             mMediaServiceController = null;
         }
+        // The ServiceMediaApi belongs to the unbound controller; drop it so setNotificationButtons
+        // doesn't poke a dead service and the old player isn't retained.
+        mServiceMediaApi = null;
     }
 
     private static boolean contextHasBug(Context context) {
@@ -468,6 +471,13 @@ public class RNJWPlayerView extends RelativeLayout implements
 
             // Remove playlist item callback listener
             mPlayer.removePlaylistItemCallbackListener();
+
+            // Detach the SDK audio-focus listener so the destroyed player can't call back into this view.
+            try {
+                mPlayer.getExoPlayerSettings().setAudioFocusListener(null);
+            } catch (Exception e) {
+                Log.w(TAG, "Couldn't clear the SDK audio-focus listener", e);
+            }
 
             mPlayer.removeListeners(this,
                     // VideoPlayerEvents
@@ -1621,6 +1631,7 @@ public class RNJWPlayerView extends RelativeLayout implements
             }
         }
         hasAudioFocus = false;
+        wasInterrupted = false;
     }
 
     /**
@@ -1628,9 +1639,9 @@ public class RNJWPlayerView extends RelativeLayout implements
      * its changes on onAudioFocusChange); anything else keeps the bridge's own handling.
      */
     private void applyAudioFocusHandling(@Nullable ReadableMap prop) {
-        if (prop != null && prop.hasKey("audioFocusHandling")) {
-            sdkAudioFocusHandling = "sdk".equals(prop.getString("audioFocusHandling"));
-        }
+        // Omitting audioFocusHandling (or any value but "sdk") means the bridge's own handling.
+        sdkAudioFocusHandling = prop != null && prop.hasKey("audioFocusHandling")
+                && "sdk".equals(prop.getString("audioFocusHandling"));
         if (mPlayer == null) {
             return;
         }
@@ -2175,8 +2186,8 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onPause(PauseEvent pauseEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onPause");
-        // Same wire values as iOS (see PauseReason in index.d.ts), e.g. "interaction",
-        // "external", "audio-interruption".
+        // Same wire values as iOS where both platforms report a reason (see PauseReason in
+        // index.d.ts), e.g. "interaction", "external". "audio-interruption" is Android-only.
         event.putString("reason", pauseEvent.getPauseReason() != null
                 ? pauseEvent.getPauseReason().toString() : "unknown");
         getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPause", event);

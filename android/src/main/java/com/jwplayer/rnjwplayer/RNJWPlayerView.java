@@ -305,8 +305,34 @@ public class RNJWPlayerView extends RelativeLayout implements
     private void emitNotificationButtonClick(String id) {
         WritableMap event = Arguments.createMap();
         event.putString("id", id);
-        getReactContext().getJSModule(RCTEventEmitter.class)
-                .receiveEvent(getId(), "topNotificationButtonClick", event);
+        emitImmediateEvent("onNotificationButtonClick", event);
+    }
+
+    /**
+     * Name of the module-level device event that carries {@code onNotificationButtonClick} and
+     * {@code onAudioFocusChange}. The JS component subscribes to it and calls the matching prop.
+     */
+    static final String IMMEDIATE_EVENT = "RNJWPlayerImmediateEvent";
+
+    /**
+     * Sends a view event as a device event instead of a view (RCTEventEmitter) event.
+     *
+     * <p>View events go through the event dispatcher, which flushes on Choreographer frames. While
+     * the app is in the background no frames are drawn, so a tap on a notification button (or an
+     * audio-focus change) would sit in the queue until the app comes back to the foreground. Device
+     * events are posted straight to the JS thread, so they arrive while backgrounded. Each event is
+     * sent exactly once, on this path only, so the prop is never called twice.
+     */
+    private void emitImmediateEvent(String handlerName, WritableMap payload) {
+        WritableMap event = Arguments.createMap();
+        event.putInt("reactTag", getId());
+        event.putString("handler", handlerName);
+        event.putMap("payload", payload);
+        ThemedReactContext themed = getReactContext();
+        ReactApplicationContext context = themed != null ? themed.getReactApplicationContext() : null;
+        if (context != null && context.hasActiveReactInstance()) {
+            context.emitDeviceEvent(IMMEDIATE_EVENT, event);
+        }
     }
 
     private void doUnbindService() {
@@ -1669,8 +1695,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         }
         WritableMap event = Arguments.createMap();
         event.putString("change", value);
-        getReactContext().getJSModule(RCTEventEmitter.class)
-                .receiveEvent(getId(), "topAudioFocusChange", event);
+        emitImmediateEvent("onAudioFocusChange", event);
     }
 
     public void requestAudioFocus() {

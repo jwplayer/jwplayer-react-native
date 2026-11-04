@@ -476,6 +476,10 @@ const buttons = liked => [
 
 Optional per button: `enabled` (default `true`; a disabled button keeps its place but does nothing when tapped), `inCompactView` (show in the collapsed notification, Android 12 and below) and `placement` (`"overflow"`, `"back"` or `"forward"`, a hint for the system media controls). The system decides how many buttons it shows, usually 3 to 5 including play/pause: put the important ones first. Android 13 and later hide disabled buttons and ignore `inCompactView`. Buttons whose icon cannot be found are skipped with a logcat warning. Keep the `config` object stable between renders (for example with `useMemo`); change buttons with `setNotificationButtons` rather than by rebuilding the config, and call it only when the buttons change (memoize the array with `useMemo` if you build it during render).
 
+Taps (and `onAudioFocusChange` events) are delivered to JavaScript straight away, including while the app is in the background, so the notification can be updated before the user returns to the app.
+
+`JWPlayer` calls the handler prop that is current when an event fires, so a handler that closes over state (like `liked` above) sees the latest render. One limitation: `JWPlayer` only re-renders when `config` or `controls` change, so an event handler prop added after mount (one that was `undefined` on earlier renders) is not registered until the next such re-render. Pass the handler from the first render, or make it a no-op until you need it.
+
 This is Android-only; on iOS these options are ignored.
 
 #### Android: Audio Focus

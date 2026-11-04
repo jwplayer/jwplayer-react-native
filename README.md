@@ -448,6 +448,45 @@ Follow these steps to enable background audio sessions:
 
 On Android, the media notification and lock-screen controls update automatically when you call `setPlaylistItemMetadata`. The `refreshNotification` option of `setPlaylistItemMetadata` is **deprecated**: it is no longer needed, is ignored, and is slated for removal.
 
+#### Android: Custom Notification Buttons
+Add your own buttons (for example Like or Bookmark) to the background-audio notification and lock-screen controls with `notificationButtons`. Each button needs an `id`, a `title`, and an `icon`: the name of a drawable resource in your Android app (for example `ic_like` for `android/app/src/main/res/drawable/ic_like.xml`). Taps arrive on `onNotificationButtonClick` with the button's `id`. Change the buttons at any time, for example to show a "liked" state, with `setNotificationButtons`; pass `[]` to remove them.
+
+```javascript
+const buttons = liked => [
+  { id: 'like', icon: 'ic_like', title: liked ? 'Unlike' : 'Like', inCompactView: true },
+  { id: 'bookmark', icon: 'ic_bookmark', title: 'Bookmark' },
+];
+
+<JWPlayer
+  ref={playerRef}
+  config={{ ...config, backgroundAudioEnabled: true, notificationButtons: buttons(false) }}
+  onNotificationButtonClick={({ nativeEvent }) => {
+    if (nativeEvent.id === 'like') {
+      playerRef.current.setNotificationButtons(buttons(true));
+    }
+  }}
+/>
+```
+
+Optional per button: `enabled` (default `true`), `inCompactView` (show in the collapsed notification, Android 12 and below) and `placement` (`"overflow"`, `"back"` or `"forward"`, a hint for the system media controls). The system decides how many buttons it shows, usually 3 to 5 including play/pause: put the important ones first. Android 13 and later hide disabled buttons and ignore `inCompactView`. Buttons whose icon cannot be found are skipped with a logcat warning. Keep the `config` object stable between renders (for example with `useMemo`); change buttons with `setNotificationButtons` rather than by rebuilding the config.
+
+This is Android-only; on iOS these options are ignored.
+
+#### Android: Audio Focus
+By default this library handles audio focus itself when `backgroundAudioEnabled` is `true`, as in earlier versions. Set `audioFocusHandling: "sdk"` to let the JW Android SDK manage it instead: it requests focus whenever content or an ad plays (with or without background audio), pauses when another app takes focus permanently, pauses and resumes for short interruptions such as a voice assistant prompt or a call, and lets the system lower the volume for navigation prompts. Focus changes are reported on `onAudioFocusChange` (`gained`, `lost`, `lostTransient`, `duck`). The two modes never run together.
+
+```javascript
+<JWPlayer
+  config={{ ...config, audioFocusHandling: 'sdk' }}
+  onAudioFocusChange={({ nativeEvent }) => console.log('focus', nativeEvent.change)}
+/>
+```
+
+Independent of this setting, the Android player always pauses when headphones or a Bluetooth audio device disconnect.
+
+#### Pause Reasons
+`onPause` reports why playback paused in `nativeEvent.reason`: `interaction`, `external`, `clickthrough`, `viewable`, `settingsInteraction`, `related-interaction`, `autostart`, `audio-interruption` or `unknown`. `audio-interruption` is Android-only (headphones or Bluetooth disconnected, or another app took audio focus with `audioFocusHandling: "sdk"`); iOS reports those pauses as `external` or `unknown`.
+
 #### Android Opt-Out Information
 If you do **not** use background audio on Android, remove the background-audio permissions and service from your app. Google can and will reject your Play Store submission if an app declares the foreground-service media-playback permission without using it.
 

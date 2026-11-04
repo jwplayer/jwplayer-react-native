@@ -40,6 +40,9 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
+import androidx.annotation.Nullable;
+import com.jwplayer.pub.api.AudioFocusChange;
+import com.jwplayer.pub.api.ExoPlayerSettings;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
@@ -237,6 +240,12 @@ public class RNJWPlayerView extends RelativeLayout implements
     AudioFocusRequest focusRequest;
 
     boolean hasAudioFocus = false;
+    /**
+     * True when the config asks the JW SDK to manage audio focus (audioFocusHandling: "sdk").
+     * The bridge's own focus handling below is then off, so the two never react to the same
+     * focus change.
+     */
+    private boolean sdkAudioFocusHandling = false;
     boolean playbackDelayed = false;
     boolean playbackNowAuthorized = false;
     boolean userPaused = false;
@@ -250,6 +259,10 @@ public class RNJWPlayerView extends RelativeLayout implements
     private ThemedReactContext mThemedReactContext;
 
     private MediaServiceController mMediaServiceController;
+    /** Custom background-audio notification buttons from the config / setNotificationButtons. */
+    private java.util.List<RNServiceMediaApi.ButtonSpec> mNotificationButtons = java.util.Collections.emptyList();
+    @Nullable
+    private RNServiceMediaApi mServiceMediaApi;
     private PipHandlerReceiver mReceiver = null;
 
     // Add completion handler field
@@ -268,6 +281,32 @@ public class RNJWPlayerView extends RelativeLayout implements
                 mMediaServiceController.bindService();
             }
         }
+    }
+
+    /**
+     * Builds the background-audio controller with the bridge's ServiceMediaApi, so custom
+     * notification buttons (if any) are shown and their taps reach JS.
+     */
+    private MediaServiceController newMediaServiceController() {
+        mServiceMediaApi = new RNServiceMediaApi(mPlayer, mNotificationButtons, this::emitNotificationButtonClick);
+        return new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
+                .serviceMediaApi(mServiceMediaApi)
+                .build();
+    }
+
+    /** Replaces the custom notification buttons; applied straight away if background audio is running. */
+    public void setNotificationButtons(@Nullable ReadableArray buttons) {
+        mNotificationButtons = RNServiceMediaApi.parse(buttons);
+        if (mServiceMediaApi != null) {
+            mServiceMediaApi.setButtons(mNotificationButtons);
+        }
+    }
+
+    private void emitNotificationButtonClick(String id) {
+        WritableMap event = Arguments.createMap();
+        event.putString("id", id);
+        getReactContext().getJSModule(RCTEventEmitter.class)
+                .receiveEvent(getId(), "topNotificationButtonClick", event);
     }
 
     private void doUnbindService() {
@@ -503,15 +542,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
             getReactContext().removeLifecycleEventListener(this);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (audioManager != null && focusRequest != null) {
-                    audioManager.abandonAudioFocusRequest(focusRequest);
-                }
-            } else {
-                if (audioManager != null) {
-                    audioManager.abandonAudioFocus(this);
-                }
-            }
+            abandonBridgeAudioFocus();
 
             audioManager = null;
 
@@ -1036,6 +1067,11 @@ public class RNJWPlayerView extends RelativeLayout implements
             return;
         }
 
+        if (prop.hasKey("notificationButtons")) {
+            setNotificationButtons(prop.getArray("notificationButtons"));
+        }
+        applyAudioFocusHandling(prop);
+
         PlayerConfig oldConfig = mPlayer.getConfig();
         boolean wasFullscreen = mPlayer.getFullscreen();
         boolean currentControlsState = mPlayer.getControls();
@@ -1509,12 +1545,15 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (prop.hasKey("backgroundAudioEnabled")) {
             backgroundAudioEnabled = prop.getBoolean("backgroundAudioEnabled");
         }
+        if (prop.hasKey("notificationButtons")) {
+            mNotificationButtons = RNServiceMediaApi.parse(prop.getArray("notificationButtons"));
+        }
 
         setupPlayerView(backgroundAudioEnabled, playlistItemCallbackEnabled);
+        applyAudioFocusHandling(prop);
 
         if (backgroundAudioEnabled) {
-            mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
-                    .build();
+            mMediaServiceController = newMediaServiceController();
         }
     }
 
@@ -1570,7 +1609,65 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     // Audio Focus
 
+    /** Releases focus held by the bridge's own handling (not the SDK's). */
+    private void abandonBridgeAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (audioManager != null && focusRequest != null) {
+                audioManager.abandonAudioFocusRequest(focusRequest);
+            }
+        } else {
+            if (audioManager != null) {
+                audioManager.abandonAudioFocus(this);
+            }
+        }
+        hasAudioFocus = false;
+    }
+
+    /**
+     * Applies the audioFocusHandling config: "sdk" hands audio focus to the JW SDK (and reports
+     * its changes on onAudioFocusChange); anything else keeps the bridge's own handling.
+     */
+    private void applyAudioFocusHandling(@Nullable ReadableMap prop) {
+        if (prop != null && prop.hasKey("audioFocusHandling")) {
+            sdkAudioFocusHandling = "sdk".equals(prop.getString("audioFocusHandling"));
+        }
+        if (mPlayer == null) {
+            return;
+        }
+        ExoPlayerSettings settings = mPlayer.getExoPlayerSettings();
+        if (sdkAudioFocusHandling) {
+            if (hasAudioFocus) {
+                abandonBridgeAudioFocus();
+            }
+            settings.setAudioFocusListener(this::emitAudioFocusChange);
+            settings.setAudioFocusHandlingEnabled(true);
+        } else {
+            settings.setAudioFocusHandlingEnabled(false);
+            settings.setAudioFocusListener(null);
+        }
+    }
+
+    private void emitAudioFocusChange(AudioFocusChange change) {
+        String value;
+        switch (change) {
+            case GAINED: value = "gained"; break;
+            case LOST: value = "lost"; break;
+            case LOST_TRANSIENT: value = "lostTransient"; break;
+            case DUCK: value = "duck"; break;
+            default: value = "unknown"; break;
+        }
+        WritableMap event = Arguments.createMap();
+        event.putString("change", value);
+        getReactContext().getJSModule(RCTEventEmitter.class)
+                .receiveEvent(getId(), "topAudioFocusChange", event);
+    }
+
     public void requestAudioFocus() {
+        if (sdkAudioFocusHandling) {
+            // The JW SDK manages audio focus; requesting it here as well would make both react
+            // to every focus change.
+            return;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (hasAudioFocus) {
                 return;
@@ -2299,8 +2396,7 @@ public class RNJWPlayerView extends RelativeLayout implements
             doUnbindService();
         } else {
             if (backgroundAudioEnabled) {
-                mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
-                        .build();
+                mMediaServiceController = newMediaServiceController();
                 doBindService();
             }
         }

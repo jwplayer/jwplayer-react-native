@@ -30,6 +30,26 @@ declare module "@jwplayer/jwplayer-react-native" {
     styling?: any;
     uiConfig?: any;
     backgroundAudioEnabled?: boolean;
+    /**
+     * **Android only.** Extra buttons for the background-audio notification and lock-screen
+     * controls (needs `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
+     * Change them later with `setNotificationButtons`.
+     */
+    notificationButtons?: NotificationButtonConfig[];
+    /**
+     * **Android only.** Who handles audio focus.
+     * - `"bridge"` (default): this library's own handling, as before. It requests focus only
+     *   when `backgroundAudioEnabled` is `true`.
+     * - `"sdk"`: the JW Android SDK requests focus whenever content or an ad plays, pauses on
+     *   a permanent loss, pauses and resumes on a transient loss (assistant prompt, call), and
+     *   lets the system duck the volume for navigation prompts. Changes are reported on
+     *   `onAudioFocusChange`; pauses it makes have `reason: "audio-interruption"`. The bridge's
+     *   own handling is switched off, so the two never react to the same change.
+     *
+     * Independent of this setting, the Android player always pauses when headphones or a
+     * Bluetooth audio device disconnect.
+     */
+    audioFocusHandling?: "bridge" | "sdk";
     category?: string;
     categoryOptions?: string[];
     mode?: string;
@@ -482,6 +502,26 @@ declare module "@jwplayer/jwplayer-react-native" {
     nextUpStyle?: { offsetSeconds: number; offsetPercentage: number };
     styling?: Styling;
     backgroundAudioEnabled?: boolean;
+    /**
+     * **Android only.** Extra buttons for the background-audio notification and lock-screen
+     * controls (needs `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
+     * Change them later with `setNotificationButtons`.
+     */
+    notificationButtons?: NotificationButtonConfig[];
+    /**
+     * **Android only.** Who handles audio focus.
+     * - `"bridge"` (default): this library's own handling, as before. It requests focus only
+     *   when `backgroundAudioEnabled` is `true`.
+     * - `"sdk"`: the JW Android SDK requests focus whenever content or an ad plays, pauses on
+     *   a permanent loss, pauses and resumes on a transient loss (assistant prompt, call), and
+     *   lets the system duck the volume for navigation prompts. Changes are reported on
+     *   `onAudioFocusChange`; pauses it makes have `reason: "audio-interruption"`. The bridge's
+     *   own handling is switched off, so the two never react to the same change.
+     *
+     * Independent of this setting, the Android player always pauses when headphones or a
+     * Bluetooth audio device disconnect.
+     */
+    audioFocusHandling?: "bridge" | "sdk";
     category?: AudioSessionCategory;
     categoryOptions?: Array<AudioSessionCategoryOptions>;
     mode?: AudioSessionMode;
@@ -605,6 +645,38 @@ declare module "@jwplayer/jwplayer-react-native" {
     | "unknown";
   interface PauseEventProps {
     reason?: PauseReason;
+  }
+  /**
+   * **Android only.** A custom button in the background-audio notification.
+   *
+   * The system decides how many buttons it shows: usually 3 to 5 in total, including the
+   * built-in play/pause and skip controls; extra buttons may not appear. Android 12 and below
+   * show at most 5 actions in the expanded notification. Android 13+ lays the buttons out
+   * itself, ignores `inCompactView`, and hides disabled buttons.
+   */
+  interface NotificationButtonConfig {
+    /** Unique id, reported back in `onNotificationButtonClick`. Keep it stable across updates. */
+    id: string;
+    /**
+     * Name of a drawable (or mipmap) resource in your Android app, e.g. `"ic_like"` for
+     * `res/drawable/ic_like.xml`. Buttons whose icon cannot be found are skipped with a warning.
+     */
+    icon: string;
+    /** Accessibility label and text shown where the system shows text. */
+    title: string;
+    /** Default `true`. A disabled button is shown greyed out (Android 12 and below) or hidden. */
+    enabled?: boolean;
+    /** Show in the collapsed notification (Android 12 and below). Default `false`. */
+    inCompactView?: boolean;
+    /** Placement hint for the system media controls. Default `"overflow"`. */
+    placement?: "overflow" | "back" | "forward";
+  }
+  interface AudioFocusChangeEventProps {
+    /** `lostTransient`: e.g. an assistant prompt or a call. `duck` is only reported below Android 8.0. */
+    change: "gained" | "lost" | "lostTransient" | "duck";
+  }
+  interface NotificationButtonClickEventProps {
+    id: string;
   }
   interface FullScreenExitEventProps {
     /**
@@ -922,6 +994,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     onComplete?: () => void;
     onPlay?: () => void;
     onPause?: (event?: BaseEvent<PauseEventProps>) => void;
+    /** **Android only.** A custom background-audio notification button was tapped. */
+    onNotificationButtonClick?: (event: BaseEvent<NotificationButtonClickEventProps>) => void;
+    /** **Android only**, with `audioFocusHandling: "sdk"`. The player's audio focus changed. */
+    onAudioFocusChange?: (event: BaseEvent<AudioFocusChangeEventProps>) => void;
     onSeek?: (event: BaseEvent<SeekEventProps>) => void;
     onSeeked?: (event?: BaseEvent<SeekedEventProps>) => void;
     onRateChanged?: (event?: BaseEvent<RateChangedEventProps>) => void;
@@ -1079,6 +1155,12 @@ declare module "@jwplayer/jwplayer-react-native" {
      *   that restarted the background-audio service so the notification showed new metadata.
      *   The SDK now refreshes the notification itself. Safe to remove from call sites.
      */
+    /**
+     * **Android only; no-op on iOS.** Replaces the custom background-audio notification buttons
+     * (see `notificationButtons` in the config). Takes effect immediately while background audio
+     * is running. Pass `[]` to remove them.
+     */
+    setNotificationButtons(buttons: NotificationButtonConfig[]): void;
     setPlaylistItemMetadata(metadata: {
         title?: string | null;
         description?: string | null;

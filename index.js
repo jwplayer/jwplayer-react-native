@@ -474,6 +474,8 @@ export default class JWPlayer extends Component {
 		onBeforeComplete: PropTypes.func,
 		onPlay: PropTypes.func,
 		onPause: PropTypes.func,
+		onNotificationButtonClick: PropTypes.func,
+		onAudioFocusChange: PropTypes.func,
 		onSetupPlayerError: PropTypes.func,
 		onPlayerError: PropTypes.func,
 		onPlayerWarning: PropTypes.func,
@@ -681,6 +683,18 @@ export default class JWPlayer extends Component {
 	loadPlaylistWithUrl(playlistUrl) {
 		if (RNJWPlayerManager)
 			RNJWPlayerManager.loadPlaylistWithUrl(this.getRNJWPlayerBridgeHandle(), playlistUrl);
+	}
+
+	/**
+	 * Android only: replaces the custom background-audio notification buttons.
+	 * No-op on iOS.
+	 */
+	setNotificationButtons(buttons) {
+		if (Platform.OS !== 'android' || !RNJWPlayerManager) return;
+		RNJWPlayerManager.setNotificationButtons(
+			this.getRNJWPlayerBridgeHandle(),
+			buttons || []
+		);
 	}
 
 	/**

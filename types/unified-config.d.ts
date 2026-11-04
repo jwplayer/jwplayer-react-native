@@ -284,6 +284,15 @@ export interface JWPlayerConfig {
    */
   logoView?: JWLogoView;
   
+  /**
+   * Captions appearance and placement, in the JW Player config format.
+   *
+   * On iOS use `styling.captionsStyle` instead.
+   *
+   * @platform android
+   */
+  captions?: JWCaptionsConfig;
+
   // ========== STYLING (iOS only) ==========
   
   /**
@@ -589,3 +598,41 @@ export function isPlaylistUrl(playlist: Playlist): playlist is string {
   return typeof playlist === 'string';
 }
 
+/**
+ * Captions appearance and placement (Android), read by the JW Android SDK's config parser.
+ * Colors are CSS color names or hex strings; opacities are 0-100.
+ *
+ * @platform android
+ */
+export interface JWCaptionsConfig {
+  fontSize?: number;
+  fontFamily?: string;
+  color?: string;
+  fontOpacity?: number;
+  backgroundColor?: string;
+  backgroundOpacity?: number;
+  windowColor?: string;
+  windowOpacity?: number;
+  edgeStyle?: 'none' | 'dropshadow' | 'raised' | 'depressed' | 'uniform';
+  /** Where the caption box is drawn. Captions that carry their own placement keep it. */
+  position?: JWCaptionPosition;
+}
+
+/**
+ * Caption box placement, in percent of the rendered video. Set at most one of `linePercentage`
+ * and `lineIndex`.
+ *
+ * @platform android
+ */
+export interface JWCaptionPosition {
+  /** Box width, 0-100. Omit to fit the text. */
+  width?: number;
+  /** Text alignment in the box. `left`/`right` follow the layout direction. Default `center`. */
+  alignment?: 'left' | 'center' | 'right';
+  /** Leading edge of the box, 0-100. Omit to center the box. */
+  position?: number;
+  /** Top edge of the box, 0-100 from the top. */
+  linePercentage?: number;
+  /** Line count from the top (0, 1, ...) or from the bottom (-1 is the bottom line). */
+  lineIndex?: number;
+}

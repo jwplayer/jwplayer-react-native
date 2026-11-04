@@ -8,6 +8,8 @@ import {globalStyles} from '../../ui/styles/global.style';
 export default () => {
   const playerRef = useRef(null);
   const [liked, setLiked] = useState(false);
+  // The handler reads the latest value through a ref, so it never acts on a stale `liked`.
+  const likedRef = useRef(false);
   const [log, setLog] = useState([]);
 
   const add = line => setLog(prev => [line, ...prev].slice(0, 6));
@@ -39,7 +41,8 @@ export default () => {
     const {id} = e.nativeEvent;
     add(`notification button: ${id}`);
     if (id === 'like') {
-      const next = !liked;
+      const next = !likedRef.current;
+      likedRef.current = next;
       setLiked(next);
       playerRef.current?.setNotificationButtons(buttons(next));
     }
@@ -67,6 +70,7 @@ export default () => {
         style={styles.button}
         onPress={() => {
           playerRef.current?.setNotificationButtons([]);
+          likedRef.current = false;
           setLiked(false);
         }}>
         <Text style={styles.buttonText}>Remove notification buttons</Text>

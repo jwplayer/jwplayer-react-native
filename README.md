@@ -102,7 +102,7 @@ Follow these steps to add the library to your iOS project:
 
 #### Migrating to Swift Package Manager (React Native 0.88+)
 
-React Native 0.88 can build iOS apps with Swift Package Manager instead of CocoaPods. Starting with the first wrapper release after 1.9.1, the wrapper ships an `ios/Package.swift` for React Native's SPM autolinking. Until that release, use this repo's `master` branch and the Example app (which is built this way) as the reference.
+React Native 0.88 can build iOS apps with Swift Package Manager instead of CocoaPods. The next wrapper release (the first after 1.9.1) ships an `ios/Package.swift` for React Native's SPM autolinking. Until it is published, use the Example app in this repo (which is built this way) as the reference.
 
 1. Upgrade your app to React Native 0.88 or later.
 2. In your `ios/` folder, run `npx react-native spm --deintegrate` (React Native's migration command), then build from the `.xcodeproj`.
@@ -110,6 +110,8 @@ React Native 0.88 can build iOS apps with Swift Package Manager instead of Cocoa
 4. Community libraries that don't ship a `Package.swift` need one generated with `npx react-native spm scaffold` and kept with `patch-package` (see `Example/patches`).
 
 On this path Google IMA and Google Cast are always included, which adds to your app's size, and the minimum iOS version is 16.0 (Google Cast's Swift package requires it). Because Cast is always linked, add the `Info.plist` values listed under [iOS Casting](#ios-casting). React Native's Swift Package Manager support is still marked experimental by React Native.
+
+The dependency paths in `ios/Package.swift` assume React Native's standard autolinking layout, with this package installed at `node_modules/@jwplayer/jwplayer-react-native` directly under your app root (next to the app's `ios/` folder). A monorepo, hoisted, or otherwise non-standard `node_modules` location changes that depth and the package will not resolve React Native.
 
 For more details and guidance regarding configuration and requirements, see the [JWX iOS SDK documentation](https://docs.jwplayer.com/players/docs/ios-overview#requirements).
 
@@ -444,7 +446,7 @@ Follow these steps to enable background audio sessions:
 2. Ensure that background audio is set for [Android](https://docs.jwplayer.com/players/docs/android-enable-background-audio) or [iOS](https://docs.jwplayer.com/players/docs/ios-player-backgrounding-reference#configure-audio-playback).
 3. **Android 13 (API 33) and later:** declare `android.permission.POST_NOTIFICATIONS` in your app's manifest and request it at runtime (for example with `PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS)`). Without it, background playback still works, but the media notification and lock-screen controls are not shown. This library already declares `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_MEDIA_PLAYBACK` for you. If background audio does not start, check logcat: the SDK's `MediaService` logs an error naming any missing permission.
 
-On Android, the media notification and lock-screen controls update automatically when you call `setPlaylistItemMetadata`. The old `refreshNotification` option is no longer needed and is ignored.
+On Android, the media notification and lock-screen controls update automatically when you call `setPlaylistItemMetadata`. The `refreshNotification` option of `setPlaylistItemMetadata` is **deprecated**: it is no longer needed, is ignored, and is slated for removal.
 
 #### Android Opt-Out Information
 If you do **not** use background audio on Android, remove the background-audio permissions and service from your app. Google can and will reject your Play Store submission if an app declares the foreground-service media-playback permission without using it.

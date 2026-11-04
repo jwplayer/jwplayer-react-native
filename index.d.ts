@@ -1075,7 +1075,7 @@ declare module "@jwplayer/jwplayer-react-native" {
      * On Android the background-audio notification and lock-screen controls pick up the new
      * metadata automatically (JW Android SDK 4.28.0 and later).
      *
-     * @param metadata.refreshNotification **Deprecated, ignored.** Was an Android-only workaround
+     * @param metadata.refreshNotification **Deprecated, ignored,** and slated for removal. Was an Android-only workaround
      *   that restarted the background-audio service so the notification showed new metadata.
      *   The SDK now refreshes the notification itself. Safe to remove from call sites.
      */
@@ -1083,7 +1083,7 @@ declare module "@jwplayer/jwplayer-react-native" {
         title?: string | null;
         description?: string | null;
         image?: string | null;
-        /** @deprecated Ignored. The notification refreshes automatically on Android. */
+        /** @deprecated Ignored and slated for removal. The notification refreshes automatically on Android. */
         refreshNotification?: boolean;
     }): void;
     setFullscreen(fullScreen: boolean): void;

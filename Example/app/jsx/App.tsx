@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {PermissionsAndroid, Platform} from 'react-native';
 import RNBootSplash from 'react-native-bootsplash';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 
@@ -26,6 +27,14 @@ import OmidViewabilityExample from './screens/OmidViewabilityExample';
 const Stack = createNativeStackNavigator();
 
 export default class App extends Component {
+  componentDidMount() {
+    // Android 13+: background audio still plays without this, but the media notification and
+    // lock-screen controls are only shown once notifications are allowed.
+    if (Platform.OS === 'android' && Number(Platform.Version) >= 33) {
+      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS).catch(() => {});
+    }
+  }
+
   render() {
     return (
       <SafeAreaProvider>

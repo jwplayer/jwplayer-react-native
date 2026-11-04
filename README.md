@@ -442,9 +442,14 @@ Follow these steps to enable background audio sessions:
 
 1. Set `backgroundAudioEnabled` to `true` in the `config`.
 2. Ensure that background audio is set for [Android](https://docs.jwplayer.com/players/docs/android-enable-background-audio) or [iOS](https://docs.jwplayer.com/players/docs/ios-player-backgrounding-reference#configure-audio-playback).
+3. **Android 13 (API 33) and later:** declare `android.permission.POST_NOTIFICATIONS` in your app's manifest and request it at runtime (for example with `PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS)`). Without it, background playback still works, but the media notification and lock-screen controls are not shown. This library already declares `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_MEDIA_PLAYBACK` for you.
+
+On Android, the media notification and lock-screen controls update automatically when you call `setPlaylistItemMetadata`. The old `refreshNotification` option is no longer needed and is ignored.
 
 #### Android Opt-Out Information
 Suppose you are **not** using the background audio service on Android. In that case, you will need to modify the [manifest](https://github.com/jwplayer/jwplayer-react-native/blob/master/android/src/main/AndroidManifest.xml) from our library (either in the node_modules, or in your fork before compilation) so as not to register a service that you will never use. Google can and will reject your Play Store submission if this is skipped. See the modified manifest below, which shows what to remove (commented-out permissions and services). Additionally, once this is done, you can never set `backgroundAudioEnabled` to true on Android, or you will run into a fatal crash.
+
+Since JW Android SDK 4.28.0 (this library's Android dependency), the SDK's own manifest also declares the `MediaService`, so commenting it out here does not remove it from your merged manifest. What matters for Play Store review is the two foreground-service permissions above. To remove the service from your app entirely, add a `tools:node="remove"` entry for `com.jwplayer.pub.api.background.MediaService` in your app's manifest.
 
 ```xml
 

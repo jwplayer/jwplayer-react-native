@@ -1053,26 +1053,18 @@ declare module "@jwplayer/jwplayer-react-native" {
      * Only non-null fields are applied; omitted fields leave existing values unchanged.
      * Fires `onPlaylistItemMetadataChanged` with the updated item on both platforms.
      *
-     * @param metadata.refreshNotification **Android-only, temporary workaround.**
-     *   When `true` on Android with `backgroundAudioEnabled: true`, the RN bridge cycles the
-     *   foreground MediaService after updating metadata so the lock-screen / notification shade
-     *   rebuilds with the new title and description. Without this flag the JW Android SDK
-     *   updates the MediaSession metadata but leaves the visible notification stale. Expect a
-     *   brief notification flicker and a momentary audio-focus transition while the service
-     *   rebinds.
+     * On Android the background-audio notification and lock-screen controls pick up the new
+     * metadata automatically (JW Android SDK 4.28.0 and later).
      *
-     *   Known limitation: the poster image is downloaded asynchronously by the SDK, so the
-     *   rebuilt notification typically still shows the previous poster. The poster refreshes
-     *   on the next playback state change (pause/play, seek).
-     *
-     *   Remove this flag from your call site once a future JW Android SDK release refreshes the
-     *   notification natively. No-op on iOS — JWPlayerKit already refreshes the lock-screen
-     *   controls via LockScreenControlsHandler.
+     * @param metadata.refreshNotification **Deprecated, ignored.** Was an Android-only workaround
+     *   that restarted the background-audio service so the notification showed new metadata.
+     *   The SDK now refreshes the notification itself. Safe to remove from call sites.
      */
     setPlaylistItemMetadata(metadata: {
         title?: string | null;
         description?: string | null;
         image?: string | null;
+        /** @deprecated Ignored. The notification refreshes automatically on Android. */
         refreshNotification?: boolean;
     }): void;
     setFullscreen(fullScreen: boolean): void;

@@ -32,6 +32,9 @@ See the [Configuration Reference](./CONFIG-REFERENCE.md) for complete documentat
 | [`playlist`](https://docs.jwplayer.com/players/reference/setup-options#playlist)         | JwPlaylistItem[ ] &#124; string | A, I | **(REQUIRED)** |
 | [`advertising`](https://docs.jwplayer.com/players/reference/advertising-config-ref)                                                                            |JwAdvertisingConfig | A, I | |
 | `allowCrossProtocolRedirectsSupport`                                                     | boolean | A    | |
+| `audioFocusHandling`                                                                     | "bridge" &#124; "sdk" | A | Who handles audio focus. See [Audio Focus](./CONFIG-REFERENCE.md#audio-focus) |
+| `backgroundAudioEnabled`                                                                 | boolean | A, I | Keep playing in the background with media notification / lock-screen controls |
+| `captions`                                                                               | JWCaptionsConfig | A | Captions appearance and `position`. iOS: `styling.captionsStyle`. See [Captions](./CONFIG-REFERENCE.md#captions-appearance-and-position) |
 | [`autostart`](https://docs.jwplayer.com/players/reference/setup-options#autostart)       | boolean | A, I | |
 | [`displaydescription`](https://docs.jwplayer.com/players/reference/setup-options#displaydescription) | boolean| A, I | |
 | [`displaytitle`](https://docs.jwplayer.com/players/reference/setup-options#displaytitle) | boolean | A    | |
@@ -40,6 +43,7 @@ See the [Configuration Reference](./CONFIG-REFERENCE.md) for complete documentat
 | `logoView`                                                                               | JwLogoView | A, I | |
 | [`mute`](https://docs.jwplayer.com/players/reference/setup-options#mute)                 | boolean | A, I | |
 | [`nextupoffset`](https://docs.jwplayer.com/players/reference/setup-options#nextupoffset) | string &#124; number | A, I | |
+| `notificationButtons`                                                                    | NotificationButtonConfig[ ] | A | Custom background-audio notification buttons. See [Notification Buttons](./CONFIG-REFERENCE.md#background-audio-notification-buttons) |
 | `pid`                                                                                    | string  | A, I | Unique identifier of the player |
 | [`playbackRateControls`](https://docs.jwplayer.com/players/reference/setup-options#playbackratecontrols) | boolean | A, I | |
 | [`playbackRates`](https://docs.jwplayer.com/players/reference/setup-options#playbackrates)|number[ ] | A, I | |

@@ -481,6 +481,16 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
         });
     }
 
+    @ReactMethod
+    public void setNotificationButtons(final int reactTag, final ReadableArray buttons) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            RNJWPlayerView playerView = getPlayerView(reactTag);
+            if (playerView != null) {
+                playerView.setNotificationButtons(buttons);
+            }
+        });
+    }
+
     private int stateToInt(PlayerState playerState) {
         switch (playerState) {
             case IDLE:

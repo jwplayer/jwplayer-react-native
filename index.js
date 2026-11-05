@@ -4,6 +4,7 @@ import {
 	NativeModules,
 	Platform,
 	findNodeHandle,
+	DeviceEventEmitter,
 } from 'react-native';
 import PropTypes from 'prop-types';
 import isEqualWith from 'lodash.isequalwith';
@@ -17,6 +18,11 @@ let playerId = 0;
 const RCT_RNJWPLAYER_REF = 'RNJWPlayerKey';
 
 const RNJWPlayer = requireNativeComponent('RNJWPlayerView');
+
+// Android sends every player event (onTime, onPlay, onAdEvent, ...) as a device event rather than a
+// view event: view events are flushed on drawn frames, so they would wait until the app returns
+// to the foreground. Payload: { reactTag, handler, payload }.
+const ANDROID_IMMEDIATE_EVENT = 'RNJWPlayerImmediateEvent';
 
 const INTEGER_STRING = /^-?\d+$/;
 
@@ -474,6 +480,8 @@ export default class JWPlayer extends Component {
 		onBeforeComplete: PropTypes.func,
 		onPlay: PropTypes.func,
 		onPause: PropTypes.func,
+		onNotificationButtonClick: PropTypes.func,
+		onAudioFocusChange: PropTypes.func,
 		onSetupPlayerError: PropTypes.func,
 		onPlayerError: PropTypes.func,
 		onPlayerWarning: PropTypes.func,
@@ -538,6 +546,38 @@ export default class JWPlayer extends Component {
 		// time an unmount cleanup calls deregister.
 		this._friendlyObstructions = new Map();
 		this._onFriendlyObstructionsPruned = this._onFriendlyObstructionsPruned.bind(this);
+		// Stable per-prop wrappers that call the CURRENT handler prop when the event fires.
+		// shouldComponentUpdate skips re-renders for handler-only changes, so passing the
+		// handlers straight through would leave native calling the closures from the last render.
+		this._handlerProxies = {};
+	}
+
+	componentDidMount() {
+		if (Platform.OS === 'android') {
+			this._immediateEventSub = DeviceEventEmitter.addListener(
+				ANDROID_IMMEDIATE_EVENT,
+				(event) => {
+					if (!event || event.reactTag !== this.getRNJWPlayerBridgeHandle()) return;
+					const handler = this.props[event.handler];
+					if (typeof handler === 'function') {
+						handler({ nativeEvent: event.payload || {} });
+					}
+				}
+			);
+		}
+	}
+
+	_handlerProxy(name) {
+		let proxy = this._handlerProxies[name];
+		if (!proxy) {
+			proxy = (...args) => {
+				const handler = this.props[name];
+				if (typeof handler === 'function') return handler(...args);
+				return undefined;
+			};
+			this._handlerProxies[name] = proxy;
+		}
+		return proxy;
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
@@ -561,6 +601,10 @@ export default class JWPlayer extends Component {
 	}
 
 	componentWillUnmount() {
+		if (this._immediateEventSub) {
+			this._immediateEventSub.remove();
+			this._immediateEventSub = null;
+		}
 		this.pause();
 		this.stop();
 	}
@@ -681,6 +725,18 @@ export default class JWPlayer extends Component {
 	loadPlaylistWithUrl(playlistUrl) {
 		if (RNJWPlayerManager)
 			RNJWPlayerManager.loadPlaylistWithUrl(this.getRNJWPlayerBridgeHandle(), playlistUrl);
+	}
+
+	/**
+	 * Android only: replaces the custom background-audio notification buttons.
+	 * No-op on iOS.
+	 */
+	setNotificationButtons(buttons) {
+		if (Platform.OS !== 'android' || !RNJWPlayerManager) return;
+		RNJWPlayerManager.setNotificationButtons(
+			this.getRNJWPlayerBridgeHandle(),
+			buttons || []
+		);
 	}
 
 	/**
@@ -1099,11 +1155,18 @@ export default class JWPlayer extends Component {
 			this._lastConfig = config;
 			this._normalizedConfig = normalizeConfig(config);
 		}
+		const handlers = {};
+		Object.keys(this.props).forEach((name) => {
+			if (/^on[A-Z]/.test(name) && typeof this.props[name] === 'function') {
+				handlers[name] = this._handlerProxy(name);
+			}
+		});
 		return (
 			<RNJWPlayer
 				ref={(player) => (this[this.ref_key] = player)}
 				key={this.ref_key}
 				{...this.props}
+				{...handlers}
 				config={this._normalizedConfig}
 				{...(Platform.OS === 'ios'
 					? { onFriendlyObstructionsPruned: this._onFriendlyObstructionsPruned }

@@ -30,6 +30,32 @@ declare module "@jwplayer/jwplayer-react-native" {
     styling?: any;
     uiConfig?: any;
     backgroundAudioEnabled?: boolean;
+    /**
+     * **Android only.** Extra buttons for the background-audio notification and lock-screen
+     * controls (needs `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
+     * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
+     * current buttons; pass `[]` to clear them. The buttons belong to the background-audio
+     * service, which is shared: they apply to the first player that starts it, and other players
+     * share that service and its buttons.
+     */
+    notificationButtons?: NotificationButtonConfig[];
+    /**
+     * **Android only.** Who handles audio focus.
+     * - `"bridge"` (default): this library's own handling, as before. It requests focus only
+     *   when `backgroundAudioEnabled` is `true`.
+     * - `"sdk"`: the JW Android SDK requests focus whenever content or an ad plays, pauses on
+     *   a permanent loss, pauses and resumes on a transient loss (assistant prompt, call), and
+     *   lets the system duck the volume for navigation prompts (below Android 8.0 a `duck` request
+     *   pauses and resumes like a transient loss instead). Changes are reported on
+     *   `onAudioFocusChange`; pauses it makes have `reason: "audio-interruption"`. The bridge's
+     *   own handling is switched off, so the two never react to the same change.
+     *
+     * Omitting this in a later config resets it to `"bridge"`.
+     *
+     * Independent of this setting, the Android player always pauses when headphones or a
+     * Bluetooth audio device disconnect.
+     */
+    audioFocusHandling?: "bridge" | "sdk";
     category?: string;
     categoryOptions?: string[];
     mode?: string;
@@ -482,6 +508,32 @@ declare module "@jwplayer/jwplayer-react-native" {
     nextUpStyle?: { offsetSeconds: number; offsetPercentage: number };
     styling?: Styling;
     backgroundAudioEnabled?: boolean;
+    /**
+     * **Android only.** Extra buttons for the background-audio notification and lock-screen
+     * controls (needs `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
+     * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
+     * current buttons; pass `[]` to clear them. The buttons belong to the background-audio
+     * service, which is shared: they apply to the first player that starts it, and other players
+     * share that service and its buttons.
+     */
+    notificationButtons?: NotificationButtonConfig[];
+    /**
+     * **Android only.** Who handles audio focus.
+     * - `"bridge"` (default): this library's own handling, as before. It requests focus only
+     *   when `backgroundAudioEnabled` is `true`.
+     * - `"sdk"`: the JW Android SDK requests focus whenever content or an ad plays, pauses on
+     *   a permanent loss, pauses and resumes on a transient loss (assistant prompt, call), and
+     *   lets the system duck the volume for navigation prompts (below Android 8.0 a `duck` request
+     *   pauses and resumes like a transient loss instead). Changes are reported on
+     *   `onAudioFocusChange`; pauses it makes have `reason: "audio-interruption"`. The bridge's
+     *   own handling is switched off, so the two never react to the same change.
+     *
+     * Omitting this in a later config resets it to `"bridge"`.
+     *
+     * Independent of this setting, the Android player always pauses when headphones or a
+     * Bluetooth audio device disconnect.
+     */
+    audioFocusHandling?: "bridge" | "sdk";
     category?: AudioSessionCategory;
     categoryOptions?: Array<AudioSessionCategoryOptions>;
     mode?: AudioSessionMode;
@@ -605,6 +657,44 @@ declare module "@jwplayer/jwplayer-react-native" {
     | "unknown";
   interface PauseEventProps {
     reason?: PauseReason;
+  }
+  /**
+   * **Android only.** A custom button in the background-audio notification.
+   *
+   * The system decides how many buttons it shows: usually 3 to 5 in total, including the
+   * built-in play/pause and skip controls; extra buttons may not appear. Android 12 and below
+   * show at most 5 actions in the expanded notification. Android 13+ lays the buttons out
+   * itself, ignores `inCompactView`, and hides disabled buttons.
+   */
+  interface NotificationButtonConfig {
+    /** Unique id, reported back in `onNotificationButtonClick`. Keep it stable across updates. */
+    id: string;
+    /**
+     * Name of a drawable (or mipmap) resource in your Android app, e.g. `"ic_like"` for
+     * `res/drawable/ic_like.xml`. Buttons whose icon cannot be found are skipped with a warning.
+     */
+    icon: string;
+    /** Accessibility label and text shown where the system shows text. */
+    title: string;
+    /**
+     * Default `true`. A disabled button keeps its place in the notification but does nothing when
+     * tapped. Android 13+ system media controls don't show it.
+     */
+    enabled?: boolean;
+    /** Show in the collapsed notification (Android 12 and below). Default `false`. */
+    inCompactView?: boolean;
+    /** Placement hint for the system media controls. Default `"overflow"`. */
+    placement?: "overflow" | "back" | "forward";
+  }
+  interface AudioFocusChangeEventProps {
+    /**
+     * `lostTransient`: e.g. an assistant prompt or a call. `duck` is only reported below
+     * Android 8.0, where the player pauses and resumes as for `lostTransient`.
+     */
+    change: "gained" | "lost" | "lostTransient" | "duck";
+  }
+  interface NotificationButtonClickEventProps {
+    id: string;
   }
   interface FullScreenExitEventProps {
     /**
@@ -922,6 +1012,10 @@ declare module "@jwplayer/jwplayer-react-native" {
     onComplete?: () => void;
     onPlay?: () => void;
     onPause?: (event?: BaseEvent<PauseEventProps>) => void;
+    /** **Android only.** A custom background-audio notification button was tapped. */
+    onNotificationButtonClick?: (event: BaseEvent<NotificationButtonClickEventProps>) => void;
+    /** **Android only**, with `audioFocusHandling: "sdk"`. The player's audio focus changed. */
+    onAudioFocusChange?: (event: BaseEvent<AudioFocusChangeEventProps>) => void;
     onSeek?: (event: BaseEvent<SeekEventProps>) => void;
     onSeeked?: (event?: BaseEvent<SeekedEventProps>) => void;
     onRateChanged?: (event?: BaseEvent<RateChangedEventProps>) => void;
@@ -1086,6 +1180,16 @@ declare module "@jwplayer/jwplayer-react-native" {
         /** @deprecated Ignored and slated for removal. The notification refreshes automatically on Android. */
         refreshNotification?: boolean;
     }): void;
+    /**
+     * **Android only; no-op on iOS.** Replaces the custom background-audio notification buttons
+     * (see `notificationButtons` in the config). Takes effect immediately while background audio
+     * is running. Pass `[]` to remove them.
+     *
+     * Each call rebuilds the notification, so call it when the buttons actually change (e.g. in
+     * a click handler), not on every render; if you derive the array in render, memoize it with
+     * `useMemo` and only pass a new array when its contents change.
+     */
+    setNotificationButtons(buttons: NotificationButtonConfig[]): void;
     setFullscreen(fullScreen: boolean): void;
     /**
      * Declares app views drawn over the player as OMID friendly obstructions so they don't

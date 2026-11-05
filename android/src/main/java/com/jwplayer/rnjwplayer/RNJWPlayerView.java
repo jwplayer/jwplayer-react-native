@@ -40,6 +40,9 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
+import androidx.annotation.Nullable;
+import com.jwplayer.pub.api.AudioFocusChange;
+import com.jwplayer.pub.api.ExoPlayerSettings;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
@@ -47,7 +50,6 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.jwplayer.pub.api.JWPlayer;
@@ -237,6 +239,12 @@ public class RNJWPlayerView extends RelativeLayout implements
     AudioFocusRequest focusRequest;
 
     boolean hasAudioFocus = false;
+    /**
+     * True when the config asks the JW SDK to manage audio focus (audioFocusHandling: "sdk").
+     * The bridge's own focus handling below is then off, so the two never react to the same
+     * focus change.
+     */
+    private boolean sdkAudioFocusHandling = false;
     boolean playbackDelayed = false;
     boolean playbackNowAuthorized = false;
     boolean userPaused = false;
@@ -250,6 +258,10 @@ public class RNJWPlayerView extends RelativeLayout implements
     private ThemedReactContext mThemedReactContext;
 
     private MediaServiceController mMediaServiceController;
+    /** Custom background-audio notification buttons from the config / setNotificationButtons. */
+    private java.util.List<RNServiceMediaApi.ButtonSpec> mNotificationButtons = java.util.Collections.emptyList();
+    @Nullable
+    private RNServiceMediaApi mServiceMediaApi;
     private PipHandlerReceiver mReceiver = null;
 
     // Add completion handler field
@@ -270,11 +282,83 @@ public class RNJWPlayerView extends RelativeLayout implements
         }
     }
 
+    /**
+     * Builds the background-audio controller with the bridge's ServiceMediaApi, so custom
+     * notification buttons (if any) are shown and their taps reach JS.
+     */
+    private MediaServiceController newMediaServiceController() {
+        mServiceMediaApi = new RNServiceMediaApi(mPlayer, mNotificationButtons, this::emitNotificationButtonClick);
+        return new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
+                .serviceMediaApi(mServiceMediaApi)
+                .build();
+    }
+
+    /** Replaces the custom notification buttons; applied straight away if background audio is running. */
+    public void setNotificationButtons(@Nullable ReadableArray buttons) {
+        mNotificationButtons = RNServiceMediaApi.parse(buttons);
+        if (mServiceMediaApi != null) {
+            mServiceMediaApi.setButtons(mNotificationButtons);
+        }
+    }
+
+    private void emitNotificationButtonClick(String id) {
+        WritableMap event = Arguments.createMap();
+        event.putString("id", id);
+        emitImmediateEvent("onNotificationButtonClick", event);
+    }
+
+    /**
+     * Name of the module-level device event that carries every player event to JS. The JS
+     * component subscribes to it and calls the matching {@code on*} prop.
+     */
+    static final String IMMEDIATE_EVENT = "RNJWPlayerImmediateEvent";
+
+    /**
+     * Sends a view event as a device event instead of a view (RCTEventEmitter) event.
+     *
+     * <p>View events go through the event dispatcher, which flushes on Choreographer frames. While
+     * the app is in the background no frames are drawn, so a tap on a notification button (or an
+     * audio-focus change) would sit in the queue until the app comes back to the foreground. Device
+     * events are posted straight to the JS thread, so they arrive while backgrounded. Each event is
+     * sent exactly once, on this path only, so the prop is never called twice.
+     */
+    /**
+     * Sends a player event by its view-event name ({@code topX}) on the device-event path, calling
+     * the JS prop registered for it in {@link RNJWPlayerViewManager} ({@code onX}, except the two
+     * names below that don't follow the pattern).
+     */
+    private void emitViewEvent(String topName, WritableMap payload) {
+        String handlerName;
+        if ("topOnPlayerReady".equals(topName)) {
+            handlerName = "onPlayerReady";
+        } else if ("topFirstFrame".equals(topName)) {
+            handlerName = "onLoaded";
+        } else {
+            handlerName = "on" + topName.substring(3);
+        }
+        emitImmediateEvent(handlerName, payload);
+    }
+
+    private void emitImmediateEvent(String handlerName, WritableMap payload) {
+        WritableMap event = Arguments.createMap();
+        event.putInt("reactTag", getId());
+        event.putString("handler", handlerName);
+        event.putMap("payload", payload);
+        ThemedReactContext themed = getReactContext();
+        ReactApplicationContext context = themed != null ? themed.getReactApplicationContext() : null;
+        if (context != null && context.hasActiveReactInstance()) {
+            context.emitDeviceEvent(IMMEDIATE_EVENT, event);
+        }
+    }
+
     private void doUnbindService() {
         if (mMediaServiceController != null) {
             mMediaServiceController.unbindService();
             mMediaServiceController = null;
         }
+        // The ServiceMediaApi belongs to the unbound controller; drop it so setNotificationButtons
+        // doesn't poke a dead service and the old player isn't retained.
+        mServiceMediaApi = null;
     }
 
     private static boolean contextHasBug(Context context) {
@@ -430,6 +514,13 @@ public class RNJWPlayerView extends RelativeLayout implements
             // Remove playlist item callback listener
             mPlayer.removePlaylistItemCallbackListener();
 
+            // Detach the SDK audio-focus listener so the destroyed player can't call back into this view.
+            try {
+                mPlayer.getExoPlayerSettings().setAudioFocusListener(null);
+            } catch (Exception e) {
+                Log.w(TAG, "Couldn't clear the SDK audio-focus listener", e);
+            }
+
             mPlayer.removeListeners(this,
                     // VideoPlayerEvents
                     EventType.READY,
@@ -503,15 +594,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
             getReactContext().removeLifecycleEventListener(this);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (audioManager != null && focusRequest != null) {
-                    audioManager.abandonAudioFocusRequest(focusRequest);
-                }
-            } else {
-                if (audioManager != null) {
-                    audioManager.abandonAudioFocus(this);
-                }
-            }
+            abandonBridgeAudioFocus();
 
             audioManager = null;
 
@@ -662,9 +745,7 @@ public class RNJWPlayerView extends RelativeLayout implements
                 }, 100);
                 WritableMap eventEnterFullscreen = Arguments.createMap();
                 eventEnterFullscreen.putString("message", "onFullscreenRequested");
-                getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-                        getId(),
-                        "topFullScreenRequested",
+                emitViewEvent("topFullScreenRequested",
                         eventEnterFullscreen);
             }
 
@@ -674,9 +755,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
                 WritableMap eventExitFullscreen = Arguments.createMap();
                 eventExitFullscreen.putString("message", "onFullscreenExitRequested");
-                getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-                        getId(),
-                        "topFullScreenExitRequested",
+                emitViewEvent("topFullScreenExitRequested",
                         eventExitFullscreen);
             }
         };
@@ -729,7 +808,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onBeforeNextPlaylistItem");
         event.putInt("index", indexOfNextItem);
         event.putString("playlistItem", gson.toJson(nextItem));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topBeforeNextPlaylistItem", event);
+        emitViewEvent("topBeforeNextPlaylistItem", event);
 
         itemUpdatePromise = playlistItemDecision;
     }
@@ -777,9 +856,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
             WritableMap eventEnterFullscreen = Arguments.createMap();
             eventEnterFullscreen.putString("message", "onFullscreenRequested");
-            getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-                    getId(),
-                    "topFullScreenRequested",
+            emitViewEvent("topFullScreenRequested",
                     eventEnterFullscreen);
         }
 
@@ -822,9 +899,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
             WritableMap eventExitFullscreen = Arguments.createMap();
             eventExitFullscreen.putString("message", "onFullscreenExitRequested");
-            getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-                    getId(),
-                    "topFullScreenExitRequested",
+            emitViewEvent("topFullScreenExitRequested",
                     eventExitFullscreen);
         }
 
@@ -1035,6 +1110,11 @@ public class RNJWPlayerView extends RelativeLayout implements
             Log.e(TAG, "Cannot reconfigure - player is null");
             return;
         }
+
+        if (prop.hasKey("notificationButtons")) {
+            setNotificationButtons(prop.getArray("notificationButtons"));
+        }
+        applyAudioFocusHandling(prop);
 
         PlayerConfig oldConfig = mPlayer.getConfig();
         boolean wasFullscreen = mPlayer.getFullscreen();
@@ -1509,12 +1589,15 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (prop.hasKey("backgroundAudioEnabled")) {
             backgroundAudioEnabled = prop.getBoolean("backgroundAudioEnabled");
         }
+        if (prop.hasKey("notificationButtons")) {
+            mNotificationButtons = RNServiceMediaApi.parse(prop.getArray("notificationButtons"));
+        }
 
         setupPlayerView(backgroundAudioEnabled, playlistItemCallbackEnabled);
+        applyAudioFocusHandling(prop);
 
         if (backgroundAudioEnabled) {
-            mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
-                    .build();
+            mMediaServiceController = newMediaServiceController();
         }
     }
 
@@ -1570,7 +1653,65 @@ public class RNJWPlayerView extends RelativeLayout implements
 
     // Audio Focus
 
+    /** Releases focus held by the bridge's own handling (not the SDK's). */
+    private void abandonBridgeAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (audioManager != null && focusRequest != null) {
+                audioManager.abandonAudioFocusRequest(focusRequest);
+            }
+        } else {
+            if (audioManager != null) {
+                audioManager.abandonAudioFocus(this);
+            }
+        }
+        hasAudioFocus = false;
+        wasInterrupted = false;
+    }
+
+    /**
+     * Applies the audioFocusHandling config: "sdk" hands audio focus to the JW SDK (and reports
+     * its changes on onAudioFocusChange); anything else keeps the bridge's own handling.
+     */
+    private void applyAudioFocusHandling(@Nullable ReadableMap prop) {
+        // Omitting audioFocusHandling (or any value but "sdk") means the bridge's own handling.
+        sdkAudioFocusHandling = prop != null && prop.hasKey("audioFocusHandling")
+                && "sdk".equals(prop.getString("audioFocusHandling"));
+        if (mPlayer == null) {
+            return;
+        }
+        ExoPlayerSettings settings = mPlayer.getExoPlayerSettings();
+        if (sdkAudioFocusHandling) {
+            if (hasAudioFocus) {
+                abandonBridgeAudioFocus();
+            }
+            settings.setAudioFocusListener(this::emitAudioFocusChange);
+            settings.setAudioFocusHandlingEnabled(true);
+        } else {
+            settings.setAudioFocusHandlingEnabled(false);
+            settings.setAudioFocusListener(null);
+        }
+    }
+
+    private void emitAudioFocusChange(AudioFocusChange change) {
+        String value;
+        switch (change) {
+            case GAINED: value = "gained"; break;
+            case LOST: value = "lost"; break;
+            case LOST_TRANSIENT: value = "lostTransient"; break;
+            case DUCK: value = "duck"; break;
+            default: value = "unknown"; break;
+        }
+        WritableMap event = Arguments.createMap();
+        event.putString("change", value);
+        emitImmediateEvent("onAudioFocusChange", event);
+    }
+
     public void requestAudioFocus() {
+        if (sdkAudioFocusHandling) {
+            // The JW SDK manages audio focus; requesting it here as well would make both react
+            // to every focus change.
+            return;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (hasAudioFocus) {
                 return;
@@ -1723,7 +1864,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adLoadedEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeLoaded));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1732,7 +1873,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adLoadedXmlEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeLoadedXml));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1742,7 +1883,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("reason", adPauseEvent.getAdPauseReason().toString());
         event.putInt("client", Util.getAdEventClientValue(adPauseEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypePause));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1752,7 +1893,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("reason", adPlayEvent.getAdPlayReason().toString());
         event.putInt("client", Util.getAdEventClientValue(adPlayEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypePlay));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1761,7 +1902,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adBreakEndEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeAdBreakEnd));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1770,7 +1911,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adBreakStartEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeAdBreakStart));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1779,7 +1920,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adBreakIgnoredEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeAdBreakIgnored));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1788,7 +1929,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adClickEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeClicked));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1797,7 +1938,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adCompanionsEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeCompanion));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1806,7 +1947,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adCompleteEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeComplete));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1816,7 +1957,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putInt("code", adErrorEvent.getCode());
         event.putInt("adErrorCode", adErrorEvent.getAdErrorCode());
         event.putString("error", adErrorEvent.getMessage());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerAdError", event);
+        emitViewEvent("topPlayerAdError", event);
     }
 
     @Override
@@ -1826,7 +1967,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putInt("code", adWarningEvent.getCode());
         event.putInt("adErrorCode", adWarningEvent.getAdErrorCode());
         event.putString("warning", adWarningEvent.getMessage());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerAdWarning", event);
+        emitViewEvent("topPlayerAdWarning", event);
     }
 
     @Override
@@ -1835,7 +1976,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adImpressionEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeImpression));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1844,7 +1985,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adMetaEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeMeta));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1853,7 +1994,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adRequestEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeRequest));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1862,7 +2003,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adScheduleEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeSchedule));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1871,7 +2012,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adSkippedEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeSkipped));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1880,7 +2021,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdEvent");
         event.putInt("client", Util.getAdEventClientValue(adStartedEvent));
         event.putInt("type", Util.getAdEventTypeValue(Util.AdEventType.JWAdEventTypeStarted));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdEvent", event);
+        emitViewEvent("topAdEvent", event);
     }
 
     @Override
@@ -1889,7 +2030,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onAdTime");
         event.putDouble("position", adTimeEvent.getPosition());
         event.putDouble("duration", adTimeEvent.getDuration());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAdTime", event);
+        emitViewEvent("topAdTime", event);
     }
 
     @Override
@@ -1901,7 +2042,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onBeforeComplete(BeforeCompleteEvent beforeCompleteEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onBeforeComplete");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topBeforeComplete", event);
+        emitViewEvent("topBeforeComplete", event);
 
         updateWakeLock(false);
     }
@@ -1915,7 +2056,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
         WritableMap event = Arguments.createMap();
         event.putString("message", "onBeforePlay");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topBeforePlay", event);
+        emitViewEvent("topBeforePlay", event);
     }
 
     // Audio Events
@@ -1924,7 +2065,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onAudioTracks(AudioTracksEvent audioTracksEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onAudioTracks");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topAudioTracks", event);
+        emitViewEvent("topAudioTracks", event);
     }
 
     @Override
@@ -1939,7 +2080,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onCaptionsChanged");
         event.putInt("index", captionsChangedEvent.getCurrentTrack());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsChanged", event);
+        emitViewEvent("topCaptionsChanged", event);
     }
 
     @Override
@@ -1960,7 +2101,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onCaptionsList");
         event.putInt("index", captionsListEvent.getCurrentCaptionIndex());
         event.putArray("tracks", captionTracks);
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCaptionsList", event);
+        emitViewEvent("topCaptionsList", event);
 
     }
 
@@ -1970,7 +2111,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onBuffer(BufferEvent bufferEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onBuffer");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topBuffer", event);
+        emitViewEvent("topBuffer", event);
 
         updateWakeLock(true);
     }
@@ -1979,7 +2120,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onComplete(CompleteEvent completeEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onComplete");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topComplete", event);
+        emitViewEvent("topComplete", event);
 
         updateWakeLock(false);
     }
@@ -1989,7 +2130,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onControlBarVisible");
         event.putBoolean("visible", controlBarVisibilityEvent.isVisible());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topControlBarVisible", event);
+        emitViewEvent("topControlBarVisible", event);
 
         updateWakeLock(true);
     }
@@ -2014,7 +2155,7 @@ public class RNJWPlayerView extends RelativeLayout implements
             event.putString("description", errorEvent.getMessage());
             event.putInt("errorCode", errorEvent.getErrorCode());
         }
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlayerError", event);
+        emitViewEvent("topPlayerError", event);
 
         updateWakeLock(false);
     }
@@ -2028,9 +2169,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap onFirstFrame = Arguments.createMap();
         onFirstFrame.putString("message", "onLoaded");
         onFirstFrame.putDouble("loadTime", firstFrameEvent.getLoadTime());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-                getId(),
-                "topFirstFrame",
+        emitViewEvent("topFirstFrame",
                 onFirstFrame);
     }
 
@@ -2043,9 +2182,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
             WritableMap eventExitFullscreen = Arguments.createMap();
             eventExitFullscreen.putString("message", "onFullscreen");
-            getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-                    getId(),
-                    "topFullScreen",
+            emitViewEvent("topFullScreen",
                     eventExitFullscreen);
         }
         // The false (exit) case is intentionally not handled here: the SDK also fires
@@ -2063,9 +2200,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap eventExitFullscreen = Arguments.createMap();
         eventExitFullscreen.putString("message", "onFullscreenExit");
         eventExitFullscreen.putString("reason", event.getReason().toString());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(
-                getId(),
-                "topFullScreenExit",
+        emitViewEvent("topFullScreenExit",
                 eventExitFullscreen);
     }
 
@@ -2078,11 +2213,11 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onPause(PauseEvent pauseEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onPause");
-        // Same wire values as iOS (see PauseReason in index.d.ts), e.g. "interaction",
-        // "external", "audio-interruption".
+        // Same wire values as iOS where both platforms report a reason (see PauseReason in
+        // index.d.ts), e.g. "interaction", "external". "audio-interruption" is Android-only.
         event.putString("reason", pauseEvent.getPauseReason() != null
                 ? pauseEvent.getPauseReason().toString() : "unknown");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPause", event);
+        emitViewEvent("topPause", event);
 
         updateWakeLock(false);
 
@@ -2101,7 +2236,7 @@ public class RNJWPlayerView extends RelativeLayout implements
 
         WritableMap event = Arguments.createMap();
         event.putString("message", "onPlay");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlay", event);
+        emitViewEvent("topPlay", event);
 
         updateWakeLock(true);
 
@@ -2113,7 +2248,7 @@ public class RNJWPlayerView extends RelativeLayout implements
     public void onPlaylistComplete(PlaylistCompleteEvent playlistCompleteEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onPlaylistComplete");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlaylistComplete", event);
+        emitViewEvent("topPlaylistComplete", event);
 
         updateWakeLock(false);
     }
@@ -2131,7 +2266,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onPlaylistItem");
         event.putInt("index", playlistItemEvent.getIndex());
         event.putString("playlistItem", JsonHelper.toJson(playlistItemEvent.getPlaylistItem()));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlaylistItem", event);
+        emitViewEvent("topPlaylistItem", event);
     }
 
     @Override
@@ -2146,7 +2281,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         }
         sb.append("]");
         event.putString("playlist", sb.toString());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlaylist", event);
+        emitViewEvent("topPlaylist", event);
     }
 
     @Override
@@ -2155,14 +2290,14 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onPlaylistItemMetadataChanged");
         event.putInt("index", playlistItemMetadataChangedEvent.getIndex());
         event.putString("playlistItem", JsonHelper.toJson(playlistItemMetadataChangedEvent.getPlaylistItem()));
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topPlaylistItemMetadataChanged", event);
+        emitViewEvent("topPlaylistItemMetadataChanged", event);
     }
 
     @Override
     public void onReady(ReadyEvent readyEvent) {
         WritableMap event = Arguments.createMap();
         event.putString("message", "onPlayerReady");
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topOnPlayerReady", event);
+        emitViewEvent("topOnPlayerReady", event);
 
         updateWakeLock(true);
     }
@@ -2173,7 +2308,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onSeek");
         event.putDouble("position", seekEvent.getPosition());
         event.putDouble("offset", seekEvent.getOffset());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topSeek", event);
+        emitViewEvent("topSeek", event);
     }
 
     @Override
@@ -2181,7 +2316,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         WritableMap event = Arguments.createMap();
         event.putString("message", "onSeeked");
         event.putDouble("position", seekedEvent.getPosition());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topSeeked", event);
+        emitViewEvent("topSeeked", event);
     }
 
     @Override
@@ -2192,7 +2327,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         if (mPlayer != null) {
             event.putDouble("at", mPlayer.getPosition());
         }
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topRateChanged", event);
+        emitViewEvent("topRateChanged", event);
     }
 
     @Override
@@ -2201,7 +2336,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onSetupError");
         event.putString("errorMessage", setupErrorEvent.getMessage());
         event.putInt("errorCode", setupErrorEvent.getCode());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topSetupPlayerError", event);
+        emitViewEvent("topSetupPlayerError", event);
 
         updateWakeLock(false);
     }
@@ -2212,7 +2347,7 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("message", "onTime");
         event.putDouble("position", timeEvent.getPosition());
         event.putDouble("duration", timeEvent.getDuration());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topTime", event);
+        emitViewEvent("topTime", event);
     }
 
     @Override
@@ -2257,7 +2392,7 @@ public class RNJWPlayerView extends RelativeLayout implements
             return;
         }
         event.putString("message", message);
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), topEvent, event);
+        emitViewEvent(topEvent, event);
     }
 
     // Picture in Picture events
@@ -2292,15 +2427,14 @@ public class RNJWPlayerView extends RelativeLayout implements
         event.putString("device", castEvent.getDeviceName());
         event.putBoolean("active", castEvent.isActive());
         event.putBoolean("available", castEvent.isAvailable());
-        getReactContext().getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topCasting", event);
+        emitViewEvent("topCasting", event);
         mIsCastActive = castEvent.isActive();
         // stop/start the background audio service if it's running and we're casting
         if (castEvent.isActive()) {
             doUnbindService();
         } else {
             if (backgroundAudioEnabled) {
-                mMediaServiceController = new MediaServiceController.Builder((AppCompatActivity) mActivity, mPlayer)
-                        .build();
+                mMediaServiceController = newMediaServiceController();
                 doBindService();
             }
         }

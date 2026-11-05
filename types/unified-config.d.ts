@@ -284,6 +284,15 @@ export interface JWPlayerConfig {
    */
   logoView?: JWLogoView;
   
+  /**
+   * Captions appearance and placement, in the JW Player config format.
+   *
+   * On iOS use `styling.captionsStyle` instead.
+   *
+   * @platform android
+   */
+  captions?: JWCaptionsConfig;
+
   // ========== STYLING (iOS only) ==========
   
   /**
@@ -318,6 +327,28 @@ export interface JWPlayerConfig {
    */
   controls?: boolean;
   
+  // ========== BACKGROUND AUDIO NOTIFICATION / AUDIO FOCUS (Android only) ==========
+
+  /**
+   * Extra buttons for the background-audio notification and lock-screen controls (needs
+   * `backgroundAudioEnabled: true`). Taps arrive on the `onNotificationButtonClick` prop.
+   * Change them later with `setNotificationButtons`. Omitting this in a later config keeps
+   * the current buttons; pass `[]` to clear them. Applies to the first player that starts the
+   * background-audio service; other players share that service and its buttons.
+   *
+   * @platform android
+   */
+  notificationButtons?: JWNotificationButtonConfig[];
+
+  /**
+   * Who handles audio focus: `"bridge"` (default, this library's own handling, only with
+   * `backgroundAudioEnabled`) or `"sdk"` (the JW Android SDK). In `"sdk"` mode changes are
+   * reported on the `onAudioFocusChange` prop. Omitting it resets to `"bridge"`.
+   *
+   * @platform android
+   */
+  audioFocusHandling?: 'bridge' | 'sdk';
+
   // ========== AUDIO SESSION (iOS only) ==========
   
   /**
@@ -589,3 +620,61 @@ export function isPlaylistUrl(playlist: Playlist): playlist is string {
   return typeof playlist === 'string';
 }
 
+/**
+ * A custom background-audio notification button. See `NotificationButtonConfig` in index.d.ts.
+ *
+ * @platform android
+ */
+export interface JWNotificationButtonConfig {
+  /** Unique id, reported back in `onNotificationButtonClick`. */
+  id: string;
+  /** Name of a drawable (or mipmap) resource in the Android app. */
+  icon: string;
+  /** Accessibility label and text shown where the system shows text. */
+  title: string;
+  /** Default `true`. A disabled button keeps its place but does nothing when tapped; Android 13+ hides it. */
+  enabled?: boolean;
+  /** Show in the collapsed notification (Android 12 and below). Default `false`. */
+  inCompactView?: boolean;
+  /** Placement hint for the system media controls. Default `"overflow"`. */
+  placement?: 'overflow' | 'back' | 'forward';
+}
+
+/**
+ * Captions appearance and placement (Android), read by the JW Android SDK's config parser.
+ * Colors are CSS color names or hex strings; opacities are 0-100.
+ *
+ * @platform android
+ */
+export interface JWCaptionsConfig {
+  fontSize?: number;
+  fontFamily?: string;
+  color?: string;
+  fontOpacity?: number;
+  backgroundColor?: string;
+  backgroundOpacity?: number;
+  windowColor?: string;
+  windowOpacity?: number;
+  edgeStyle?: 'none' | 'dropshadow' | 'raised' | 'depressed' | 'uniform';
+  /** Where the caption box is drawn. Captions that carry their own placement keep it. */
+  position?: JWCaptionPosition;
+}
+
+/**
+ * Caption box placement, in percent of the rendered video. Set at most one of `linePercentage`
+ * and `lineIndex`.
+ *
+ * @platform android
+ */
+export interface JWCaptionPosition {
+  /** Box width, 0-100. Omit to fit the text. */
+  width?: number;
+  /** Text alignment in the box. `left`/`right` follow the layout direction. Default `center`. */
+  alignment?: 'left' | 'center' | 'right';
+  /** Leading edge of the box, 0-100. Omit to center the box. */
+  position?: number;
+  /** Top edge of the box, 0-100 from the top. */
+  linePercentage?: number;
+  /** Line count from the top (0, 1, ...) or from the bottom (-1 is the bottom line). */
+  lineIndex?: number;
+}

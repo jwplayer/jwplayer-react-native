@@ -19,7 +19,7 @@ const RCT_RNJWPLAYER_REF = 'RNJWPlayerKey';
 
 const RNJWPlayer = requireNativeComponent('RNJWPlayerView');
 
-// Android sends onNotificationButtonClick and onAudioFocusChange as a device event rather than a
+// Android sends every player event (onTime, onPlay, onAdEvent, ...) as a device event rather than a
 // view event: view events are flushed on drawn frames, so they would wait until the app returns
 // to the foreground. Payload: { reactTag, handler, payload }.
 const ANDROID_IMMEDIATE_EVENT = 'RNJWPlayerImmediateEvent';

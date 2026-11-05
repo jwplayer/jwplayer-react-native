@@ -2103,10 +2103,25 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     }
 
     func jwplayer(_ player:JWPlayer, didPauseWithReason reason:JWPauseReason) {
-        self.onPause?([:])
+        self.onPause?(["reason": pauseReasonString(reason)])
 
         if !wasInterrupted {
             userPaused = true
+        }
+    }
+
+    /// Wire value for `onPause`'s `reason`, matching Android's PauseReason strings.
+    private func pauseReasonString(_ reason: JWPauseReason) -> String {
+        switch reason {
+        case .external: return "external"
+        case .interaction: return "interaction"
+        case .clickthrough: return "clickthrough"
+        case .viewable: return "viewable"
+        case .settingsInteraction: return "settingsInteraction"
+        case .relatedInteraction: return "related-interaction"
+        case .autostart: return "autostart"
+        case .unknown: return "unknown"
+        @unknown default: return "unknown"
         }
     }
 

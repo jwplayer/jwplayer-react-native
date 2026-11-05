@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import {PermissionsAndroid, Platform} from 'react-native';
 import RNBootSplash from 'react-native-bootsplash';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 
@@ -19,6 +20,7 @@ import YoutubeExample from './screens/YoutubeExample';
 import PlayerInModal from './screens/PlayerInModal';
 import GlobalPlayerExample from './screens/GlobalPlayerExample';
 import PlaylistItemMetadataExample from './screens/PlaylistItemMetadataExample';
+import BackgroundAudioExample from './screens/BackgroundAudioExample';
 import MetadataExample from './screens/MetadataExample';
 import BottomTabOverlapExample from './screens/BottomTabOverlapExample';
 import OmidViewabilityExample from './screens/OmidViewabilityExample';
@@ -26,6 +28,14 @@ import OmidViewabilityExample from './screens/OmidViewabilityExample';
 const Stack = createNativeStackNavigator();
 
 export default class App extends Component {
+  componentDidMount() {
+    // Android 13+: background audio still plays without this, but the media notification and
+    // lock-screen controls are only shown once notifications are allowed.
+    if (Platform.OS === 'android' && Number(Platform.Version) >= 33) {
+      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS).catch(() => {});
+    }
+  }
+
   render() {
     return (
       <SafeAreaProvider>
@@ -49,6 +59,7 @@ export default class App extends Component {
             <Stack.Screen name="Youtube" component={YoutubeExample} />
             <Stack.Screen name="Global Player" component={GlobalPlayerExample} />
             <Stack.Screen name="Item Metadata" component={PlaylistItemMetadataExample} />
+            <Stack.Screen name="Background Audio" component={BackgroundAudioExample} />
             <Stack.Screen name="Metadata Events" component={MetadataExample} />
             <Stack.Screen name="OMID Viewability" component={OmidViewabilityExample} />
             <Stack.Screen name="TypeScript Example" component={TypeScriptExample} />

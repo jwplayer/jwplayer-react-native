@@ -41,12 +41,8 @@ export default () => {
   const applyNextSegment = () => {
     const next = (segmentIndex + 1) % SEGMENTS.length;
     setSegmentIndex(next);
-    // refreshNotification: temporary workaround so the Android background-audio notification
-    // rebuilds with the new metadata. Drop this flag once the JW Android SDK refreshes it natively.
-    playerRef.current?.setPlaylistItemMetadata({
-      ...SEGMENTS[next],
-      refreshNotification: true,
-    });
+    // The background-audio notification / lock-screen controls refresh automatically.
+    playerRef.current?.setPlaylistItemMetadata(SEGMENTS[next]);
   };
 
   const onPlaylistItemMetadataChanged = e => {

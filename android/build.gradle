@@ -100,7 +100,7 @@ allprojects {
     }
 }
 
-def jwPlayerVersion = "4.27.1"
+def jwPlayerVersion = "4.28.0"
 def useLocalAARs = false // Set to false to revert to Maven dependencies
 def exoplayerVersion = "2.18.7" // Deprecated. Use Media3 when targeting JW SDK > 4.16.0
 def media3ExoVersion = "1.10.1"
@@ -147,6 +147,10 @@ dependencies {
     implementation "androidx.media3:media3-exoplayer-hls:${safeExtGet('media3ExoVersion', media3ExoVersion)}"
     implementation "androidx.media3:media3-exoplayer-smoothstreaming:${safeExtGet('media3ExoVersion', media3ExoVersion)}"
     implementation "androidx.media3:media3-ui:${safeExtGet('media3ExoVersion', media3ExoVersion)}"
+    // Background audio runs on a Media3 MediaSessionService since JW SDK 4.28.0. The SDK brings
+    // this in from Maven; declaring it here keeps it on the same Media3 version as the rest and
+    // covers useLocalAARs builds, which get no transitive dependencies.
+    implementation "androidx.media3:media3-session:${safeExtGet('media3ExoVersion', media3ExoVersion)}"
 
     // JW Player Native UI dependencies
     implementation 'com.squareup.picasso:picasso:2.71828'

@@ -673,10 +673,9 @@ class RNJWPlayerViewManager: RCTViewManager {
         }
     }
 
-    // The `refreshNotification` parameter is part of the JS API for parity with an
-    // Android-side workaround. On iOS JWPlayerKit already refreshes MPNowPlayingInfoCenter /
-    // the Control Center via LockScreenControlsHandler when updateItemMetadata is called,
-    // so this flag is accepted and ignored here.
+    // The `refreshNotification` parameter is deprecated and ignored on both platforms. On iOS
+    // JWPlayerKit refreshes MPNowPlayingInfoCenter / the Control Center via
+    // LockScreenControlsHandler when updateItemMetadata is called.
     @objc func setPlaylistItemMetadata(_ reactTag: NSNumber, _ title: String?, _ description: String?, _ image: String?, _ refreshNotification: Bool) {
         self.withPlayerView(reactTag) { view in
             guard let view = view else {

@@ -473,12 +473,20 @@ public class RNJWPlayerModule extends ReactContextBaseJavaModule {
         new Handler(Looper.getMainLooper()).post(() -> {
             RNJWPlayerView playerView = getPlayerView(reactTag);
             if (playerView != null && playerView.mPlayerView != null) {
+                // The SDK's Media3 session picks up the new metadata and refreshes the
+                // background-audio notification itself. refreshNotification is kept in the
+                // signature for API compatibility and is ignored.
                 playerView.mPlayerView.getPlayer().setPlaylistItemMetadata(title, description, image);
-                // Temporary workaround: cycle the MediaServiceController so the foreground-service
-                // Notification rebuilds from the updated MediaSession metadata.
-                if (refreshNotification) {
-                    playerView.refreshBackgroundAudioNotification();
-                }
+            }
+        });
+    }
+
+    @ReactMethod
+    public void setNotificationButtons(final int reactTag, final ReadableArray buttons) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            RNJWPlayerView playerView = getPlayerView(reactTag);
+            if (playerView != null) {
+                playerView.setNotificationButtons(buttons);
             }
         });
     }

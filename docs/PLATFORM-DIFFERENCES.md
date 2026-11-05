@@ -164,13 +164,13 @@ Use XML styling instead. See [Android Styling Guide](https://docs.jwplayer.com/p
 
 ### 2. Audio Session Configuration
 
-**iOS Only** - Controls background audio behavior
+**iOS Only** - Controls the audio session. `backgroundAudioEnabled` itself works on both platforms; on Android see [Background Audio Notification Buttons](#8-background-audio-notification-buttons) and [Audio Focus](#9-audio-focus).
 
 ```typescript
 const config: JWPlayerConfig = {
   license: 'YOUR_LICENSE_KEY',
   file: 'https://example.com/video.m3u8',
-  backgroundAudioEnabled: true,  // ⚠️ iOS ONLY
+  backgroundAudioEnabled: true,  // iOS and Android
   category: 'Playback',          // ⚠️ iOS ONLY
   categoryOptions: [             // ⚠️ iOS ONLY
     'MixWithOthers',
@@ -474,6 +474,37 @@ const config: JWPlayerConfig = {
   displaydescription: true   // ⚠️ ANDROID ONLY
 };
 ```
+
+### 8. Background Audio Notification Buttons
+
+**Android Only** - custom buttons in the background-audio notification and lock-screen controls.
+
+```typescript
+const config: JWPlayerConfig = {
+  license: 'YOUR_LICENSE_KEY',
+  file: 'https://example.com/video.m3u8',
+  backgroundAudioEnabled: true,
+  notificationButtons: [{ id: 'like', icon: 'ic_like', title: 'Like' }]  // ⚠️ ANDROID ONLY
+};
+// <JWPlayer onNotificationButtonClick={({ nativeEvent }) => ...} />
+// playerRef.current.setNotificationButtons([...])   // no-op on iOS
+```
+
+**iOS:** JWPlayerKit has no custom lock-screen buttons; the options are ignored.
+
+### 9. Audio Focus
+
+**Android Only** - `audioFocusHandling: 'bridge' | 'sdk'` and the `onAudioFocusChange` event. See the [Configuration Reference](./CONFIG-REFERENCE.md#audio-focus).
+
+**iOS:** audio interruptions are handled through the audio session (`category`, `categoryOptions`, `mode`) and this library's interruption handling.
+
+### 10. Pause Reason `audio-interruption`
+
+`onPause` reports `nativeEvent.reason` on both platforms with the same values, except `audio-interruption`, which only Android reports (headphones or Bluetooth disconnected, or audio focus taken with `audioFocusHandling: 'sdk'`). iOS reports such pauses as `external` or `unknown`. Compare against both if you need to detect interruptions on each platform.
+
+### 11. Captions Config
+
+**Android Only** - the `captions` config object (appearance and `position`) is read by the Android SDK. On iOS use `styling.captionsStyle`. See the [Configuration Reference](./CONFIG-REFERENCE.md#captions-appearance-and-position).
 
 ---
 

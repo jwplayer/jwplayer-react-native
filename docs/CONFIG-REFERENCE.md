@@ -302,7 +302,7 @@ const config: JWPlayerConfig = {
 const config: JWPlayerConfig = {
   license: 'YOUR_LICENSE_KEY',
   file: 'https://example.com/video.m3u8',
-  backgroundAudioEnabled: true,
+  backgroundAudioEnabled: true,   // iOS and Android; the options below are iOS-only
   category: 'Playback',
   categoryOptions: ['MixWithOthers', 'DuckOthers'],
   mode: 'MoviePlayback'
@@ -396,6 +396,70 @@ const config: JWPlayerConfig = {
   }]
 };
 ```
+
+#### Background Audio Notification Buttons
+
+Extra buttons in the background-audio notification and lock-screen controls (requires `backgroundAudioEnabled: true`). `icon` is the name of a drawable (or mipmap) resource in your Android app.
+
+```typescript
+const config: JWPlayerConfig = {
+  license: 'YOUR_LICENSE_KEY',
+  file: 'https://example.com/video.m3u8',
+  backgroundAudioEnabled: true,
+  notificationButtons: [
+    { id: 'like', icon: 'ic_like', title: 'Like', inCompactView: true },
+    { id: 'bookmark', icon: 'ic_bookmark', title: 'Bookmark', placement: 'forward' }
+  ]
+};
+```
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `id` | `string` | required | Reported by `onNotificationButtonClick`. Keep it stable. |
+| `icon` | `string` | required | Drawable name, e.g. `ic_like`. Missing icons are skipped with a warning. |
+| `title` | `string` | required | Label / accessibility text. |
+| `enabled` | `boolean` | `true` | Disabled buttons are greyed out (Android 12-) or hidden (Android 13+). |
+| `inCompactView` | `boolean` | `false` | Show in the collapsed notification (Android 12 and below). |
+| `placement` | `'overflow' \| 'back' \| 'forward'` | `'overflow'` | Placement hint for the system media controls. |
+
+Taps arrive on the `onNotificationButtonClick` prop (`nativeEvent.id`). Replace the buttons while playing with `playerRef.current.setNotificationButtons(buttons)`; `[]` removes them.
+
+#### Audio Focus
+
+```typescript
+const config: JWPlayerConfig = {
+  license: 'YOUR_LICENSE_KEY',
+  file: 'https://example.com/video.m3u8',
+  audioFocusHandling: 'sdk'   // 'bridge' (default) | 'sdk'
+};
+```
+
+- `'bridge'` (default): this library's own audio-focus handling, active when `backgroundAudioEnabled` is `true`.
+- `'sdk'`: the JW Android SDK manages audio focus for content and ads, pauses on a permanent loss, pauses and resumes on a transient loss, and lets the system duck the volume. Changes are reported on `onAudioFocusChange` (`nativeEvent.change`: `gained`, `lost`, `lostTransient`, `duck`). Pauses it makes have `reason: 'audio-interruption'` on `onPause`. The bridge's own handling is switched off.
+
+The Android player always pauses when headphones or a Bluetooth audio device disconnect, whichever mode is used.
+
+#### Captions Appearance and Position
+
+```typescript
+const config: JWPlayerConfig = {
+  license: 'YOUR_LICENSE_KEY',
+  file: 'https://example.com/video.m3u8',
+  captions: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    backgroundOpacity: 50,
+    edgeStyle: 'dropshadow',     // 'none' | 'dropshadow' | 'raised' | 'depressed' | 'uniform'
+    position: {
+      width: 80,                 // % of the video width; omit to fit the text
+      alignment: 'center',       // 'left' | 'center' | 'right'
+      linePercentage: 85         // top edge, % from the top (or use lineIndex, e.g. -1 = bottom line)
+    }
+  }
+};
+```
+
+Captions that carry their own placement (for example TTML regions) keep it. On iOS use `styling.captionsStyle` instead.
 
 ---
 

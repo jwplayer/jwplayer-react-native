@@ -420,9 +420,13 @@ const config: JWPlayerConfig = {
 | `title` | `string` | required | Label / accessibility text. |
 | `enabled` | `boolean` | `true` | Disabled buttons are greyed out (Android 12-) or hidden (Android 13+). |
 | `inCompactView` | `boolean` | `false` | Show in the collapsed notification (Android 12 and below). |
-| `placement` | `'overflow' \| 'back' \| 'forward'` | `'overflow'` | Placement hint for the system media controls. |
+| `placement` | `'overflow' \| 'back' \| 'forward'` | `'overflow'` | Placement hint for the system media controls. Android only. |
+| `iosCommand` | `'like' \| 'dislike' \| 'bookmark'` | none | iOS only. Shows the button as that lock-screen / Control Center feedback command. Buttons without it are not shown on iOS. |
+| `iosActive` | `boolean` | `false` | iOS only. The command's selected state (e.g. liked). |
 
 Taps arrive on the `onNotificationButtonClick` prop (`nativeEvent.id`). Replace the buttons while playing with `playerRef.current.setNotificationButtons(buttons)`; `[]` removes them.
+
+**iOS:** iOS has no custom lock-screen buttons, only fixed `MPRemoteCommandCenter` commands. Buttons with an `iosCommand` map to the like, dislike and bookmark commands (system icons, `title` as the label, `enabled` honoured); `icon`, `inCompactView` and `placement` are ignored. The system decides whether and where it shows them. JWPlayerKit does not use these three commands, so they do not conflict with its play/pause/skip/scrubber controls. The command center is shared by the whole app: with several players, the one that applied buttons last owns the commands.
 
 #### Audio Focus
 
@@ -438,6 +442,8 @@ const config: JWPlayerConfig = {
 - `'sdk'`: the JW Android SDK manages audio focus for content and ads, pauses on a permanent loss, pauses and resumes on a transient loss, and lets the system duck the volume. Changes are reported on `onAudioFocusChange` (`nativeEvent.change`: `gained`, `lost`, `lostTransient`, `duck`). Pauses it makes have `reason: 'audio-interruption'` on `onPause`. The bridge's own handling is switched off.
 
 The Android player always pauses when headphones or a Bluetooth audio device disconnect, whichever mode is used.
+
+**iOS:** `audioFocusHandling` is ignored. `onAudioFocusChange` reports audio session interruptions whenever `backgroundAudioEnabled` or `pipEnabled` is `true`: `lostTransient` when one begins (call, alarm, Siri) and `gained` when it ends. `lost` and `duck` do not occur on iOS.
 
 #### Captions Appearance and Position
 

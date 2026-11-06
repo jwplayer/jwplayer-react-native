@@ -448,7 +448,7 @@ Follow these steps to enable background audio sessions:
 
 On Android, the media notification and lock-screen controls update automatically when you call `setPlaylistItemMetadata`. The `refreshNotification` option of `setPlaylistItemMetadata` is **deprecated**: it is no longer needed, is ignored, and is slated for removal.
 
-#### Android: Custom Notification Buttons
+#### Custom Notification Buttons
 Add your own buttons (for example Like or Bookmark) to the background-audio notification and lock-screen controls with `notificationButtons`. Each button needs an `id`, a `title`, and an `icon`: the name of a drawable resource in your Android app (for example `ic_like` for `android/app/src/main/res/drawable/ic_like.xml`). Taps arrive on `onNotificationButtonClick` with the button's `id`. Change the buttons at any time, for example to show a "liked" state, with `setNotificationButtons`; pass `[]` to remove them. Omitting `notificationButtons` from a later config keeps the current buttons; to clear them, pass `[]` (in the config or to `setNotificationButtons`).
 
 The buttons belong to the background-audio service, which is shared by every player in the app: they apply to the first player that starts the service, and other players share that service (and its buttons) rather than adding their own.
@@ -480,9 +480,9 @@ Taps (and `onAudioFocusChange` events) are delivered to JavaScript straight away
 
 `JWPlayer` calls the handler prop that is current when an event fires, so a handler that closes over state (like `liked` above) sees the latest render. One limitation: `JWPlayer` only re-renders when `config` or `controls` change, so an event handler prop added after mount (one that was `undefined` on earlier renders) is not registered until the next such re-render. Pass the handler from the first render, or make it a no-op until you need it.
 
-This is Android-only; on iOS these options are ignored.
+**iOS:** iOS has no custom lock-screen buttons, only fixed system commands. Add `iosCommand: 'like' | 'dislike' | 'bookmark'` to a button to show it on iOS as that lock-screen / Control Center command (system icon, `title` as the label); taps arrive on the same `onNotificationButtonClick` with the button's `id`. Set `iosActive: true` to show the command as selected (for example "liked"). Buttons without `iosCommand` are not shown on iOS, and `icon`, `inCompactView` and `placement` are ignored there. The system decides whether and where it shows these commands. With several players, the player that applied buttons last owns them. See [Platform Differences](docs/PLATFORM-DIFFERENCES.md).
 
-#### Android: Audio Focus
+#### Audio Focus
 By default this library handles audio focus itself when `backgroundAudioEnabled` is `true`, as in earlier versions. Set `audioFocusHandling: "sdk"` to let the JW Android SDK manage it instead: it requests focus whenever content or an ad plays (with or without background audio), pauses when another app takes focus permanently, pauses and resumes for short interruptions such as a voice assistant prompt or a call, and lets the system lower the volume for navigation prompts (below Android 8.0 the SDK pauses and resumes for those instead). Omitting `audioFocusHandling` from a later config switches back to the default handling. Focus changes are reported on `onAudioFocusChange` (`gained`, `lost`, `lostTransient`, `duck`). The two modes never run together.
 
 ```javascript
@@ -493,6 +493,8 @@ By default this library handles audio focus itself when `backgroundAudioEnabled`
 ```
 
 Independent of this setting, the Android player always pauses when headphones or a Bluetooth audio device disconnect.
+
+**iOS:** `audioFocusHandling` is ignored. `onAudioFocusChange` reports audio session interruptions whenever `backgroundAudioEnabled` or `pipEnabled` is `true`: `lostTransient` when one begins (a call, an alarm, Siri) and `gained` when it ends, with `shouldResume` saying whether iOS suggests resuming.
 
 #### Pause Reasons
 `onPause` reports why playback paused in `nativeEvent.reason`: `interaction`, `external`, `clickthrough`, `viewable`, `settingsInteraction`, `related-interaction`, `autostart`, `audio-interruption` or `unknown`. `audio-interruption` is Android-only (headphones or Bluetooth disconnected, or another app took audio focus with `audioFocusHandling: "sdk"`); iOS reports those pauses as `external` or `unknown`.

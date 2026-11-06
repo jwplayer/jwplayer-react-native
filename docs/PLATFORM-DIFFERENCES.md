@@ -477,26 +477,46 @@ const config: JWPlayerConfig = {
 
 ### 8. Background Audio Notification Buttons
 
-**Android Only** - custom buttons in the background-audio notification and lock-screen controls.
+**Both platforms, different capabilities** - custom buttons in the background-audio notification and lock-screen controls.
 
 ```typescript
 const config: JWPlayerConfig = {
   license: 'YOUR_LICENSE_KEY',
   file: 'https://example.com/video.m3u8',
   backgroundAudioEnabled: true,
-  notificationButtons: [{ id: 'like', icon: 'ic_like', title: 'Like' }]  // ⚠️ ANDROID ONLY
+  notificationButtons: [
+    { id: 'like', icon: 'ic_like', title: 'Like', iosCommand: 'like' },
+    { id: 'share', icon: 'ic_share', title: 'Share' }   // Android only: no iosCommand
+  ]
 };
-// <JWPlayer onNotificationButtonClick={({ nativeEvent }) => ...} />
-// playerRef.current.setNotificationButtons([...])   // no-op on iOS
+// <JWPlayer onNotificationButtonClick={({ nativeEvent }) => ...} />   // both platforms
+// playerRef.current.setNotificationButtons([...])                     // both platforms
 ```
 
-**iOS:** JWPlayerKit has no custom lock-screen buttons; the options are ignored.
+| | Android | iOS |
+|---|---|---|
+| Which buttons | Any, with your own drawable `icon` | Only buttons with `iosCommand`: `like`, `dislike`, `bookmark` (one button each) |
+| Icon | `icon` (drawable name) | System icon; `icon` ignored |
+| Label | `title` | `title` (where the system shows text) |
+| `enabled` | Yes | Yes |
+| Selected state | Change `title`/`icon` | `iosActive` |
+| `inCompactView`, `placement` | Yes | Ignored |
+| Several players | First player to start the background service | Last player to apply buttons |
+
+**iOS:** iOS offers only fixed `MPRemoteCommandCenter` commands, and the system decides whether and where feedback commands appear. JWPlayerKit owns play/pause, next/previous, skip and the scrubber, but not like/dislike/bookmark, so the bridge can use those without conflicting with the SDK.
 
 ### 9. Audio Focus
 
-**Android Only** - `audioFocusHandling: 'bridge' | 'sdk'` and the `onAudioFocusChange` event. See the [Configuration Reference](./CONFIG-REFERENCE.md#audio-focus).
+**Android Only** - `audioFocusHandling: 'bridge' | 'sdk'`. See the [Configuration Reference](./CONFIG-REFERENCE.md#audio-focus).
 
-**iOS:** audio interruptions are handled through the audio session (`category`, `categoryOptions`, `mode`) and this library's interruption handling.
+**Both platforms** - the `onAudioFocusChange` event.
+
+| | Android | iOS |
+|---|---|---|
+| When it fires | Only with `audioFocusHandling: 'sdk'` | Whenever `backgroundAudioEnabled` or `pipEnabled` is `true` |
+| Values | `gained`, `lost`, `lostTransient`, `duck` | `lostTransient` (interruption began), `gained` (interruption ended) |
+
+**iOS:** there is no audio focus; audio session interruptions (call, alarm, Siri) are the closest equivalent, and iOS ducks other apps' audio itself. Interruptions are handled through the audio session (`category`, `categoryOptions`, `mode`) and this library's interruption handling, which pauses on `lostTransient` and resumes after `gained` when the system allows it and `backgroundAudioEnabled` is `true`.
 
 ### 10. Pause Reason `audio-interruption`
 

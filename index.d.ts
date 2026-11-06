@@ -31,12 +31,19 @@ declare module "@jwplayer/jwplayer-react-native" {
     uiConfig?: any;
     backgroundAudioEnabled?: boolean;
     /**
-     * **Android only.** Extra buttons for the background-audio notification and lock-screen
-     * controls (needs `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
+     * Extra buttons for the background-audio notification and lock-screen controls (needs
+     * `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
      * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
-     * current buttons; pass `[]` to clear them. The buttons belong to the background-audio
-     * service, which is shared: they apply to the first player that starts it, and other players
-     * share that service and its buttons.
+     * current buttons; pass `[]` to clear them.
+     *
+     * **Android:** the buttons belong to the background-audio service, which is shared: they
+     * apply to the first player that starts it, and other players share that service and its
+     * buttons.
+     *
+     * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
+     * like, dislike and bookmark commands (system icons, the system decides whether and where it
+     * shows them). With several players, only the one that applied buttons last has them: an
+     * earlier player's buttons are removed, so a tap reaches one player only.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -509,12 +516,19 @@ declare module "@jwplayer/jwplayer-react-native" {
     styling?: Styling;
     backgroundAudioEnabled?: boolean;
     /**
-     * **Android only.** Extra buttons for the background-audio notification and lock-screen
-     * controls (needs `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
+     * Extra buttons for the background-audio notification and lock-screen controls (needs
+     * `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
      * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
-     * current buttons; pass `[]` to clear them. The buttons belong to the background-audio
-     * service, which is shared: they apply to the first player that starts it, and other players
-     * share that service and its buttons.
+     * current buttons; pass `[]` to clear them.
+     *
+     * **Android:** the buttons belong to the background-audio service, which is shared: they
+     * apply to the first player that starts it, and other players share that service and its
+     * buttons.
+     *
+     * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
+     * like, dislike and bookmark commands (system icons, the system decides whether and where it
+     * shows them). With several players, only the one that applied buttons last has them: an
+     * earlier player's buttons are removed, so a tap reaches one player only.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -659,7 +673,8 @@ declare module "@jwplayer/jwplayer-react-native" {
     reason?: PauseReason;
   }
   /**
-   * **Android only.** A custom button in the background-audio notification.
+   * A custom button in the background-audio notification (Android) or a lock-screen feedback
+   * command (iOS, only when `iosCommand` is set).
    *
    * The system decides how many buttons it shows: usually 3 to 5 in total, including the
    * built-in play/pause and skip controls; extra buttons may not appear. Android 12 and below
@@ -685,13 +700,33 @@ declare module "@jwplayer/jwplayer-react-native" {
     inCompactView?: boolean;
     /** Placement hint for the system media controls. Default `"overflow"`. */
     placement?: "overflow" | "back" | "forward";
+    /**
+     * **iOS only.** Shows this button on iOS as the given `MPRemoteCommandCenter` feedback
+     * command, with the system's icon and `title` as its label. Taps report this button's `id`.
+     * Buttons without it are not shown on iOS; each command is used by at most one button
+     * (the first). Ignored on Android.
+     */
+    iosCommand?: "like" | "dislike" | "bookmark";
+    /**
+     * **iOS only.** The command's selected state (e.g. a filled heart for "liked"), where the
+     * system shows one. Default `false`.
+     */
+    iosActive?: boolean;
   }
   interface AudioFocusChangeEventProps {
     /**
      * `lostTransient`: e.g. an assistant prompt or a call. `duck` is only reported below
      * Android 8.0, where the player pauses and resumes as for `lostTransient`.
+     *
+     * iOS reports only `lostTransient` (an audio session interruption began) and `gained`
+     * (it ended). The audio session is app-wide, so every player observing it gets the event.
      */
     change: "gained" | "lost" | "lostTransient" | "duck";
+    /**
+     * iOS only, on `gained`: whether the system suggests resuming playback. Resume only when
+     * this is `true` (the bridge's own resume already follows it).
+     */
+    shouldResume?: boolean;
   }
   interface NotificationButtonClickEventProps {
     id: string;
@@ -1012,9 +1047,18 @@ declare module "@jwplayer/jwplayer-react-native" {
     onComplete?: () => void;
     onPlay?: () => void;
     onPause?: (event?: BaseEvent<PauseEventProps>) => void;
-    /** **Android only.** A custom background-audio notification button was tapped. */
+    /**
+     * A custom background-audio notification button was tapped. On iOS, a lock-screen feedback
+     * command from a button with `iosCommand` was tapped.
+     */
     onNotificationButtonClick?: (event: BaseEvent<NotificationButtonClickEventProps>) => void;
-    /** **Android only**, with `audioFocusHandling: "sdk"`. The player's audio focus changed. */
+    /**
+     * The player's audio focus changed.
+     * - Android: only with `audioFocusHandling: "sdk"`.
+     * - iOS: audio session interruptions (`lostTransient` / `gained`), whenever
+     *   `backgroundAudioEnabled` or `pipEnabled` is `true` (the bridge only observes the audio
+     *   session then). `audioFocusHandling` has no effect on iOS.
+     */
     onAudioFocusChange?: (event: BaseEvent<AudioFocusChangeEventProps>) => void;
     onSeek?: (event: BaseEvent<SeekEventProps>) => void;
     onSeeked?: (event?: BaseEvent<SeekedEventProps>) => void;

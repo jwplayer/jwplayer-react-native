@@ -34,6 +34,9 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     var backgroundAudioEnabled: Bool = true
     var userPaused: Bool = false
     var wasInterrupted: Bool = false
+    /// Lock-screen feedback commands (like / dislike / bookmark) built from `notificationButtons`.
+    /// Created on first use; never from teardown (a weak capture of self during deinit traps).
+    var remoteCommands: RNJWPlayerRemoteCommands?
     var interfaceBehavior: JWInterfaceBehavior!
     var fairplayCertUrl: String!
     var processSpcUrl: String!
@@ -85,6 +88,8 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     @objc var onComplete: RCTDirectEventBlock?
     @objc var onAudioTracks: RCTDirectEventBlock?
     @objc var onPlayerReady: RCTDirectEventBlock?
+    @objc var onAudioFocusChange: RCTDirectEventBlock?
+    @objc var onNotificationButtonClick: RCTDirectEventBlock?
     @objc var onSetupPlayerError: RCTDirectEventBlock?
     @objc var onPlayerError: RCTDirectEventBlock?
     @objc var onPlayerWarning: RCTDirectEventBlock?
@@ -159,7 +164,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         self.dismissPlayerViewController()
 
         self.deinitAudioSession()
-
+        self.remoteCommands?.clear()
     }
 
     override func layoutSubviews() {
@@ -585,6 +590,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         } else {
             self.deinitAudioSession()
         }
+        self.applyNotificationButtons(from: config)
 
         // Handle DRM parameters (update bridge vars for local playback DRM callbacks)
         processSpcUrl = config["processSpcUrl"] as? String
@@ -908,6 +914,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             } else {
                 self.deinitAudioSession()
             }
+            self.applyNotificationButtons(from: config)
 
             // Pull out top level iOS DRM values from config if present
             // This is most often used in non-legacy configs using JWP DRM solutions.
@@ -2385,6 +2392,28 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         self.onMeta?(RNJWPlayerMetadata.accessLog(metadata))
     }
 
+    // MARK: - Notification buttons (lock screen feedback commands)
+
+    /// `notificationButtons` in a config replaces the buttons; omitting it keeps them (as on Android).
+    func applyNotificationButtons(from config: [String: Any]) {
+        guard let buttons = config["notificationButtons"] as? [[String: Any]] else { return }
+        setNotificationButtons(buttons)
+    }
+
+    func setNotificationButtons(_ buttons: [[String: Any]]) {
+        let apply = { [weak self] in
+            guard let self = self else { return }
+            if self.remoteCommands == nil {
+                if buttons.isEmpty { return }
+                self.remoteCommands = RNJWPlayerRemoteCommands { [weak self] id in
+                    self?.onNotificationButtonClick?(["id": id])
+                }
+            }
+            self.remoteCommands?.apply(buttons)
+        }
+        if Thread.isMainThread { apply() } else { DispatchQueue.main.async(execute: apply) }
+    }
+
     // MARK: - JWPlayer audio session && interruption handling
 
     func initAudioSession(category:String?, categoryOptions:[String]?, mode:String?) {
@@ -2569,6 +2598,13 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
                 return
         }
         
+        // iOS has no audio focus; interruptions are the closest equivalent. Reported whenever the
+        // bridge observes interruptions (backgroundAudioEnabled or pipEnabled), regardless of the
+        // Android-only audioFocusHandling setting.
+        DispatchQueue.main.async { [weak self] in
+            self?.onAudioFocusChange?(["change": type == .began ? "lostTransient" : "gained"])
+        }
+
         switch type {
         case .began:
             DispatchQueue.main.async { [self] in

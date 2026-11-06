@@ -42,7 +42,8 @@ declare module "@jwplayer/jwplayer-react-native" {
      *
      * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
      * like, dislike and bookmark commands (system icons, the system decides whether and where it
-     * shows them). With several players, the one that applied buttons last owns them.
+     * shows them). With several players, only the one that applied buttons last has them: an
+     * earlier player's buttons are removed, so a tap reaches one player only.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -526,7 +527,8 @@ declare module "@jwplayer/jwplayer-react-native" {
      *
      * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
      * like, dislike and bookmark commands (system icons, the system decides whether and where it
-     * shows them). With several players, the one that applied buttons last owns them.
+     * shows them). With several players, only the one that applied buttons last has them: an
+     * earlier player's buttons are removed, so a tap reaches one player only.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -717,9 +719,14 @@ declare module "@jwplayer/jwplayer-react-native" {
      * Android 8.0, where the player pauses and resumes as for `lostTransient`.
      *
      * iOS reports only `lostTransient` (an audio session interruption began) and `gained`
-     * (it ended, whether or not the system allows playback to resume).
+     * (it ended). The audio session is app-wide, so every player observing it gets the event.
      */
     change: "gained" | "lost" | "lostTransient" | "duck";
+    /**
+     * iOS only, on `gained`: whether the system suggests resuming playback. Resume only when
+     * this is `true` (the bridge's own resume already follows it).
+     */
+    shouldResume?: boolean;
   }
   interface NotificationButtonClickEventProps {
     id: string;

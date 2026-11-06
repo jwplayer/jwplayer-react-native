@@ -426,7 +426,7 @@ const config: JWPlayerConfig = {
 
 Taps arrive on the `onNotificationButtonClick` prop (`nativeEvent.id`). Replace the buttons while playing with `playerRef.current.setNotificationButtons(buttons)`; `[]` removes them.
 
-**iOS:** iOS has no custom lock-screen buttons, only fixed `MPRemoteCommandCenter` commands. Buttons with an `iosCommand` map to the like, dislike and bookmark commands (system icons, `title` as the label, `enabled` honoured); `icon`, `inCompactView` and `placement` are ignored. The system decides whether and where it shows them. JWPlayerKit does not use these three commands, so they do not conflict with its play/pause/skip/scrubber controls. The command center is shared by the whole app: with several players, the one that applied buttons last owns the commands.
+**iOS:** iOS has no custom lock-screen buttons, only fixed `MPRemoteCommandCenter` commands. Buttons with an `iosCommand` map to the like, dislike and bookmark commands (system icons, `title` as the label, `enabled` honoured); `icon`, `inCompactView` and `placement` are ignored. The system decides whether and where it shows them. JWPlayerKit does not use these three commands, so they do not conflict with its play/pause/skip/scrubber controls. The command center is shared by the whole app: with several players, only the one that applied buttons last has them (an earlier player's buttons are removed, so a tap reaches one player), and when that player is removed the commands are hidden until another player sets buttons. Like Android, the buttons are only shown while `backgroundAudioEnabled` is `true`.
 
 #### Audio Focus
 
@@ -443,7 +443,7 @@ const config: JWPlayerConfig = {
 
 The Android player always pauses when headphones or a Bluetooth audio device disconnect, whichever mode is used.
 
-**iOS:** `audioFocusHandling` is ignored. `onAudioFocusChange` reports audio session interruptions whenever `backgroundAudioEnabled` or `pipEnabled` is `true`: `lostTransient` when one begins (call, alarm, Siri) and `gained` when it ends. `lost` and `duck` do not occur on iOS.
+**iOS:** `audioFocusHandling` is ignored. `onAudioFocusChange` reports audio session interruptions whenever `backgroundAudioEnabled` or `pipEnabled` is `true`: `lostTransient` when one begins (call, alarm, Siri) and `gained` when it ends, with `shouldResume` telling you whether iOS suggests resuming. `lost` and `duck` do not occur on iOS. The audio session is app-wide, so every observing player gets the event.
 
 #### Captions Appearance and Position
 

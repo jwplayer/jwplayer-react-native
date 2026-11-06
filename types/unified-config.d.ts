@@ -336,9 +336,9 @@ export interface JWPlayerConfig {
    * the current buttons; pass `[]` to clear them. Android: applies to the first player that
    * starts the background-audio service; other players share that service and its buttons.
    * iOS: only buttons with `iosCommand` are used, as the lock-screen like / dislike / bookmark
-   * commands; the player that applied buttons last owns them.
+   * commands. With several players, only the one that applied buttons last has them.
    *
-   * @platform android, ios (subset)
+   * @platform android, ios
    */
   notificationButtons?: JWNotificationButtonConfig[];
 
@@ -627,7 +627,7 @@ export function isPlaylistUrl(playlist: Playlist): playlist is string {
 /**
  * A custom background-audio notification button. See `NotificationButtonConfig` in index.d.ts.
  *
- * @platform android, ios (only with `iosCommand`)
+ * @platform android, ios
  */
 export interface JWNotificationButtonConfig {
   /** Unique id, reported back in `onNotificationButtonClick`. */

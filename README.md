@@ -494,7 +494,7 @@ By default this library handles audio focus itself when `backgroundAudioEnabled`
 
 Independent of this setting, the Android player always pauses when headphones or a Bluetooth audio device disconnect.
 
-**iOS:** `audioFocusHandling` is ignored. `onAudioFocusChange` reports audio session interruptions whenever `backgroundAudioEnabled` or `pipEnabled` is `true`: `lostTransient` when one begins (a call, an alarm, Siri) and `gained` when it ends.
+**iOS:** `audioFocusHandling` is ignored. `onAudioFocusChange` reports audio session interruptions whenever `backgroundAudioEnabled` or `pipEnabled` is `true`: `lostTransient` when one begins (a call, an alarm, Siri) and `gained` when it ends, with `shouldResume` saying whether iOS suggests resuming.
 
 #### Pause Reasons
 `onPause` reports why playback paused in `nativeEvent.reason`: `interaction`, `external`, `clickthrough`, `viewable`, `settingsInteraction`, `related-interaction`, `autostart`, `audio-interruption` or `unknown`. `audio-interruption` is Android-only (headphones or Bluetooth disconnected, or another app took audio focus with `audioFocusHandling: "sdk"`); iOS reports those pauses as `external` or `unknown`.

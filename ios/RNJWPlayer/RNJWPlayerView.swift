@@ -35,8 +35,14 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     var userPaused: Bool = false
     var wasInterrupted: Bool = false
     /// Lock-screen feedback commands (like / dislike / bookmark) built from `notificationButtons`.
-    /// Created on first use; never from teardown (a weak capture of self during deinit traps).
+    /// Created lazily the first time there are buttons to show, never during teardown: creating it
+    /// captures self weakly, and forming a weak reference to an object in deinit traps.
     var remoteCommands: RNJWPlayerRemoteCommands?
+    /// Last buttons from the config / setNotificationButtons. Shown only while
+    /// backgroundAudioEnabled is on (as on Android), and kept so they come back when it is.
+    var notificationButtons: [[String: Any]] = []
+    /// Set by reset(); stops a late setNotificationButtons from re-registering commands.
+    var isTornDown = false
     var interfaceBehavior: JWInterfaceBehavior!
     var fairplayCertUrl: String!
     var processSpcUrl: String!
@@ -164,7 +170,8 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         self.dismissPlayerViewController()
 
         self.deinitAudioSession()
-        self.remoteCommands?.clear()
+        self.isTornDown = true
+        self.remoteCommands?.invalidate()
     }
 
     override func layoutSubviews() {
@@ -2395,14 +2402,17 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     // MARK: - Notification buttons (lock screen feedback commands)
 
     /// `notificationButtons` in a config replaces the buttons; omitting it keeps them (as on Android).
+    /// Re-syncs on every config, since backgroundAudioEnabled may have changed.
     func applyNotificationButtons(from config: [String: Any]) {
-        guard let buttons = config["notificationButtons"] as? [[String: Any]] else { return }
-        setNotificationButtons(buttons)
+        setNotificationButtons(config["notificationButtons"] as? [[String: Any]] ?? notificationButtons)
     }
 
-    func setNotificationButtons(_ buttons: [[String: Any]]) {
+    func setNotificationButtons(_ newButtons: [[String: Any]]) {
         let apply = { [weak self] in
-            guard let self = self else { return }
+            guard let self = self, !self.isTornDown else { return }
+            self.notificationButtons = newButtons
+            // Like Android, the buttons need background audio.
+            let buttons = self.backgroundAudioEnabled ? newButtons : []
             if self.remoteCommands == nil {
                 if buttons.isEmpty { return }
                 self.remoteCommands = RNJWPlayerRemoteCommands { [weak self] id in
@@ -2450,6 +2460,16 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             print("setUnactive - success")
         } catch {
             print("setUnactive - error: @%@", error)
+        }
+        // Drop the observers setObservers() added; it re-adds them when audioSession is nil, so
+        // keeping them would register a second set after a background-audio toggle.
+        if audioSession != nil {
+            NotificationCenter.default.removeObserver(self, name: AVAudioSession.mediaServicesWereResetNotification, object: audioSession)
+            NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: audioSession)
+            NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
+            NotificationCenter.default.removeObserver(self, name: UIApplication.didEnterBackgroundNotification, object: nil)
+            NotificationCenter.default.removeObserver(self, name: UIApplication.willEnterForegroundNotification, object: nil)
+            NotificationCenter.default.removeObserver(self, name: AVAudioSession.routeChangeNotification, object: nil)
         }
         audioSession = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = [:]
@@ -2601,8 +2621,24 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         // iOS has no audio focus; interruptions are the closest equivalent. Reported whenever the
         // bridge observes interruptions (backgroundAudioEnabled or pipEnabled), regardless of the
         // Android-only audioFocusHandling setting.
-        DispatchQueue.main.async { [weak self] in
-            self?.onAudioFocusChange?(["change": type == .began ? "lostTransient" : "gained"])
+        // A .began flagged wasSuspended is iOS reporting, late, that the app was suspended; no
+        // matching .ended follows, so it isn't reported. `gained` carries shouldResume: iOS's
+        // hint on whether resuming is appropriate (the bridge's own resume honours it).
+        // Checked via the reason (raw 1 = appWasSuspended) and the older key by name, both
+        // deprecated symbols, to avoid warnings on the iOS 15.6 deployment target.
+        let reasonRaw = userInfo[AVAudioSessionInterruptionReasonKey] as? UInt
+        let wasSuspended = reasonRaw == 1
+            || ((userInfo["AVAudioSessionInterruptionWasSuspendedKey"] as? Bool) ?? false)
+        if type == .began && !wasSuspended {
+            DispatchQueue.main.async { [weak self] in
+                self?.onAudioFocusChange?(["change": "lostTransient"])
+            }
+        } else if type == .ended {
+            let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            let shouldResume = AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
+            DispatchQueue.main.async { [weak self] in
+                self?.onAudioFocusChange?(["change": "gained", "shouldResume": shouldResume])
+            }
         }
 
         switch type {

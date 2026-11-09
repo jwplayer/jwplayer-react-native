@@ -327,16 +327,20 @@ export interface JWPlayerConfig {
    */
   controls?: boolean;
   
-  // ========== BACKGROUND AUDIO NOTIFICATION / AUDIO FOCUS (Android only) ==========
+  // ========== BACKGROUND AUDIO NOTIFICATION / AUDIO FOCUS ==========
 
   /**
    * Extra buttons for the background-audio notification and lock-screen controls (needs
    * `backgroundAudioEnabled: true`). Taps arrive on the `onNotificationButtonClick` prop.
    * Change them later with `setNotificationButtons`. Omitting this in a later config keeps
-   * the current buttons; pass `[]` to clear them. Applies to the first player that starts the
-   * background-audio service; other players share that service and its buttons.
+   * the current buttons; pass `[]` to clear them. Android: applies to the first player that
+   * starts the background-audio service; other players share that service and its buttons.
+   * iOS: only buttons with `iosCommand` are used, as the lock-screen like / dislike / bookmark
+   * commands. With several players, the player that is playing has them: a player takes them
+   * when it starts playing; an idle player that sets buttons takes them only if no player has
+   * them, otherwise it keeps them until it plays.
    *
-   * @platform android
+   * @platform android, ios
    */
   notificationButtons?: JWNotificationButtonConfig[];
 
@@ -344,6 +348,8 @@ export interface JWPlayerConfig {
    * Who handles audio focus: `"bridge"` (default, this library's own handling, only with
    * `backgroundAudioEnabled`) or `"sdk"` (the JW Android SDK). In `"sdk"` mode changes are
    * reported on the `onAudioFocusChange` prop. Omitting it resets to `"bridge"`.
+   * iOS has no equivalent setting; it reports audio session interruptions on
+   * `onAudioFocusChange` regardless.
    *
    * @platform android
    */
@@ -623,7 +629,7 @@ export function isPlaylistUrl(playlist: Playlist): playlist is string {
 /**
  * A custom background-audio notification button. See `NotificationButtonConfig` in index.d.ts.
  *
- * @platform android
+ * @platform android, ios
  */
 export interface JWNotificationButtonConfig {
   /** Unique id, reported back in `onNotificationButtonClick`. */
@@ -638,6 +644,10 @@ export interface JWNotificationButtonConfig {
   inCompactView?: boolean;
   /** Placement hint for the system media controls. Default `"overflow"`. */
   placement?: 'overflow' | 'back' | 'forward';
+  /** iOS only: show as this lock-screen feedback command (system icon, `title` as label). */
+  iosCommand?: 'like' | 'dislike' | 'bookmark';
+  /** iOS only: the command's selected state, e.g. "liked". Default `false`. */
+  iosActive?: boolean;
 }
 
 /**

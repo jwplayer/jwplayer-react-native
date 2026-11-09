@@ -728,11 +728,11 @@ export default class JWPlayer extends Component {
 	}
 
 	/**
-	 * Android only: replaces the custom background-audio notification buttons.
-	 * No-op on iOS.
+	 * Replaces the custom background-audio notification buttons. On iOS only buttons with an
+	 * `iosCommand` (like / dislike / bookmark) are shown, as lock-screen feedback commands.
 	 */
 	setNotificationButtons(buttons) {
-		if (Platform.OS !== 'android' || !RNJWPlayerManager) return;
+		if (!RNJWPlayerManager) return;
 		RNJWPlayerManager.setNotificationButtons(
 			this.getRNJWPlayerBridgeHandle(),
 			buttons || []

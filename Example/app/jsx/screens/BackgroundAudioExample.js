@@ -3,8 +3,11 @@ import {StyleSheet, Text, View, Pressable, Platform} from 'react-native';
 import Player from '../components/Player';
 import {globalStyles} from '../../ui/styles/global.style';
 
-// Android: custom background-audio notification buttons and SDK-managed audio focus.
-// The icons are drawables in this app (android/app/src/main/res/drawable/ic_rn_*.xml).
+// Custom background-audio notification buttons and audio focus.
+// Android: the icons are drawables in this app (android/app/src/main/res/drawable/ic_rn_*.xml),
+// and audio focus is managed by the JW SDK (`audioFocusHandling: 'sdk'`).
+// iOS: buttons with `iosCommand` appear as the lock-screen / Control Center like and bookmark
+// commands; audio session interruptions (a call, Siri) arrive on onAudioFocusChange.
 export default () => {
   const playerRef = useRef(null);
   const [liked, setLiked] = useState(false);
@@ -15,8 +18,15 @@ export default () => {
   const add = line => setLog(prev => [line, ...prev].slice(0, 6));
 
   const buttons = isLiked => [
-    {id: 'like', icon: 'ic_rn_like', title: isLiked ? 'Unlike' : 'Like', inCompactView: true},
-    {id: 'bookmark', icon: 'ic_rn_bookmark', title: 'Bookmark'},
+    {
+      id: 'like',
+      icon: 'ic_rn_like',
+      title: isLiked ? 'Unlike' : 'Like',
+      inCompactView: true,
+      iosCommand: 'like',
+      iosActive: isLiked,
+    },
+    {id: 'bookmark', icon: 'ic_rn_bookmark', title: 'Bookmark', iosCommand: 'bookmark'},
   ];
 
   // Keep the config object stable: a new object on every render would reconfigure the player.
@@ -62,8 +72,10 @@ export default () => {
           />
         </View>
       </View>
-      {Platform.OS !== 'android' ? (
-        <Text style={styles.label}>These features are Android-only.</Text>
+      {Platform.OS === 'ios' ? (
+        <Text style={styles.label}>
+          Play, then lock the device: Like and Bookmark appear in the lock-screen controls.
+        </Text>
       ) : null}
       <Text style={styles.label}>Liked: {liked ? 'yes' : 'no'}</Text>
       <Pressable

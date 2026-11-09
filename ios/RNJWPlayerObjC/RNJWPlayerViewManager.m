@@ -42,6 +42,8 @@ RCT_EXPORT_VIEW_PROPERTY(onMetadataCueParsed, RCTDirectEventBlock);
 
 /* player events */
 RCT_EXPORT_VIEW_PROPERTY(onPlayerReady, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onAudioFocusChange, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onNotificationButtonClick, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onSetupPlayerError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPlayerError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPlayerWarning, RCTDirectEventBlock);
@@ -145,6 +147,8 @@ RCT_EXTERN_METHOD(loadPlaylist: (nonnull NSNumber *)reactTag: (nonnull NSArray *
 RCT_EXTERN_METHOD(recreatePlayerWithConfig: (nonnull NSNumber *)reactTag: (nonnull NSDictionary *)config)
 
 RCT_EXTERN_METHOD(loadPlaylistWithUrl: (nonnull NSNumber *)reactTag: (nonnull NSString *)playlist)
+
+RCT_EXTERN_METHOD(setNotificationButtons: (nonnull NSNumber *)reactTag: (nonnull NSArray *)buttons)
 
 RCT_EXTERN_METHOD(setFullscreen: (nonnull NSNumber *)reactTag: (BOOL)fullscreen)
 

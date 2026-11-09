@@ -118,6 +118,7 @@ class RNJWPlayerViewManager: RCTViewManager {
             }
             
             view.userPaused = true
+            view.playIntent = false
             if let playerView = view.playerView {
                 playerView.player.pause()
             } else if let playerViewController = view.playerViewController {
@@ -150,6 +151,7 @@ class RNJWPlayerViewManager: RCTViewManager {
             }
             
             view.userPaused = true
+            view.playIntent = false
             if let playerView = view.playerView {
                 playerView.player.stop()
             } else if let playerViewController = view.playerViewController {
@@ -654,6 +656,16 @@ class RNJWPlayerViewManager: RCTViewManager {
         }
     }
     
+    @objc func setNotificationButtons(_ reactTag: NSNumber, _ buttons: [Any]) {
+        self.withPlayerView(reactTag) { view in
+            guard let view = view else {
+                print("Invalid view returned from registry, expecting RNJWPlayerView")
+                return
+            }
+            view.setNotificationButtons(buttons.compactMap { $0 as? [String: Any] })
+        }
+    }
+
     @objc func setFullscreen(_ reactTag: NSNumber, _ fullscreen: Bool) {
         self.withPlayerView(reactTag) { view in
             guard let view = view else {

@@ -92,17 +92,23 @@ Follow these steps to add the library to your iOS project:
    cd ios/
    ```
 
-3. Install the iOS dependencies with CocoaPods.
+3. Set the minimum iOS version to 15.6 or later. In **ios/Podfile**, set the platform line:
+   ```ruby
+   platform :ios, '15.6'
+   ```
+   A new React Native app defaults to a lower version, and `pod install` fails with "required a higher minimum deployment target" until you raise it. With Swift Package Manager instead of CocoaPods, the minimum is 16.0 (see below).
+
+4. Install the iOS dependencies with CocoaPods.
      ```
    pod install
    ```
 
 > [!IMPORTANT]
-> **iOS is moving from CocoaPods to Swift Package Manager.** JWPlayerKit 4.28.2 is the final iOS SDK version published to CocoaPods, and wrapper 1.9.1 is the last release that installs it through CocoaPods. Later iOS SDK versions are published only through Swift Package Manager, and future wrapper releases will require it. If your iOS app still uses CocoaPods for this wrapper, plan to migrate to Swift Package Manager before taking a wrapper release after 1.9.1.
+> **iOS is moving from CocoaPods to Swift Package Manager.** JWPlayerKit 4.28.2 is the final iOS SDK version published to CocoaPods. Wrapper 1.10.0 still installs through CocoaPods, and also supports Swift Package Manager. Later iOS SDK versions are published only through Swift Package Manager, so wrapper releases that move to them will require it. If your iOS app still uses CocoaPods for this wrapper, plan to migrate to Swift Package Manager.
 
 #### Migrating to Swift Package Manager (React Native 0.88+)
 
-React Native 0.88 can build iOS apps with Swift Package Manager instead of CocoaPods. The next wrapper release (the first after 1.9.1) ships an `ios/Package.swift` for React Native's SPM autolinking. Until it is published, use the Example app in this repo (which is built this way) as the reference.
+React Native 0.88 can build iOS apps with Swift Package Manager instead of CocoaPods. From 1.10.0, the wrapper ships an `ios/Package.swift` for React Native's SPM autolinking. The Example app in this repo is built this way and can be used as a reference.
 
 1. Upgrade your app to React Native 0.88 or later.
 2. In your `ios/` folder, run `npx react-native spm --deintegrate` (React Native's migration command), then build from the `.xcodeproj`.

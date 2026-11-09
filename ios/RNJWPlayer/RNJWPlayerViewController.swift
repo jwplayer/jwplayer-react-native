@@ -380,6 +380,8 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
         super.jwplayer(player, isPlayingWithReason:reason)
 
         parentView?.onPlay?([:])
+        parentView?.playIntent = true
+        parentView?.claimNotificationButtons()
 
         parentView?.userPaused = false
         parentView?.wasInterrupted = false
@@ -392,7 +394,10 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
 
     override func jwplayer(_ player:JWPlayer, didPauseWithReason reason:JWPauseReason) {
         super.jwplayer(player, didPauseWithReason:reason)
-        parentView?.onPause?([:])
+        if let parentView = parentView {
+            parentView.onPause?(["reason": parentView.pauseReasonString(reason)])
+            if parentView.isUserPauseReason(reason) { parentView.playIntent = false }
+        }
 
         if let wasInterrupted = parentView?.wasInterrupted {
             if !wasInterrupted {
@@ -404,6 +409,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
     override func jwplayer(_ player:JWPlayer, didBecomeIdleWithReason reason:JWIdleReason) {
         super.jwplayer(player, didBecomeIdleWithReason:reason)
         parentView?.onIdle?([:])
+        parentView?.playIntent = false
     }
 
     override func jwplayer(_ player:JWPlayer, isVisible:Bool) {
@@ -419,6 +425,7 @@ class RNJWPlayerViewController : JWPlayerViewController, JWPlayerViewControllerF
     override func jwplayerContentDidComplete(_ player:JWPlayer) {
         super.jwplayerContentDidComplete(player)
         parentView?.onComplete?([:])
+        parentView?.playIntent = false
     }
 
     override func jwplayer(_ player:JWPlayer, didLoadPlaylistItem item:JWPlayerItem, at index:UInt) {

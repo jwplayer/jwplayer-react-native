@@ -34,6 +34,15 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     var backgroundAudioEnabled: Bool = true
     var userPaused: Bool = false
     var wasInterrupted: Bool = false
+    /// Set when this player reported `lostTransient`; its `gained` is reported only then.
+    var reportedFocusLoss: Bool = false
+    /// Whether this player means to be playing: set on play, cleared by an explicit pause
+    /// (API or player UI), stop, completion or idle, but not by system pauses (viewability,
+    /// interruptions). Interruption events and the bridge's resume apply only when it is set.
+    var playIntent: Bool = false {
+        // A player that no longer means to play must not report `gained` for an earlier loss.
+        didSet { if !playIntent { reportedFocusLoss = false } }
+    }
     /// Lock-screen feedback commands (like / dislike / bookmark) built from `notificationButtons`.
     /// Created lazily the first time there are buttons to show, never during teardown: creating it
     /// captures self weakly, and forming a weak reference to an object in deinit traps.
@@ -171,7 +180,12 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
         self.deinitAudioSession()
         self.isTornDown = true
-        self.remoteCommands?.invalidate()
+        // reset() can run from deinit off the main thread; RNJWPlayerRemoteCommands is main-only.
+        // Capture the object (not self) so the hop is safe during deinit.
+        if let commands = self.remoteCommands {
+            self.remoteCommands = nil
+            if Thread.isMainThread { commands.invalidate() } else { DispatchQueue.main.async { commands.invalidate() } }
+        }
     }
 
     override func layoutSubviews() {
@@ -584,10 +598,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         self.setLicense(license: license)
 
         // Handle audio session for background/PiP
-        if let bae = config["backgroundAudioEnabled"] as? Bool, let pe = config["pipEnabled"] as? Bool {
-            backgroundAudioEnabled = bae
-            pipEnabled = pe
-        }
+        // Read each key on its own: either may be set without the other.
+        let previousBackgroundAudio = backgroundAudioEnabled
+        if let bae = config["backgroundAudioEnabled"] as? Bool { backgroundAudioEnabled = bae }
+        if let pe = config["pipEnabled"] as? Bool { pipEnabled = pe }
 
         if backgroundAudioEnabled || pipEnabled {
             let category = config["category"] != nil ? config["category"] as? String : "playback"
@@ -597,7 +611,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         } else {
             self.deinitAudioSession()
         }
-        self.applyNotificationButtons(from: config)
+        self.applyNotificationButtons(from: config, backgroundAudioChanged: previousBackgroundAudio != backgroundAudioEnabled)
 
         // Handle DRM parameters (update bridge vars for local playback DRM callbacks)
         processSpcUrl = config["processSpcUrl"] as? String
@@ -907,10 +921,10 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             let license = config["license"] as? String
             self.setLicense(license: license)
 
-            if let bae = config["backgroundAudioEnabled"] as? Bool, let pe = config["pipEnabled"] as? Bool {
-                backgroundAudioEnabled = bae
-                pipEnabled = pe
-            }
+            // Read each key on its own: either may be set without the other.
+            let previousBackgroundAudio = backgroundAudioEnabled
+            if let bae = config["backgroundAudioEnabled"] as? Bool { backgroundAudioEnabled = bae }
+            if let pe = config["pipEnabled"] as? Bool { pipEnabled = pe }
 
             if backgroundAudioEnabled || pipEnabled {
                 let category = config["category"] != nil ? config["category"] as? String : "playback" // default category for playback
@@ -921,7 +935,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             } else {
                 self.deinitAudioSession()
             }
-            self.applyNotificationButtons(from: config)
+            self.applyNotificationButtons(from: config, backgroundAudioChanged: previousBackgroundAudio != backgroundAudioEnabled)
 
             // Pull out top level iOS DRM values from config if present
             // This is most often used in non-legacy configs using JWP DRM solutions.
@@ -2107,6 +2121,8 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     func jwplayer(_ player:JWPlayer, isPlayingWithReason reason:JWPlayReason) {
         self.onPlay?([:])
+        playIntent = true
+        claimNotificationButtons()
 
         userPaused = false
         wasInterrupted = false
@@ -2118,14 +2134,23 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     func jwplayer(_ player:JWPlayer, didPauseWithReason reason:JWPauseReason) {
         self.onPause?(["reason": pauseReasonString(reason)])
+        if isUserPauseReason(reason) { playIntent = false }
 
         if !wasInterrupted {
             userPaused = true
         }
     }
 
+    /// Pauses the user asked for (player UI, lock screen / Control Center, the related-content
+    /// gallery, the settings menu). These clear playIntent. JWPlayerKit reports a lock-screen
+    /// pause as `.interaction`; API pauses (`.external`) are cleared by the view manager instead,
+    /// and system pauses (`.viewable`, the bridge's own interruption pause) keep the intent.
+    func isUserPauseReason(_ reason: JWPauseReason) -> Bool {
+        return reason == .interaction || reason == .relatedInteraction || reason == .settingsInteraction
+    }
+
     /// Wire value for `onPause`'s `reason`, matching Android's PauseReason strings.
-    private func pauseReasonString(_ reason: JWPauseReason) -> String {
+    func pauseReasonString(_ reason: JWPauseReason) -> String {
         switch reason {
         case .external: return "external"
         case .interaction: return "interaction"
@@ -2141,6 +2166,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     func jwplayer(_ player:JWPlayer, didBecomeIdleWithReason reason:JWIdleReason) {
         self.onIdle?([:])
+        playIntent = false
     }
 
     func jwplayer(_ player:JWPlayer, isVisible:Bool) {
@@ -2153,6 +2179,7 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
 
     func jwplayerContentDidComplete(_ player:JWPlayer) {
         self.onComplete?([:])
+        playIntent = false
     }
 
     func jwplayer(_ player:JWPlayer, didLoadPlaylistItem item:JWPlayerItem, at index:UInt) {
@@ -2402,17 +2429,30 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
     // MARK: - Notification buttons (lock screen feedback commands)
 
     /// `notificationButtons` in a config replaces the buttons; omitting it keeps them (as on Android).
-    /// Re-syncs on every config, since backgroundAudioEnabled may have changed.
-    func applyNotificationButtons(from config: [String: Any]) {
-        setNotificationButtons(config["notificationButtons"] as? [[String: Any]] ?? notificationButtons)
+    /// Re-applies the stored buttons only when backgroundAudioEnabled changed, so an unrelated
+    /// config on this player does not take lock-screen ownership from another player.
+    func applyNotificationButtons(from config: [String: Any], backgroundAudioChanged: Bool) {
+        if let buttons = config["notificationButtons"] as? [[String: Any]] {
+            setNotificationButtons(buttons)
+        } else if backgroundAudioChanged {
+            setNotificationButtons(notificationButtons)
+        }
     }
 
-    func setNotificationButtons(_ newButtons: [[String: Any]]) {
+    /// `claim` is set by claimNotificationButtons() on play, so taking ownership does not depend
+    /// on getState() already reporting .playing inside the play delegate.
+    func setNotificationButtons(_ newButtons: [[String: Any]], claim: Bool = false) {
         let apply = { [weak self] in
             guard let self = self, !self.isTornDown else { return }
             self.notificationButtons = newButtons
             // Like Android, the buttons need background audio.
             let buttons = self.backgroundAudioEnabled ? newButtons : []
+            // An idle player does not take the lock screen from another player; it keeps the
+            // buttons and claims them when it starts playing (claimNotificationButtons).
+            if !claim, !buttons.isEmpty, !self.isPlayingOrBuffering,
+               RNJWPlayerRemoteCommands.hasOwner, !(self.remoteCommands?.isOwner ?? false) {
+                return
+            }
             if self.remoteCommands == nil {
                 if buttons.isEmpty { return }
                 self.remoteCommands = RNJWPlayerRemoteCommands { [weak self] id in
@@ -2422,6 +2462,19 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
             self.remoteCommands?.apply(buttons)
         }
         if Thread.isMainThread { apply() } else { DispatchQueue.main.async(execute: apply) }
+    }
+
+    private var isPlayingOrBuffering: Bool {
+        let state = playerView?.player.getState() ?? playerViewController?.player.getState()
+        return state == .playing || state == .buffering
+    }
+
+    /// The playing player owns the lock-screen buttons, so a tap reaches the player the user
+    /// hears. Re-applies this player's buttons if another player took ownership since.
+    func claimNotificationButtons() {
+        guard backgroundAudioEnabled, !notificationButtons.isEmpty,
+              !(remoteCommands?.isOwner ?? false) else { return }
+        setNotificationButtons(notificationButtons, claim: true)
     }
 
     // MARK: - JWPlayer audio session && interruption handling
@@ -2629,15 +2682,23 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         let reasonRaw = userInfo[AVAudioSessionInterruptionReasonKey] as? UInt
         let wasSuspended = reasonRaw == 1
             || ((userInfo["AVAudioSessionInterruptionWasSuspendedKey"] as? Bool) ?? false)
+        // The session is app-wide, so every player observes it; like Android, only a player that
+        // means to be playing (playIntent) reports it, and `gained` only follows a reported
+        // `lostTransient`. playIntent survives system pauses, so the order of this notification
+        // and a viewability pause does not matter.
         if type == .began && !wasSuspended {
             DispatchQueue.main.async { [weak self] in
-                self?.onAudioFocusChange?(["change": "lostTransient"])
+                guard let self = self, self.playIntent else { return }
+                self.reportedFocusLoss = true
+                self.onAudioFocusChange?(["change": "lostTransient"])
             }
         } else if type == .ended {
             let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
             let shouldResume = AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
             DispatchQueue.main.async { [weak self] in
-                self?.onAudioFocusChange?(["change": "gained", "shouldResume": shouldResume])
+                guard let self = self, self.reportedFocusLoss else { return }
+                self.reportedFocusLoss = false
+                self.onAudioFocusChange?(["change": "gained", "shouldResume": shouldResume])
             }
         }
 
@@ -2656,20 +2717,19 @@ class RNJWPlayerView: UIView, JWPlayerDelegate, JWPlayerStateDelegate,
         case .ended:
             guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
             let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-            if options.contains(.shouldResume) && !userPaused && backgroundAudioEnabled {
-                // Interruption ended. Playback should resume.
-                DispatchQueue.main.async { [self] in
+            // Decided on main, where playIntent and backgroundAudioEnabled are written.
+            DispatchQueue.main.async { [self] in
+                // Only a player that means to be playing resumes: an idle or user-paused one stays put.
+                if options.contains(.shouldResume) && playIntent && backgroundAudioEnabled {
+                    // Interruption ended. Playback should resume.
                     if (playerView != nil) {
                         playerView.player.play()
                     } else if (playerViewController != nil) {
                         playerViewController.player.play()
                     }
                     print("handleInterruption :- Play")
-                }
-            }
-            else {
-                // Interruption ended. Playback should not resume.
-                DispatchQueue.main.async { [self] in
+                } else {
+                    // Interruption ended. Playback should not resume.
                     wasInterrupted = true
 
                     if (playerView != nil) {

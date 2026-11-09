@@ -118,6 +118,7 @@ class RNJWPlayerViewManager: RCTViewManager {
             }
             
             view.userPaused = true
+            view.playIntent = false
             if let playerView = view.playerView {
                 playerView.player.pause()
             } else if let playerViewController = view.playerViewController {
@@ -150,6 +151,7 @@ class RNJWPlayerViewManager: RCTViewManager {
             }
             
             view.userPaused = true
+            view.playIntent = false
             if let playerView = view.playerView {
                 playerView.player.stop()
             } else if let playerViewController = view.playerViewController {

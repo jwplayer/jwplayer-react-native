@@ -17,8 +17,9 @@ import MediaPlayer
 final class RNJWPlayerRemoteCommands {
 
     /// MPRemoteCommandCenter is process-wide. Only one player owns the feedback commands at a
-    /// time: the one that applied buttons last. Taking ownership clears the previous owner's
-    /// targets, so a tap is only ever reported to one player.
+    /// time: the last one to call apply() with buttons. The view decides when that happens (on
+    /// play, or when it sets buttons while playing or while there is no owner). Taking ownership
+    /// clears the previous owner's targets, so a tap is only ever reported to one player.
     private static weak var owner: RNJWPlayerRemoteCommands?
 
     private var targets: [(MPFeedbackCommand, Any)] = []
@@ -99,6 +100,12 @@ final class RNJWPlayerRemoteCommands {
             targets.append((spec.command, token))
         }
     }
+
+    /// Whether any player currently owns the feedback commands.
+    static var hasOwner: Bool { owner != nil }
+
+    /// Whether this player currently owns the feedback commands.
+    var isOwner: Bool { RNJWPlayerRemoteCommands.owner === self }
 
     /// Removes this player's targets and, if it owns the commands, disables them.
     func clear() {

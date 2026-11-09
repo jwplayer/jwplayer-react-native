@@ -501,7 +501,7 @@ const config: JWPlayerConfig = {
 | `enabled` | Yes | Yes |
 | Selected state | Change `title`/`icon` | `iosActive` |
 | `inCompactView`, `placement` | Yes | Ignored |
-| Several players | First player to start the background service | Last player to apply buttons |
+| Several players | First player to start the background service | The player that is playing (an idle player takes them only when no player has them) |
 
 **iOS:** iOS offers only fixed `MPRemoteCommandCenter` commands, and the system decides whether and where feedback commands appear. JWPlayerKit owns play/pause, next/previous, skip and the scrubber, but not like/dislike/bookmark, so the bridge can use those without conflicting with the SDK.
 
@@ -516,7 +516,7 @@ const config: JWPlayerConfig = {
 | When it fires | Only with `audioFocusHandling: 'sdk'` | Whenever `backgroundAudioEnabled` or `pipEnabled` is `true` |
 | Values | `gained`, `lost`, `lostTransient`, `duck` | `lostTransient` (interruption began), `gained` (interruption ended) |
 
-**iOS:** there is no audio focus; audio session interruptions (call, alarm, Siri) are the closest equivalent, and iOS ducks other apps' audio itself. Interruptions are handled through the audio session (`category`, `categoryOptions`, `mode`) and this library's interruption handling, which pauses on `lostTransient` and resumes after `gained` when the system allows it and `backgroundAudioEnabled` is `true`.
+**iOS:** there is no audio focus; audio session interruptions (call, alarm, Siri) are the closest equivalent, and iOS ducks other apps' audio itself. Interruptions are handled through the audio session (`category`, `categoryOptions`, `mode`) and this library's interruption handling, which pauses on `lostTransient` and resumes after `gained` when the system allows it and `backgroundAudioEnabled` is `true`. The bridge resumes only a player that was playing (or paused by the system), not an idle player or one paused with `pause()`/`stop()` or by the user. **Known issue:** JWPlayerKit itself currently resumes every player when an interruption ends, idle or paused ones included; a fix is pending in the iOS SDK. Because those players start playing, lock-screen buttons can also move to whichever of them starts last.
 
 ### 10. Pause Reason `audio-interruption`
 

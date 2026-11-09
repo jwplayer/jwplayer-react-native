@@ -336,7 +336,9 @@ export interface JWPlayerConfig {
    * the current buttons; pass `[]` to clear them. Android: applies to the first player that
    * starts the background-audio service; other players share that service and its buttons.
    * iOS: only buttons with `iosCommand` are used, as the lock-screen like / dislike / bookmark
-   * commands. With several players, only the one that applied buttons last has them.
+   * commands. With several players, the player that is playing has them: a player takes them
+   * when it starts playing; an idle player that sets buttons takes them only if no player has
+   * them, otherwise it keeps them until it plays.
    *
    * @platform android, ios
    */

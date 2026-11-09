@@ -42,8 +42,10 @@ declare module "@jwplayer/jwplayer-react-native" {
      *
      * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
      * like, dislike and bookmark commands (system icons, the system decides whether and where it
-     * shows them). With several players, only the one that applied buttons last has them: an
-     * earlier player's buttons are removed, so a tap reaches one player only.
+     * shows them; the lock screen may show only one). With several players, one owns them at a
+     * time, so a tap reaches one player only: the player that is playing. A player takes them
+     * when it starts playing, or when it sets buttons while playing or while no player has
+     * them. The `iosActive` state (e.g. a filled star) changes only when you set it.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -527,8 +529,10 @@ declare module "@jwplayer/jwplayer-react-native" {
      *
      * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
      * like, dislike and bookmark commands (system icons, the system decides whether and where it
-     * shows them). With several players, only the one that applied buttons last has them: an
-     * earlier player's buttons are removed, so a tap reaches one player only.
+     * shows them; the lock screen may show only one). With several players, one owns them at a
+     * time, so a tap reaches one player only: the player that is playing. A player takes them
+     * when it starts playing, or when it sets buttons while playing or while no player has
+     * them. The `iosActive` state (e.g. a filled star) changes only when you set it.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -1057,7 +1061,11 @@ declare module "@jwplayer/jwplayer-react-native" {
      * - Android: only with `audioFocusHandling: "sdk"`.
      * - iOS: audio session interruptions (`lostTransient` / `gained`), whenever
      *   `backgroundAudioEnabled` or `pipEnabled` is `true` (the bridge only observes the audio
-     *   session then). `audioFocusHandling` has no effect on iOS.
+     *   session then), and only on a player that is playing, or was paused by the system rather
+     *   than by `pause()`/`stop()` or the user; that player then gets `gained` when it ends. An
+     *   idle or user-paused player gets neither, and the bridge does not resume it. Known issue:
+     *   JWPlayerKit itself currently resumes every player when an interruption ends, idle or
+     *   paused ones included; a fix is pending in the iOS SDK. `audioFocusHandling` has no effect on iOS.
      */
     onAudioFocusChange?: (event: BaseEvent<AudioFocusChangeEventProps>) => void;
     onSeek?: (event: BaseEvent<SeekEventProps>) => void;

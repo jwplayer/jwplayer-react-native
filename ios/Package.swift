@@ -33,15 +33,25 @@ let package = Package(
         .package(name: "React-GeneratedCode", path: "../../../ios"),
         .package(url: "https://github.com/jwplayer/JWPlayerKit-package.git", exact: "4.28.2"),
         .package(url: "https://github.com/googleads/swift-package-manager-google-interactive-media-ads-ios.git", .upToNextMinor(from: "3.32.0")),
-        .package(url: "https://github.com/googlecast/google-cast-ios-sdk.git", .upToNextMinor(from: "4.8.6")),
     ],
     targets: [
+        // Google Cast, dynamic build. Our iOS docs require the dynamic build: the static one needs its
+        // resource bundles copied into the app by hand, and without them discovery finds no devices.
+        // This points at the same zip Google's google-cast-ios-sdk package uses for GoogleCastDynamic,
+        // without that package's static GTMSessionFetcher dependency. The dynamic framework already
+        // contains GTMSessionFetcher, so linking it again loads the GTM classes twice.
+        // When updating, copy the url and checksum from google-cast-ios-sdk's Package.swift.
+        .binaryTarget(
+            name: "GoogleCast",
+            url: "https://dl.google.com/dl/chromecast/sdk/ios/GoogleCastSDK-ios-4.8.6_dynamic.zip",
+            checksum: "55f6c21291a1315c68063f07e7d76225564bff70f2fd38caad135c71d66eb310"
+        ),
         .target(
             name: "RNJWPlayerSwift",
             dependencies: reactDependencies + [
                 .product(name: "JWPlayerKit", package: "JWPlayerKit-package"),
                 .product(name: "GoogleInteractiveMediaAds", package: "swift-package-manager-google-interactive-media-ads-ios"),
-                .product(name: "GoogleCastStatic", package: "google-cast-ios-sdk"),
+                "GoogleCast",
             ],
             path: "RNJWPlayer",
             exclude: ["RNJWPlayer-Bridging-Header.h"],

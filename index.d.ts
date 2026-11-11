@@ -36,13 +36,16 @@ declare module "@jwplayer/jwplayer-react-native" {
      * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
      * current buttons; pass `[]` to clear them.
      *
-     * **Android:** the buttons belong to the background-audio service, which is shared: they
-     * apply to the first player that starts it, and other players share that service and its
-     * buttons.
+     * **Android:** the buttons belong to the background-audio service, which one player uses
+     * at a time: the first player to start background playback. Other players get no
+     * notification controls while it holds the service: their buttons are not shown and their
+     * `onNotificationButtonClick` never fires. The service moves only after the owning player
+     * releases it (removed, set up again, or casting) and another player then starts playback.
      *
      * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
      * like, dislike and bookmark commands (system icons, the system decides whether and where it
-     * shows them; the lock screen may show only one). With several players, one owns them at a
+     * shows them; in testing on iOS 27 only `like` is displayed, `bookmark` and `dislike` are
+     * accepted but not shown). With several players, one owns them at a
      * time, so a tap reaches one player only: the player that is playing. A player takes them
      * when it starts playing, or when it sets buttons while playing or while no player has
      * them. The `iosActive` state (e.g. a filled star) changes only when you set it.
@@ -523,13 +526,16 @@ declare module "@jwplayer/jwplayer-react-native" {
      * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
      * current buttons; pass `[]` to clear them.
      *
-     * **Android:** the buttons belong to the background-audio service, which is shared: they
-     * apply to the first player that starts it, and other players share that service and its
-     * buttons.
+     * **Android:** the buttons belong to the background-audio service, which one player uses
+     * at a time: the first player to start background playback. Other players get no
+     * notification controls while it holds the service: their buttons are not shown and their
+     * `onNotificationButtonClick` never fires. The service moves only after the owning player
+     * releases it (removed, set up again, or casting) and another player then starts playback.
      *
      * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
      * like, dislike and bookmark commands (system icons, the system decides whether and where it
-     * shows them; the lock screen may show only one). With several players, one owns them at a
+     * shows them; in testing on iOS 27 only `like` is displayed, `bookmark` and `dislike` are
+     * accepted but not shown). With several players, one owns them at a
      * time, so a tap reaches one player only: the player that is playing. A player takes them
      * when it starts playing, or when it sets buttons while playing or while no player has
      * them. The `iosActive` state (e.g. a filled star) changes only when you set it.
@@ -1233,11 +1239,14 @@ declare module "@jwplayer/jwplayer-react-native" {
         refreshNotification?: boolean;
     }): void;
     /**
-     * **Android only; no-op on iOS.** Replaces the custom background-audio notification buttons
-     * (see `notificationButtons` in the config). Takes effect immediately while background audio
-     * is running. Pass `[]` to remove them.
+     * Replaces the custom background-audio notification buttons (see `notificationButtons` in
+     * the config). Pass `[]` to remove them.
+     * - Android: takes effect immediately while background audio is running.
+     * - iOS: updates the lock-screen feedback commands (the buttons with an `iosCommand`),
+     *   including their `iosActive` state. Needs `backgroundAudioEnabled`; with several players,
+     *   an idle player does not take the commands from the player that has them.
      *
-     * Each call rebuilds the notification, so call it when the buttons actually change (e.g. in
+     * On Android each call rebuilds the notification, so call it when the buttons actually change (e.g. in
      * a click handler), not on every render; if you derive the array in render, memoize it with
      * `useMemo` and only pass a new array when its contents change.
      */

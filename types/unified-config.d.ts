@@ -333,8 +333,10 @@ export interface JWPlayerConfig {
    * Extra buttons for the background-audio notification and lock-screen controls (needs
    * `backgroundAudioEnabled: true`). Taps arrive on the `onNotificationButtonClick` prop.
    * Change them later with `setNotificationButtons`. Omitting this in a later config keeps
-   * the current buttons; pass `[]` to clear them. Android: applies to the first player that
-   * starts the background-audio service; other players share that service and its buttons.
+   * the current buttons; pass `[]` to clear them. Android: only the first player that
+   * starts the background-audio service gets notification controls; other players' buttons
+   * are not shown and get no clicks until that player releases the service (removed, set up
+   * again, or casting) and another player then starts playback.
    * iOS: only buttons with `iosCommand` are used, as the lock-screen like / dislike / bookmark
    * commands. With several players, the player that is playing has them: a player takes them
    * when it starts playing; an idle player that sets buttons takes them only if no player has

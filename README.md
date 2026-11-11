@@ -264,12 +264,17 @@ Follow these steps to run the example project:
 
 1. Checkout this repository.
 2. From the **Example** directory, run `yarn` or `npm i`.
-3. From the **Example/ios** directory, install the iOS dependencies.
+3. From the **Example/ios** directory, set up the iOS dependencies. The Example builds with Swift Package Manager, not CocoaPods: **Example/ios/Podfile** is a stub, so do not run `pod install`.
    ```
-   pod install
+   npx react-native spm update
    ```
-4. In Xcode,open **RNJWPlayer.xcworkspace**.
-5. In **App.js**, within the `config` prop, add your JWX SDK license key.
+   If your checkout was previously built with CocoaPods, delete **Example/ios/build** first.
+4. In Xcode, open **RNJWPlayer.xcodeproj** (not a workspace).
+5. Create **Example/.env** with your JWX SDK license keys. The example screens read them through `@env` (see **Example/app/jsx/components/Player.js**).
+   ```
+   IOS_API_KEY=<your iOS license key>
+   ANDROID_API_KEY=<your Android license key>
+   ```
 6. Build and run the app for your preferred platform.
    ```
    yarn android
@@ -289,7 +294,7 @@ Follow these steps to run the example project:
 
 ```
 xcrun simctl boot <SIMULATOR_UDID>
-xcodebuild -workspace RNJWPlayer.xcworkspace -scheme RNJWPlayer -configuration Debug -destination id=<SIMULATOR_UDID> build
+xcodebuild -project RNJWPlayer.xcodeproj -scheme RNJWPlayer -configuration Debug -destination id=<SIMULATOR_UDID> build
 xcrun simctl install <SIMULATOR_UDID> ~/Library/Developer/Xcode/DerivedData/RNJWPlayer-*/Build/Products/Debug-iphonesimulator/RNJWPlayer.app
 xcrun simctl launch <SIMULATOR_UDID> com.jwplayer.RNJWPlayer
 ```
@@ -457,7 +462,7 @@ On Android, the media notification and lock-screen controls update automatically
 #### Custom Notification Buttons
 Add your own buttons (for example Like or Bookmark) to the background-audio notification and lock-screen controls with `notificationButtons`. Each button needs an `id`, a `title`, and an `icon`: the name of a drawable resource in your Android app (for example `ic_like` for `android/app/src/main/res/drawable/ic_like.xml`). Taps arrive on `onNotificationButtonClick` with the button's `id`. Change the buttons at any time, for example to show a "liked" state, with `setNotificationButtons`; pass `[]` to remove them. Omitting `notificationButtons` from a later config keeps the current buttons; to clear them, pass `[]` (in the config or to `setNotificationButtons`).
 
-The buttons belong to the background-audio service, which is shared by every player in the app: they apply to the first player that starts the service, and other players share that service (and its buttons) rather than adding their own.
+The buttons belong to the background-audio service, and only one player uses that service at a time: the first player with `backgroundAudioEnabled` to start playback (its first frame). While it holds the service, other players get no notification or lock-screen controls: their `notificationButtons` are not shown, `setNotificationButtons` on them changes nothing visible, and their `onNotificationButtonClick` never fires. The service does not follow the player that is playing. It moves only after the owning player releases it (the player is removed, set up again with a new config, or starts casting) and another player then starts playback.
 
 ```javascript
 const [liked, setLiked] = useState(false);
@@ -482,11 +487,11 @@ const buttons = liked => [
 
 Optional per button: `enabled` (default `true`; a disabled button keeps its place but does nothing when tapped), `inCompactView` (show in the collapsed notification, Android 12 and below) and `placement` (`"overflow"`, `"back"` or `"forward"`, a hint for the system media controls). The system decides how many buttons it shows, usually 3 to 5 including play/pause: put the important ones first. Android 13 and later hide disabled buttons and ignore `inCompactView`. Buttons whose icon cannot be found are skipped with a logcat warning. Keep the `config` object stable between renders (for example with `useMemo`); change buttons with `setNotificationButtons` rather than by rebuilding the config, and call it only when the buttons change (memoize the array with `useMemo` if you build it during render).
 
-Taps (and `onAudioFocusChange` events) are delivered to JavaScript straight away, including while the app is in the background, so the notification can be updated before the user returns to the app.
+Taps (and `onAudioFocusChange` events) are delivered to JavaScript straight away, including while the app is in the background, so the notification can be updated before the user returns to the app. On Android, from 1.10.0, this applies to every player event: all `on*` handlers (`onTime` included) run while the app is in the background and receive a plain `{ nativeEvent }` object. See [Event Delivery](docs/PLATFORM-DIFFERENCES.md#12-event-delivery).
 
 `JWPlayer` calls the handler prop that is current when an event fires, so a handler that closes over state (like `liked` above) sees the latest render. One limitation: `JWPlayer` only re-renders when `config` or `controls` change, so an event handler prop added after mount (one that was `undefined` on earlier renders) is not registered until the next such re-render. Pass the handler from the first render, or make it a no-op until you need it.
 
-**iOS:** iOS has no custom lock-screen buttons, only fixed system commands. Add `iosCommand: 'like' | 'dislike' | 'bookmark'` to a button to show it on iOS as that lock-screen / Control Center command (system icon, `title` as the label); taps arrive on the same `onNotificationButtonClick` with the button's `id`. Set `iosActive: true` to show the command as selected (for example "liked"). Buttons without `iosCommand` are not shown on iOS, and `icon`, `inCompactView` and `placement` are ignored there. The system decides whether and where it shows these commands. With several players, the player that is playing owns them: a player takes them when it starts playing, and an idle player that sets buttons takes them only if no player has them, otherwise it keeps them until it plays. The lock screen may show only one of the commands, and `iosActive` changes only when you set it, so update it with `setNotificationButtons` from `onNotificationButtonClick`. See [Platform Differences](docs/PLATFORM-DIFFERENCES.md).
+**iOS:** iOS has no custom lock-screen buttons, only fixed system commands. Add `iosCommand: 'like' | 'dislike' | 'bookmark'` to a button to show it on iOS as that lock-screen / Control Center command (system icon, `title` as the label); taps arrive on the same `onNotificationButtonClick` with the button's `id`. Set `iosActive: true` to show the command as selected (for example "liked"). Buttons without `iosCommand` are not shown on iOS, and `icon`, `inCompactView` and `placement` are ignored there. The system decides whether and where it shows these commands. With several players, the player that is playing owns them: a player takes them when it starts playing, and an idle player that sets buttons takes them only if no player has them, otherwise it keeps them until it plays. In testing on iOS 27 only `like` is displayed (lock screen, Control Center and Dynamic Island); `bookmark` and `dislike` are accepted but not shown. `iosActive` changes only when you set it, so update it with `setNotificationButtons` from `onNotificationButtonClick`. **Known limitation:** JWPlayerKit supports one playing player at a time, and pausing any player pauses every player. That covers `pause()`, the player UI, the lock screen, and unmounting a `<JWPlayer>` (the component calls `pause()` when it unmounts). See [Platform Differences](docs/PLATFORM-DIFFERENCES.md).
 
 #### Audio Focus
 By default this library handles audio focus itself when `backgroundAudioEnabled` is `true`, as in earlier versions. Set `audioFocusHandling: "sdk"` to let the JW Android SDK manage it instead: it requests focus whenever content or an ad plays (with or without background audio), pauses when another app takes focus permanently, pauses and resumes for short interruptions such as a voice assistant prompt or a call, and lets the system lower the volume for navigation prompts (below Android 8.0 the SDK pauses and resumes for those instead). Omitting `audioFocusHandling` from a later config switches back to the default handling. Focus changes are reported on `onAudioFocusChange` (`gained`, `lost`, `lostTransient`, `duck`). The two modes never run together.
@@ -559,7 +564,7 @@ Follow these steps to enable casting:
 Follow these steps to enable casting:
 
 1. [Enable casting to Chromecast devices](https://docs.jwplayer.com/players/docs/ios-enable-casting-to-chromecast-devices).
-2. Add `$RNJWPlayerUseGoogleCast = true` to your **Podfile**. This setting will install `google-cast-sdk` pod.
+2. Add `$RNJWPlayerUseGoogleCast = true` to your **Podfile**. This setting will install `google-cast-sdk` pod. With Swift Package Manager, Google Cast is always linked and no flag is needed.
 3. Edit **Info.plist** with the following values.
 
   ```text
@@ -569,6 +574,8 @@ Follow these steps to enable casting:
   'Privacy - Local Network Usage Description' => 'We will use the local network to discover Cast-enabled devices on your WiFi network.'
   'NSMicrophoneUsageDescription' => 'We will use your Microphone for media casting.'
   ```
+
+ℹ️ By default the Google Cast SDK suspends the cast session when the app goes to the background. To keep casting, set `options.suspendSessionsWhenBackgrounded = false` on your `GCKCastOptions` before calling `GCKCastContext.setSharedInstanceWith(options)`, and keep a suitable background mode enabled. This library adds no lock-screen controls for a cast session on iOS (on Android they come from the `NotificationOptions` in your `OptionsProvider`), and the iOS lock screen can show the wrong Play/Pause state while casting.
 
 <br />
 

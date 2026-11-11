@@ -43,7 +43,7 @@ See the [Configuration Reference](./CONFIG-REFERENCE.md) for complete documentat
 | `logoView`                                                                               | JwLogoView | A, I | |
 | [`mute`](https://docs.jwplayer.com/players/reference/setup-options#mute)                 | boolean | A, I | |
 | [`nextupoffset`](https://docs.jwplayer.com/players/reference/setup-options#nextupoffset) | string &#124; number | A, I | |
-| `notificationButtons`                                                                    | NotificationButtonConfig[ ] | A | Custom background-audio notification buttons. See [Notification Buttons](./CONFIG-REFERENCE.md#background-audio-notification-buttons) |
+| `notificationButtons`                                                                    | NotificationButtonConfig[ ] | A, I | Custom background-audio notification buttons (iOS: lock-screen commands via `iosCommand`). See [Notification Buttons](./CONFIG-REFERENCE.md#background-audio-notification-buttons) |
 | `pid`                                                                                    | string  | A, I | Unique identifier of the player |
 | [`playbackRateControls`](https://docs.jwplayer.com/players/reference/setup-options#playbackratecontrols) | boolean | A, I | |
 | [`playbackRates`](https://docs.jwplayer.com/players/reference/setup-options#playbackrates)|number[ ] | A, I | |

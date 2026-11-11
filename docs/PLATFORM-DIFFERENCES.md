@@ -495,15 +495,15 @@ const config: JWPlayerConfig = {
 
 | | Android | iOS |
 |---|---|---|
-| Which buttons | Any, with your own drawable `icon` | Only buttons with `iosCommand`: `like`, `dislike`, `bookmark` (one button each) |
+| Which buttons | Any, with your own drawable `icon` | Only buttons with `iosCommand`: `like`, `dislike`, `bookmark` (one button each). In testing on iOS 27 only `like` is displayed, so put your primary action on `like` |
 | Icon | `icon` (drawable name) | System icon; `icon` ignored |
 | Label | `title` | `title` (where the system shows text) |
 | `enabled` | Yes | Yes |
 | Selected state | Change `title`/`icon` | `iosActive` |
 | `inCompactView`, `placement` | Yes | Ignored |
-| Several players | Only the first player to start the background service. Other players get no notification controls (buttons not shown, no `onNotificationButtonClick`) until it releases the service and another player then starts playback | The player that is playing (an idle player takes them only when no player has them). Pausing any player pauses all of them |
+| Several players | One player holds the notification at a time, normally the first with `backgroundAudioEnabled: true` to start playing. Other players: buttons not shown, no `onNotificationButtonClick`. The owner releases it only when unmounted or casting (not on a new `config`); another player takes over at its next first frame. See the [Configuration Reference](./CONFIG-REFERENCE.md#background-audio-notification-buttons) | The player that is playing: a player that is not playing does not take the commands from the one that has them; its buttons are applied when it starts playing, or straight away if no player has them. Known limitation (observed with JWPlayerKit 4.28.2): pausing any player pauses every player |
 
-**iOS:** iOS offers only fixed `MPRemoteCommandCenter` commands, and the system decides whether and where feedback commands appear. In testing on iOS 27 only `like` is displayed (lock screen, Control Center and Dynamic Island); `bookmark` and `dislike` are accepted but not shown. JWPlayerKit owns play/pause, next/previous, skip and the scrubber, but not like/dislike/bookmark, so the bridge can use those without conflicting with the SDK.
+**iOS:** iOS offers only fixed `MPRemoteCommandCenter` commands, and the system decides whether and where feedback commands appear. In testing on iOS 27 only `like` is displayed (lock screen, Control Center and Dynamic Island); `bookmark` and `dislike` are accepted but not shown, so put your primary action on `like`. JWPlayerKit owns play/pause, next/previous, skip and the scrubber, but not like/dislike/bookmark, so the bridge can use those without conflicting with the SDK.
 
 ### 9. Audio Focus
 
@@ -516,7 +516,11 @@ const config: JWPlayerConfig = {
 | When it fires | Only with `audioFocusHandling: 'sdk'` | Whenever `backgroundAudioEnabled` or `pipEnabled` is `true` |
 | Values | `gained`, `lost`, `lostTransient`, `duck` | `lostTransient` (interruption began), `gained` (interruption ended) |
 
-**iOS:** there is no audio focus; audio session interruptions (call, alarm, Siri) are the closest equivalent, and iOS ducks other apps' audio itself. Interruptions are handled through the audio session (`category`, `categoryOptions`, `mode`) and this library's interruption handling, which pauses on `lostTransient` and resumes after `gained` when the system allows it and `backgroundAudioEnabled` is `true`. The bridge resumes only a player that was playing (or paused by the system), not an idle player or one paused with `pause()`/`stop()` or by the user. **Known issue:** JWPlayerKit itself currently resumes every player when an interruption ends, idle or paused ones included; a fix is pending in the iOS SDK. Because those players start playing, lock-screen buttons can also move to whichever of them starts last. **Known limitation:** JWPlayerKit supports one playing player at a time, and pausing any player pauses every player. That covers `pause()`, the player UI, the lock screen, and unmounting a `<JWPlayer>` (the component calls `pause()` when it unmounts).
+**iOS:** there is no audio focus; audio session interruptions (call, alarm, Siri) are the closest equivalent, and iOS ducks other apps' audio itself. Interruptions are handled through the audio session (`category`, `categoryOptions`, `mode`) and this library's interruption handling, which pauses on `lostTransient` and resumes after `gained` when the system allows it and `backgroundAudioEnabled` is `true`. The bridge resumes only a player that was playing (or paused by the system), not an idle player or one paused with `pause()`/`stop()` or by the user.
+
+**Known issue (JWPlayerKit 4.28.2):** when an interruption ends, JWPlayerKit itself resumes every player, idle or paused ones included. This has been reported to the iOS SDK team; this release does not work around it. Because those players start playing, lock-screen buttons can also move to whichever of them starts last.
+
+**Known limitation (observed with JWPlayerKit 4.28.2):** pausing any player pauses every player (`pause()`, the player UI, the lock screen, or unmounting a `<JWPlayer>`, which calls `pause()`). Design for one playing player at a time on iOS.
 
 ### 10. Pause Reason `audio-interruption`
 
@@ -528,29 +532,50 @@ const config: JWPlayerConfig = {
 
 ### 12. Event Delivery
 
-**Android Only (from 1.10.0)** - every player event is sent to JavaScript as a device event instead of a view event. iOS is unchanged: events are still view events.
+**Android, changed in 1.10.0** - player events are delivered to JavaScript as they occur while the app process is running (for example during background audio), and handlers receive a plain `{ nativeEvent }` object. (The bridge now sends every player event as a device event instead of a view event.) iOS is not changed in 1.10.0.
+
+Use only `event.nativeEvent` in handlers shared by both platforms.
 
 | | Android | iOS |
 |---|---|---|
-| While the app is in the background | All `on*` handlers fire, `onTime` included | Unchanged from earlier versions |
+| While the app is in the background | Events are delivered as they occur while the app process is running. Before 1.10.0, on the New Architecture, they were held until the app returned to the foreground | Not changed in 1.10.0 |
 | Handler argument | A plain `{ nativeEvent }` object | React synthetic event |
-| `nativeEvent.target`, `target`, `currentTarget`, `timeStamp` | Not present | Present |
-| `persist()`, `stopPropagation()` | Not present; calling them throws | Present |
+| `nativeEvent.target`, `target`, `currentTarget`, `timeStamp` | `undefined` | Present |
+| `persist()`, `stopPropagation()` | Not present; calling them throws a `TypeError` | Present |
 | Bubbling to parent views | No (before 1.10.0 the events bubbled) | No (direct events) |
+| Handler prop added after mount | Called straight away | Registered at the next re-render (`config` or `controls` change) |
+
+On Android, `nativeEvent.target === findNodeHandle(ref.current)` is now always `false`. Identify the player from the closure or a ref instead.
+
+In handlers that now run in the background:
+
+- Keep updating state (`setState` is safe in the background). Do not drop `onPlay`, `onPause`, `onComplete`, `onPlaylistItem` or `onTime` state: those events are not replayed when the app returns to the foreground.
+- Guard only work that needs a visible UI (animations, navigation, alerts, visibility analytics) with `AppState.currentState === 'background'`. On Android, `AppState` is `'background'` whenever the activity is paused, Picture-in-Picture included.
+- If a handler does skip events in the background, resync through the player ref when `AppState` changes to `'active'`.
 
 ```typescript
-// Identify the player with a closure or ref, not event.nativeEvent.target.
+import { AppState } from 'react-native';
+
+// playerId comes from the closure, not from event.nativeEvent.target.
 <JWPlayer
   ref={playerRef}
   onTime={({ nativeEvent }) => {
-    // Runs in the background on Android: guard foreground-only work.
-    if (AppState.currentState !== 'active') return;
-    updateProgressBar(playerId, nativeEvent.position);
+    setPosition(playerId, nativeEvent.position);           // state: always
+    if (AppState.currentState === 'background') return;    // visible-UI work only below
+    animateProgressBar(playerId, nativeEvent.position);
   }}
 />
-```
 
-Read only `nativeEvent` in handlers shared by both platforms.
+// Only needed if a handler skips events in the background.
+useEffect(() => {
+  const sub = AppState.addEventListener('change', async (next) => {
+    if (next !== 'active' || !playerRef.current) return;
+    setPlayerState(playerId, await playerRef.current.playerState());
+    setPosition(playerId, await playerRef.current.position());
+  });
+  return () => sub.remove();
+}, []);
+```
 
 ---
 
@@ -840,7 +865,10 @@ the ad did not complete, but playback recovered on its own.
 |---------|-----|---------|----------------|
 | **Styling** | ✅ Full | ❌ Use XML | Platform-specific |
 | **UI Config** | ❌ Use hideUIGroups | ✅ Full | Platform-specific |
-| **Background Audio** | ✅ Full | ❌ | iOS only |
+| **Background Audio** (`backgroundAudioEnabled`) | ✅ | ✅ | Cross-platform |
+| **Notification / lock-screen buttons** (`notificationButtons`) | ⚠️ `like` / `dislike` / `bookmark` commands only | ✅ | Platform-aware, see [Background Audio Notification Buttons](#8-background-audio-notification-buttons) |
+| **`audioFocusHandling`** | ❌ | ✅ | Android only; `onAudioFocusChange` fires on both, see [Audio Focus](#9-audio-focus) |
+| **Events delivered while in the background** | Not changed in 1.10.0 | ✅ From 1.10.0 | Use only `event.nativeEvent`, see [Event Delivery](#12-event-delivery) |
 | **Caption Styling** | ✅ Full | ❌ System settings | iOS only |
 | **FairPlay DRM** | ✅ | ❌ | iOS only |
 | **Widevine DRM** | ❌ | ✅ | Android only |

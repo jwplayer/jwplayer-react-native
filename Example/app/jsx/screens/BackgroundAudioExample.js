@@ -75,7 +75,8 @@ export default () => {
       </View>
       {Platform.OS === 'ios' ? (
         <Text style={styles.label}>
-          Play, then lock the device: Like and Bookmark appear in the lock-screen controls.
+          Play, then lock the device: Like appears in the lock-screen controls. Bookmark is
+          registered too, but iOS 27 does not show it.
         </Text>
       ) : null}
       <Text style={styles.label}>Liked: {liked ? 'yes' : 'no'}</Text>

@@ -330,17 +330,30 @@ export interface JWPlayerConfig {
   // ========== BACKGROUND AUDIO NOTIFICATION / AUDIO FOCUS ==========
 
   /**
-   * Extra buttons for the background-audio notification and lock-screen controls (needs
-   * `backgroundAudioEnabled: true`). Taps arrive on the `onNotificationButtonClick` prop.
-   * Change them later with `setNotificationButtons`. Omitting this in a later config keeps
-   * the current buttons; pass `[]` to clear them. Android: only the first player that
-   * starts the background-audio service gets notification controls; other players' buttons
-   * are not shown and get no clicks until that player releases the service (removed, set up
-   * again, or casting) and another player then starts playback.
-   * iOS: only buttons with `iosCommand` are used, as the lock-screen like / dislike / bookmark
-   * commands. With several players, the player that is playing has them: a player takes them
-   * when it starts playing; an idle player that sets buttons takes them only if no player has
-   * them, otherwise it keeps them until it plays.
+   * Extra buttons for the background-audio notification and lock-screen controls. Not shown when
+   * `backgroundAudioEnabled` is `false` (iOS: on unless set to `false`; Android: must be `true`).
+   * Taps arrive on the `onNotificationButtonClick` prop. Change them later with
+   * `setNotificationButtons`. Omitting this in a later config keeps the current buttons; pass `[]`
+   * to clear them.
+   *
+   * **Android:** one player holds the notification at a time, normally the first player with
+   * `backgroundAudioEnabled: true` to start playing. Other players' buttons are not shown, their
+   * `onNotificationButtonClick` never fires, and `setNotificationButtons` on them has no visible
+   * effect (the buttons are stored and applied if that player later holds the notification). The
+   * owner releases the notification only when it is unmounted or starts casting; a new `config`,
+   * `recreatePlayerWithConfig` or `backgroundAudioEnabled: false` does not release it. Another
+   * player then takes over at its next first frame (a new item or load, not a resume from pause).
+   * To hand over, unmount the owner; prefer `backgroundAudioEnabled: true` on one player at a time.
+   * With Google Cast enabled, a player can take the notification earlier (when it finishes setup)
+   * and again when its cast session ends.
+   *
+   * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center like,
+   * dislike and bookmark commands (system icons; iOS decides whether and where to display them). In
+   * testing on iOS 27 only `like` is displayed; `bookmark` and `dislike` are accepted but not
+   * shown. With several players, the player that is playing has the commands: a player that is not
+   * playing does not take the commands from the one that has them; its buttons are applied when it
+   * starts playing, or straight away if no player has them. The `iosActive` state (e.g. a filled
+   * star) changes only when you set it.
    *
    * @platform android, ios
    */
@@ -646,7 +659,11 @@ export interface JWNotificationButtonConfig {
   inCompactView?: boolean;
   /** Placement hint for the system media controls. Default `"overflow"`. */
   placement?: 'overflow' | 'back' | 'forward';
-  /** iOS only: show as this lock-screen feedback command (system icon, `title` as label). */
+  /**
+   * iOS only: registers the button as this lock-screen feedback command (system icon, `title` as
+   * label; iOS decides whether to display it). In testing on iOS 27 only `like` is displayed;
+   * `bookmark` and `dislike` are accepted but not shown.
+   */
   iosCommand?: 'like' | 'dislike' | 'bookmark';
   /** iOS only: the command's selected state, e.g. "liked". Default `false`. */
   iosActive?: boolean;

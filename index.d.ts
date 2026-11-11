@@ -31,24 +31,30 @@ declare module "@jwplayer/jwplayer-react-native" {
     uiConfig?: any;
     backgroundAudioEnabled?: boolean;
     /**
-     * Extra buttons for the background-audio notification and lock-screen controls (needs
-     * `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
-     * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
-     * current buttons; pass `[]` to clear them.
+     * Extra buttons for the background-audio notification and lock-screen controls. Not shown when
+     * `backgroundAudioEnabled` is `false` (iOS: on unless set to `false`; Android: must be `true`).
+     * Taps arrive on the `onNotificationButtonClick` prop. Change them later with
+     * `setNotificationButtons`. Omitting this in a later config keeps the current buttons; pass
+     * `[]` to clear them.
      *
-     * **Android:** the buttons belong to the background-audio service, which one player uses
-     * at a time: the first player to start background playback. Other players get no
-     * notification controls while it holds the service: their buttons are not shown and their
-     * `onNotificationButtonClick` never fires. The service moves only after the owning player
-     * releases it (removed, set up again, or casting) and another player then starts playback.
+     * **Android:** one player holds the notification at a time, normally the first player with
+     * `backgroundAudioEnabled: true` to start playing. Other players' buttons are not shown, their
+     * `onNotificationButtonClick` never fires, and `setNotificationButtons` on them has no visible
+     * effect (the buttons are stored and applied if that player later holds the notification). The
+     * owner releases the notification only when it is unmounted or starts casting; a new `config`,
+     * `recreatePlayerWithConfig` or `backgroundAudioEnabled: false` does not release it. Another
+     * player then takes over at its next first frame (a new item or load, not a resume from pause).
+     * To hand over, unmount the owner; prefer `backgroundAudioEnabled: true` on one player at a
+     * time. With Google Cast enabled, a player can take the notification earlier (when it finishes
+     * setup) and again when its cast session ends.
      *
      * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
-     * like, dislike and bookmark commands (system icons, the system decides whether and where it
-     * shows them; in testing on iOS 27 only `like` is displayed, `bookmark` and `dislike` are
-     * accepted but not shown). With several players, one owns them at a
-     * time, so a tap reaches one player only: the player that is playing. A player takes them
-     * when it starts playing, or when it sets buttons while playing or while no player has
-     * them. The `iosActive` state (e.g. a filled star) changes only when you set it.
+     * like, dislike and bookmark commands (system icons; iOS decides whether and where to display
+     * them). In testing on iOS 27 only `like` is displayed; `bookmark` and `dislike` are accepted
+     * but not shown. With several players, the player that is playing has the commands: a player
+     * that is not playing does not take the commands from the one that has them; its buttons are
+     * applied when it starts playing, or straight away if no player has them. The `iosActive` state
+     * (e.g. a filled star) changes only when you set it.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -521,24 +527,30 @@ declare module "@jwplayer/jwplayer-react-native" {
     styling?: Styling;
     backgroundAudioEnabled?: boolean;
     /**
-     * Extra buttons for the background-audio notification and lock-screen controls (needs
-     * `backgroundAudioEnabled: true`). Taps arrive on `onNotificationButtonClick`.
-     * Change them later with `setNotificationButtons`. Omitting this in a later config keeps the
-     * current buttons; pass `[]` to clear them.
+     * Extra buttons for the background-audio notification and lock-screen controls. Not shown when
+     * `backgroundAudioEnabled` is `false` (iOS: on unless set to `false`; Android: must be `true`).
+     * Taps arrive on the `onNotificationButtonClick` prop. Change them later with
+     * `setNotificationButtons`. Omitting this in a later config keeps the current buttons; pass
+     * `[]` to clear them.
      *
-     * **Android:** the buttons belong to the background-audio service, which one player uses
-     * at a time: the first player to start background playback. Other players get no
-     * notification controls while it holds the service: their buttons are not shown and their
-     * `onNotificationButtonClick` never fires. The service moves only after the owning player
-     * releases it (removed, set up again, or casting) and another player then starts playback.
+     * **Android:** one player holds the notification at a time, normally the first player with
+     * `backgroundAudioEnabled: true` to start playing. Other players' buttons are not shown, their
+     * `onNotificationButtonClick` never fires, and `setNotificationButtons` on them has no visible
+     * effect (the buttons are stored and applied if that player later holds the notification). The
+     * owner releases the notification only when it is unmounted or starts casting; a new `config`,
+     * `recreatePlayerWithConfig` or `backgroundAudioEnabled: false` does not release it. Another
+     * player then takes over at its next first frame (a new item or load, not a resume from pause).
+     * To hand over, unmount the owner; prefer `backgroundAudioEnabled: true` on one player at a
+     * time. With Google Cast enabled, a player can take the notification earlier (when it finishes
+     * setup) and again when its cast session ends.
      *
      * **iOS:** only buttons with an `iosCommand` are used, as the lock-screen / Control Center
-     * like, dislike and bookmark commands (system icons, the system decides whether and where it
-     * shows them; in testing on iOS 27 only `like` is displayed, `bookmark` and `dislike` are
-     * accepted but not shown). With several players, one owns them at a
-     * time, so a tap reaches one player only: the player that is playing. A player takes them
-     * when it starts playing, or when it sets buttons while playing or while no player has
-     * them. The `iosActive` state (e.g. a filled star) changes only when you set it.
+     * like, dislike and bookmark commands (system icons; iOS decides whether and where to display
+     * them). In testing on iOS 27 only `like` is displayed; `bookmark` and `dislike` are accepted
+     * but not shown. With several players, the player that is playing has the commands: a player
+     * that is not playing does not take the commands from the one that has them; its buttons are
+     * applied when it starts playing, or straight away if no player has them. The `iosActive` state
+     * (e.g. a filled star) changes only when you set it.
      */
     notificationButtons?: NotificationButtonConfig[];
     /**
@@ -584,6 +596,17 @@ declare module "@jwplayer/jwplayer-react-native" {
     forceFullScreenOnLandscape?: boolean;
     forceLandscapeOnFullScreen?: boolean;
   }
+  /**
+   * The argument of every `on*` handler. Use only `nativeEvent`.
+   *
+   * **Android (from 1.10.0):** this is a plain `{ nativeEvent }` object, not a React synthetic
+   * event: `target`, `currentTarget`, `timeStamp` and `nativeEvent.target` are `undefined`,
+   * `persist()` and `stopPropagation()` do not exist (calling them throws), and events do not
+   * bubble to parent views. Events are delivered as they occur while the app process is running,
+   * including in the background (e.g. during background audio).
+   *
+   * **iOS:** a React synthetic event; not changed in 1.10.0.
+   */
   interface BaseEvent<T> {
     nativeEvent: T;
   }
@@ -711,10 +734,11 @@ declare module "@jwplayer/jwplayer-react-native" {
     /** Placement hint for the system media controls. Default `"overflow"`. */
     placement?: "overflow" | "back" | "forward";
     /**
-     * **iOS only.** Shows this button on iOS as the given `MPRemoteCommandCenter` feedback
-     * command, with the system's icon and `title` as its label. Taps report this button's `id`.
-     * Buttons without it are not shown on iOS; each command is used by at most one button
-     * (the first). Ignored on Android.
+     * **iOS only.** Registers this button as the given `MPRemoteCommandCenter` feedback command,
+     * with the system's icon and `title` as its label (iOS decides whether to display it). In
+     * testing on iOS 27 only `like` is displayed; `bookmark` and `dislike` are accepted but not
+     * shown. Taps report this button's `id`. Buttons without it are not used on iOS; each command
+     * is used by at most one button (the first). Ignored on Android.
      */
     iosCommand?: "like" | "dislike" | "bookmark";
     /**
@@ -1069,9 +1093,10 @@ declare module "@jwplayer/jwplayer-react-native" {
      *   `backgroundAudioEnabled` or `pipEnabled` is `true` (the bridge only observes the audio
      *   session then), and only on a player that is playing, or was paused by the system rather
      *   than by `pause()`/`stop()` or the user; that player then gets `gained` when it ends. An
-     *   idle or user-paused player gets neither, and the bridge does not resume it. Known issue:
-     *   JWPlayerKit itself currently resumes every player when an interruption ends, idle or
-     *   paused ones included; a fix is pending in the iOS SDK. `audioFocusHandling` has no effect on iOS.
+     *   idle or user-paused player gets neither, and the bridge does not resume it. Known issue
+     *   (JWPlayerKit 4.28.2): when an interruption ends, JWPlayerKit itself resumes every player,
+     *   idle or paused ones included. This has been reported to the iOS SDK team; this release
+     *   does not work around it. `audioFocusHandling` has no effect on iOS.
      */
     onAudioFocusChange?: (event: BaseEvent<AudioFocusChangeEventProps>) => void;
     onSeek?: (event: BaseEvent<SeekEventProps>) => void;
@@ -1195,6 +1220,13 @@ declare module "@jwplayer/jwplayer-react-native" {
 
   export default class JWPlayer extends React.Component<PropsType> {
     quite(): void;
+    /**
+     * Pauses playback.
+     *
+     * **iOS, known limitation (observed with JWPlayerKit 4.28.2):** pausing any player pauses every
+     * player. Unmounting a `<JWPlayer>` calls `pause()`, so it does too. Design for one playing
+     * player at a time on iOS.
+     */
     pause(): void;
     play(): void;
     stop(): void;
@@ -1239,16 +1271,22 @@ declare module "@jwplayer/jwplayer-react-native" {
         refreshNotification?: boolean;
     }): void;
     /**
-     * Replaces the custom background-audio notification buttons (see `notificationButtons` in
-     * the config). Pass `[]` to remove them.
-     * - Android: takes effect immediately while background audio is running.
-     * - iOS: updates the lock-screen feedback commands (the buttons with an `iosCommand`),
-     *   including their `iosActive` state. Needs `backgroundAudioEnabled`; with several players,
-     *   an idle player does not take the commands from the player that has them.
+     * Replaces the custom background-audio notification buttons (see `notificationButtons` in the
+     * config). Pass `[]` to remove them.
      *
-     * On Android each call rebuilds the notification, so call it when the buttons actually change (e.g. in
-     * a click handler), not on every render; if you derive the array in render, memoize it with
-     * `useMemo` and only pass a new array when its contents change.
+     * - Android: updates the notification immediately only if this player holds it. On any other
+     *   player the buttons are stored and applied if it later holds the notification.
+     * - iOS: updates the lock-screen feedback commands (the buttons with an `iosCommand`),
+     *   including their `iosActive` state. A player that is not playing does not take the commands
+     *   from the one that has them; its buttons are applied when it starts playing, or straight
+     *   away if no player has them.
+     *
+     * The buttons are not shown when `backgroundAudioEnabled` is `false` (iOS: on unless set to
+     * `false`; Android: must be `true`).
+     *
+     * On Android each call rebuilds the notification, so call it when the buttons actually change
+     * (e.g. in a click handler), not on every render; if you derive the array in render, memoize it
+     * with `useMemo` and only pass a new array when its contents change.
      */
     setNotificationButtons(buttons: NotificationButtonConfig[]): void;
     setFullscreen(fullScreen: boolean): void;

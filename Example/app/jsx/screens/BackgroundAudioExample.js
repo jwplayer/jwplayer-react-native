@@ -6,8 +6,9 @@ import {globalStyles} from '../../ui/styles/global.style';
 // Custom background-audio notification buttons and audio focus.
 // Android: the icons are drawables in this app (android/app/src/main/res/drawable/ic_rn_*.xml),
 // and audio focus is managed by the JW SDK (`audioFocusHandling: 'sdk'`).
-// iOS: buttons with `iosCommand` appear as the lock-screen / Control Center like and bookmark
-// commands; audio session interruptions (a call, Siri) arrive on onAudioFocusChange.
+// iOS: buttons with `iosCommand` map to the lock-screen / Control Center feedback commands. In
+// testing on iOS 27 only `like` is displayed; `bookmark` is accepted but not shown. Audio
+// session interruptions (a call, Siri) arrive on onAudioFocusChange.
 export default () => {
   const playerRef = useRef(null);
   const [liked, setLiked] = useState(false);
@@ -74,7 +75,8 @@ export default () => {
       </View>
       {Platform.OS === 'ios' ? (
         <Text style={styles.label}>
-          Play, then lock the device: Like and Bookmark appear in the lock-screen controls.
+          Play, then lock the device: Like appears in the lock-screen controls. Bookmark is
+          registered too, but iOS 27 does not show it.
         </Text>
       ) : null}
       <Text style={styles.label}>Liked: {liked ? 'yes' : 'no'}</Text>

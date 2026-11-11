@@ -399,7 +399,7 @@ const config: JWPlayerConfig = {
 
 #### Background Audio Notification Buttons
 
-Extra buttons in the background-audio notification and lock-screen controls (requires `backgroundAudioEnabled: true`). `icon` is the name of a drawable (or mipmap) resource in your Android app.
+Extra buttons in the background-audio notification and lock-screen controls. Not shown when `backgroundAudioEnabled` is `false` (Android needs it set to `true`; on iOS it is on unless set to `false`). `icon` is the name of a drawable (or mipmap) resource in your Android app.
 
 ```typescript
 const config: JWPlayerConfig = {
@@ -421,12 +421,16 @@ const config: JWPlayerConfig = {
 | `enabled` | `boolean` | `true` | Disabled buttons are greyed out (Android 12-) or hidden (Android 13+). |
 | `inCompactView` | `boolean` | `false` | Show in the collapsed notification (Android 12 and below). |
 | `placement` | `'overflow' \| 'back' \| 'forward'` | `'overflow'` | Placement hint for the system media controls. Android only. |
-| `iosCommand` | `'like' \| 'dislike' \| 'bookmark'` | none | iOS only. Shows the button as that lock-screen / Control Center feedback command. Buttons without it are not shown on iOS. |
+| `iosCommand` | `'like' \| 'dislike' \| 'bookmark'` | none | iOS only. Registers the button as that lock-screen / Control Center feedback command (iOS decides whether to display it). Buttons without it are not used on iOS. |
 | `iosActive` | `boolean` | `false` | iOS only. The command's selected state (e.g. liked). |
 
 Taps arrive on the `onNotificationButtonClick` prop (`nativeEvent.id`). Replace the buttons while playing with `playerRef.current.setNotificationButtons(buttons)`; `[]` removes them.
 
-**iOS:** iOS has no custom lock-screen buttons, only fixed `MPRemoteCommandCenter` commands. Buttons with an `iosCommand` map to the like, dislike and bookmark commands (system icons, `title` as the label, `enabled` honoured); `icon`, `inCompactView` and `placement` are ignored. The system decides whether and where it shows them. JWPlayerKit does not use these three commands, so they do not conflict with its play/pause/skip/scrubber controls. The command center is shared by the whole app: with several players, one owns the commands at a time, so a tap reaches one player: the player that is playing. A player takes them when it starts playing, or when it sets buttons while playing or while no player has them; an idle player that sets buttons keeps them until it plays. When the owner is removed, the commands are hidden until another player plays or sets buttons. The lock screen may show only one of the commands, and `iosActive` (for example a filled star) changes only when you set it, so update it with `setNotificationButtons` from `onNotificationButtonClick`. Like Android, the buttons are only shown while `backgroundAudioEnabled` is `true`.
+**Android, several players:** one player holds the notification at a time, normally the first player with `backgroundAudioEnabled: true` to start playing. Other players get no notification or lock-screen controls: their `notificationButtons` are not shown, their `onNotificationButtonClick` never fires, and `setNotificationButtons` on them has no visible effect (the buttons are stored and applied if that player later holds the notification). The owner releases the notification only when it is unmounted or starts casting; a new `config`, `recreatePlayerWithConfig` or `backgroundAudioEnabled: false` does not release it. Another player then takes over at its next first frame (a new item or load, not a resume from pause). To hand the notification over, unmount the owner; we recommend `backgroundAudioEnabled: true` on one player at a time. With Google Cast enabled, a player can take the notification earlier (when it finishes setup) and take it again when its cast session ends.
+
+**iOS:** iOS has no custom lock-screen buttons, only fixed `MPRemoteCommandCenter` commands. Buttons with an `iosCommand` map to the like, dislike and bookmark commands (system icons, `title` as the label, `enabled` honoured); `icon`, `inCompactView` and `placement` are ignored. The system decides whether and where it shows them. In testing on iOS 27 only `like` is displayed (lock screen, Control Center and Dynamic Island); `bookmark` and `dislike` are accepted but not shown, so put your primary action on `like`. JWPlayerKit does not use these three commands, so they do not conflict with its play/pause/skip/scrubber controls. `iosActive` (for example a filled star) changes only when you set it, so update it with `setNotificationButtons` from `onNotificationButtonClick`. The buttons are not shown when `backgroundAudioEnabled` is `false` (iOS: on unless set to `false`; Android: must be `true`).
+
+**iOS, several players:** the command center is shared by the whole app, so one player has the commands at a time and a tap reaches that player only: the player that is playing. A player that is not playing does not take the commands from the one that has them; its buttons are applied when it starts playing, or straight away if no player has them. When the player that has them is removed, the commands are hidden until another player plays or sets buttons.
 
 #### Audio Focus
 
@@ -439,11 +443,15 @@ const config: JWPlayerConfig = {
 ```
 
 - `'bridge'` (default): this library's own audio-focus handling, active when `backgroundAudioEnabled` is `true`.
-- `'sdk'`: the JW Android SDK manages audio focus for content and ads, pauses on a permanent loss, pauses and resumes on a transient loss, and lets the system duck the volume. Changes are reported on `onAudioFocusChange` (`nativeEvent.change`: `gained`, `lost`, `lostTransient`, `duck`). Pauses it makes have `reason: 'audio-interruption'` on `onPause`. The bridge's own handling is switched off.
+- `'sdk'`: the JW Android SDK manages audio focus for content and ads, pauses on a permanent loss, pauses and resumes on a transient loss, and lets the system duck the volume. Changes are reported on `onAudioFocusChange` (`nativeEvent.change`: `gained`, `lost`, `lostTransient`, `duck`). Pauses it makes have `reason: 'audio-interruption'` on `onPause`. The bridge's own handling is switched off. With several players using `'sdk'`, starting one pauses the other, which reports `lost` and does not resume on its own.
 
 The Android player always pauses when headphones or a Bluetooth audio device disconnect, whichever mode is used.
 
-**iOS:** `audioFocusHandling` is ignored. `onAudioFocusChange` reports audio session interruptions whenever `backgroundAudioEnabled` or `pipEnabled` is `true`: `lostTransient` when one begins (call, alarm, Siri) and `gained` when it ends, with `shouldResume` telling you whether iOS suggests resuming. `lost` and `duck` do not occur on iOS. The audio session is app-wide, but only a player that is playing, or was paused by the system rather than by `pause()`/`stop()` or the user, reports it, and that player then reports `gained`. An idle or user-paused player reports nothing, and the bridge does not resume it. **Known issue:** JWPlayerKit itself currently resumes every player when an interruption ends, idle or paused ones included; a fix is pending in the iOS SDK. Because those players start playing, lock-screen buttons can also move to whichever of them starts last.
+**iOS:** `audioFocusHandling` is ignored. `onAudioFocusChange` reports audio session interruptions whenever `backgroundAudioEnabled` or `pipEnabled` is `true`: `lostTransient` when one begins (call, alarm, Siri) and `gained` when it ends, with `shouldResume` telling you whether iOS suggests resuming. `lost` and `duck` do not occur on iOS. The audio session is app-wide, but only a player that is playing, or was paused by the system rather than by `pause()`/`stop()` or the user, reports it, and that player then reports `gained`. An idle or user-paused player reports nothing, and the bridge does not resume it.
+
+**Known issue (JWPlayerKit 4.28.2):** when an interruption ends, JWPlayerKit itself resumes every player, idle or paused ones included. This has been reported to the iOS SDK team; this release does not work around it. Because those players start playing, lock-screen buttons can also move to whichever of them starts last.
+
+**Known limitation (observed with JWPlayerKit 4.28.2):** pausing any player pauses every player (`pause()`, the player UI, the lock screen, or unmounting a `<JWPlayer>`, which calls `pause()`). Design for one playing player at a time on iOS.
 
 #### Captions Appearance and Position
 

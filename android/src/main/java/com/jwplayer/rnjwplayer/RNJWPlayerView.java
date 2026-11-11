@@ -389,8 +389,8 @@ public class RNJWPlayerView extends RelativeLayout implements
         ActivityManager manager = (ActivityManager) mAppContext.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (MediaService.class.getName().equals(service.service.getClassName())) {
-                Log.w(TAG, "MediaService is already running with another player loaded. To avoid crashing, this player, "
-                        + mPlayerView.getTag() + "  will not be loaded into the background service.");
+                Log.w(TAG, "MediaService is already running with another player loaded. To avoid crashing, this player (React tag "
+                        + getId() + ") will not be loaded into the background service.");
                 return true;
             }
         }

@@ -31,7 +31,7 @@ let package = Package(
     dependencies: [
         .package(name: "ReactNative", path: "../../../../xcframeworks"),
         .package(name: "React-GeneratedCode", path: "../../../ios"),
-        .package(url: "https://github.com/jwplayer/JWPlayerKit-package.git", exact: "4.28.2"),
+        .package(url: "https://github.com/jwplayer/JWPlayerKit-package.git", exact: "4.28.3"),
         .package(url: "https://github.com/googleads/swift-package-manager-google-interactive-media-ads-ios.git", .upToNextMinor(from: "3.32.0")),
     ],
     targets: [

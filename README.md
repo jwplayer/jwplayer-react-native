@@ -104,7 +104,7 @@ Follow these steps to add the library to your iOS project:
    ```
 
 > [!IMPORTANT]
-> **iOS is moving from CocoaPods to Swift Package Manager.** JWPlayerKit 4.28.2 is the final iOS SDK version published to CocoaPods. Wrapper 1.10.0 still installs through CocoaPods, and also supports Swift Package Manager. Later iOS SDK versions are published only through Swift Package Manager, so wrapper releases that move to them will require it. If your iOS app still uses CocoaPods for this wrapper, plan to migrate to Swift Package Manager.
+> **iOS is moving from CocoaPods to Swift Package Manager.** JWPlayerKit 4.28.2 is the final iOS SDK version published to CocoaPods. Wrapper 1.10.1 uses JWPlayerKit 4.28.3 with Swift Package Manager. With CocoaPods it still installs, but stays on JWPlayerKit 4.28.2 and does not get the 4.28.3 fixes. Later iOS SDK versions are published only through Swift Package Manager, so wrapper releases that move to them will require it. If your iOS app still uses CocoaPods for this wrapper, plan to migrate to Swift Package Manager.
 
 #### Migrating to Swift Package Manager (React Native 0.88+)
 
